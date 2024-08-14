@@ -58,15 +58,17 @@ export default function LandingComponent() {
             showLoginElements ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <button className="bg-[#ff671e] text-xl text-black font-semibold py-3 px-6 rounded-xl shadow-lg border border-gray-500 hover:bg-orange-500 transition duration-300">
-            Nomad Email Login
-          </button>
+          <Link href="/login-user">
+            <button className="bg-[#ff671e] text-xl text-black font-semibold py-3 px-6 rounded-xl shadow-lg border border-gray-500 hover:bg-orange-500 transition duration-300">
+              Nomad Email Login
+            </button>
+          </Link>
           <div className="flex items-center space-x-4">
             <div className="h-px w-16 bg-gray-500"></div>
             <span className="text-gray-500">or</span>
             <div className="h-px w-16 bg-gray-500"></div>
           </div>
-          <Link href="#" className="text-black underline hover:text-orange-400 transition duration-300">
+          <Link href="/login-house" className="text-black underline hover:text-orange-400 transition duration-300">
             Hacker House Email Login
           </Link>
         </div>
