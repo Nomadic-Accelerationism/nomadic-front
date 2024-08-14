@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 export default function HomeUserComponent() {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between">
+    <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
       {/* Background gradient */}
       <div
         className="absolute inset-0 z-0"
