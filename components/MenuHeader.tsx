@@ -27,7 +27,7 @@ export default function MenuHeaderComponent() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <header className="flex items-center justify-between px-4 py-2 bg-white">
+        <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
           <div className="flex items-center">
             <Image
               src="/images/nomadic.png"
