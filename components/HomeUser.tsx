@@ -1,7 +1,17 @@
+"use client";
+
 import React from 'react';
 import { Button } from "@/components/ui/button"
+import { useRouter } from 'next/navigation';
 
 export default function HomeUserComponent() {
+
+  const router = useRouter();
+
+  const goToProofs = () => {
+    router.push('/user-proofs'); 
+  }; 
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
       {/* Background gradient */}
@@ -21,6 +31,7 @@ export default function HomeUserComponent() {
         
         <Button 
           className="w-full max-w-[200px] mb-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          onClick={goToProofs}
         >
           My Proofs
         </Button>
