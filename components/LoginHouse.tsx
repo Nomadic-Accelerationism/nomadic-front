@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-export default function HouseLogin() {
+export default function HouseLoginComponent() {
+
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
 

@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-export default function MenuHeaderComponent() {
+export default function MenuUserHeaderComponent() {
   const menuItems = [
     "Home",
     "My Proofs",
