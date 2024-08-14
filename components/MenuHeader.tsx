@@ -26,24 +26,24 @@ export default function MenuHeaderComponent() {
 
   return (
     <Sheet>
-        <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
-          <div className="flex items-center">
-            <Image
-              src="/images/nomadic.png"
-              alt="Nomadic Logo"
-              width={40}
-              height={40}
-              className="mr-2"
-            />
-            <span className="text-2xl font-bold">Nomadic</span>
-          </div>
-          <SheetTrigger asChild>
+      <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
+        <div className="flex items-center">
+          <Image
+            src="/images/nomadic.png"
+            alt="Nomadic Logo"
+            width={40}
+            height={40}
+            className="mr-2"
+          />
+          <span className="text-2xl font-bold">Nomadic</span>
+        </div>
+        <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="text-gray-700">
             <MenuIcon className="h-6 w-6" />
             <span className="sr-only">Open menu</span>
           </Button>
-          </SheetTrigger>
-          </header>
+        </SheetTrigger>
+      </header>
       <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
         <div className="h-full bg-gradient-to-t from-[#ff7231] via-[#ffc4a8] to-white flex flex-col">
           <SheetHeader className="p-4 flex justify-between items-center border-b">
