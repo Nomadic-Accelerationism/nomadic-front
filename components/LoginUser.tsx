@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import Link from 'next/link';
 
 export default function UserLogin() {
   const [email, setEmail] = useState('');
@@ -50,14 +51,16 @@ export default function UserLogin() {
               onChange={handleEmailChange}
               className="pr-12 rounded-xl"
             />
-            <Button
-              type="submit"
-              className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Button>
+            <Link href="/home-user">
+              <Button
+                type="submit"
+                className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Button>
+            </Link>
           </div>
 
         <div className="">

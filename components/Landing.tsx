@@ -59,7 +59,7 @@ export default function LandingComponent() {
           }`}
         >
           <Link href="/login-user">
-            <button className="bg-[#ff671e] text-xl text-black font-semibold py-3 px-6 rounded-xl shadow-lg border border-gray-500 hover:bg-orange-500 transition duration-300">
+            <button className="bg-[#ff671e] text-xl text-black font-semibold py-4 px-6 rounded-xl shadow-lg border border-gray-500 hover:bg-orange-500 transition duration-300">
               Nomad Email Login
             </button>
           </Link>
