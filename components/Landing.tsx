@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LandingComponent() {
+  
   const [showOverlay, setShowOverlay] = useState(false);
   const [showLoginElements, setShowLoginElements] = useState(false);
 

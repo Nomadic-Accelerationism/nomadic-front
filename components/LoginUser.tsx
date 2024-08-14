@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link';
 
-export default function UserLogin() {
+export default function UserLoginComponent() {
+
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
 

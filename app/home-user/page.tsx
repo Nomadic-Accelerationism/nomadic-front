@@ -1,11 +1,11 @@
 import Image from "next/image";
 import HomeUserComponent from "@/components/HomeUser";
-import MenuHeaderComponent from "@/components/MenuHeader";
+import MenuUserHeaderComponent from "@/components/MenuUserHeader";
 
 export default function Home() {
   return (
     <>
-      <MenuHeaderComponent />
+      <MenuUserHeaderComponent />
       <HomeUserComponent />
     </>
   );
