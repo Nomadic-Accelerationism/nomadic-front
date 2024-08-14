@@ -42,7 +42,7 @@ export default function LandingComponent() {
       <div className="relative z-10 flex flex-col items-center justify-between h-full w-full bg-transparent">
         <div
           className={`transition-all duration-1000 ease-in-out ${
-            showLoginElements ? 'mt-48' : 'mt-[50vh] -translate-y-1/2'
+            showLoginElements ? 'mt-36' : 'mt-[50vh] -translate-y-1/2'
           }`}
         >
           <Image
