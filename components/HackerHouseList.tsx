@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -120,8 +122,9 @@ export default function HackerHouseListComponent() {
 
       <div className="space-y-4">
         {houses.map((house) => (
-          <Link href={`/house/${house.id}`} key={house.id} className="block">
-            <div className="rounded-lg overflow-hidden shadow-lg">
+          // <Link href={`/house-detail/${house.id}`} key={house.id} className="block">
+          <Link href={`/house-detail/`} key={house.id} className="block">
+          <div className="rounded-lg overflow-hidden shadow-lg">
               <div className="relative h-28">
                 <Image
                   src={house.image}
