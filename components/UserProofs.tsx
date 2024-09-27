@@ -3,11 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Search } from 'lucide-react'
 
-interface ProofItem {
-  name: string;
-  icon: string;
-  isActive: boolean;
-}
+import { ProofItem } from "@/interfaces/ProofItem"
 
 const proofItems: ProofItem[] = [
   { name: "$APE Holder", icon: "/proofs/ape-holder.png", isActive: true },
