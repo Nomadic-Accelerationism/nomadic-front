@@ -29,11 +29,14 @@ export default function MenuHouseHeaderComponent() {
           <Image
             src="/images/nomadic.png"
             alt="Nomadic Logo"
-            width={40}
-            height={40}
+            width={43}
+            height={43}
             className="mr-2"
           />
-          <span className="text-2xl font-bold">Nomadic</span>
+          <div className="flex flex-col">
+            <p className="text-2xl font-bold pb-0">Nomadic</p>
+            <p className="text-sm text-gray-800">Hacker House</p>
+          </div>
         </div>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="text-gray-700">
