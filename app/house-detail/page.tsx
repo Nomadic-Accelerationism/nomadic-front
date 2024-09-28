@@ -40,7 +40,7 @@ export default function HouseDetail() {
       <HackerHouseDetailComponent {...hackerHouseDetail} />
       <HackerHouseParticipantsComponent />
 
-      <div className="relative z-10 flex flex-col items-center mt-4 flex-grow w-full max-w-md px-6">
+      <div className="flex flex-col items-center mt-4">
         <Button 
           className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
           onClick={editHackerHouse}>

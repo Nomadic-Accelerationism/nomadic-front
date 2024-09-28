@@ -31,8 +31,8 @@ export default function MenuUserHeaderComponent() {
           <Image
             src="/images/nomadic.png"
             alt="Nomadic Logo"
-            width={40}
-            height={40}
+            width={43}
+            height={43}
             className="mr-2"
           />
           <span className="text-2xl font-bold">Nomadic</span>
