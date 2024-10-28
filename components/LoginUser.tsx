@@ -5,11 +5,44 @@ import Image from 'next/image';
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Magic } from 'magic-sdk';
+import axios from 'axios';
+import { useUser } from '@/contexts/UserContext';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from "lucide-react";
+
+// Move Magic initialization inside a function to ensure client-side only execution
+const createMagic = () => {
+  return typeof window !== 'undefined' 
+    ? new Magic(process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY || '')
+    : null;
+};
+
+const magic = createMagic();
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (magic) {
+  magic.preload();
+}
+
 
 export default function UserLoginComponent() {
 
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const { setUserMetadata } = useUser();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -21,9 +54,64 @@ export default function UserLoginComponent() {
     setCode(newCode);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const requestOTP = async (email: string) => {
+    try {
+      setIsLoading(true);
+      if (!magic) {
+        throw new Error('Magic SDK is not initialized');
+      }
+      
+      const didToken = await magic.auth.loginWithEmailOTP({ email: email });
+      const userInfo = await magic.user.getInfo();
+      
+      console.log("email--->", email);
+      console.log("didToken--->", didToken);
+      console.log("UserInfo--->", userInfo);
+
+
+      const response = await axios.post('/api/auth/validate-otp', {
+        email,
+        didToken
+      });
+
+      console.log("response--->", response.data);
+      
+      const metadata = response.data.metadata;
+      setUserMetadata(metadata); // Store metadata in global context
+
+      router.push('/home-user');
+      
+    } catch (error) {
+      console.error('Magic SDK error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
+    
+    if (!emailRegex.test(email)) {
+      setIsAlertOpen(true);
+      return;
+    }
+    
+    try {
+      await requestOTP(email);
+    } catch (error) {
+      // Handle error appropriately
+      console.error('Failed to send OTP:', error);
+    }
+  };
+
+  const requestNewOTP = () => {
+    if (!emailRegex.test(email)) {
+      setIsAlertOpen(true);
+      return;
+    }
+    requestOTP(email);
   };
 
   return (
@@ -51,20 +139,24 @@ export default function UserLoginComponent() {
               value={email}
               onChange={handleEmailChange}
               className="pr-12 rounded-xl"
+              disabled={isLoading}
             />
-            <Link href="/home-user">
-              <Button
-                type="submit"
-                className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
-              >
+            <Button
+              type="submit"
+              className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </Button>
-            </Link>
+              )}
+            </Button>
           </div>
 
-        <div className="">
+        {/* <div className="">
           <div className="flex justify-between space-x-1 ml-8 mr-8">
             {code.map((digit, index) => (
               <Input
@@ -77,12 +169,13 @@ export default function UserLoginComponent() {
               />
             ))}
           </div>
-        </div>
+        </div> */}
 
           <Button
             type="button"
             variant="ghost"
             className="w-full text-gray-600 hover:text-gray-900"
+            onClick={requestNewOTP}
           >
             Send new code
           </Button>
@@ -92,6 +185,22 @@ export default function UserLoginComponent() {
       <div className="mt-8 text-center">
         <p className="text-xs text-gray-500">v.0.01a</p>
       </div>
+
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Invalid Email</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please enter a valid email address.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button onClick={() => setIsAlertOpen(false)}>
+              OK
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
