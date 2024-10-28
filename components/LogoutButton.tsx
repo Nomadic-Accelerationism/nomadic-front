@@ -8,7 +8,7 @@ export function LogoutButton() {
   const handleLogout = async () => {
     try {
       // Perform any API logout calls if needed
-      await api.logout();
+      //await api.logout();
       
       // Clear the user context
       logout();
