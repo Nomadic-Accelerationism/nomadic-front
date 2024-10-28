@@ -11,8 +11,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';  // Make sure this path matches your actual UserContext location
 
 export default function MenuUserHeaderComponent() {
+  const router = useRouter();
+  const { logout } = useUser();
+  
   const menuItems = [
     "Home",
     "My Proofs",
@@ -23,6 +28,11 @@ export default function MenuUserHeaderComponent() {
     "Pending Reviews",
     "About"
   ];
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
 
   return (
     <Sheet>
@@ -75,7 +85,11 @@ export default function MenuUserHeaderComponent() {
             <Button variant="ghost" className="w-full text-left justify-start">
               Switch to Hacker House Profile
             </Button>
-            <Button variant="ghost" className="w-full text-left justify-start">
+            <Button 
+              variant="ghost" 
+              className="w-full text-left justify-start"
+              onClick={handleLogout}
+            >
               Logout
             </Button>
             <p className="text-xs text-center mt-4">v.0.01a</p>
