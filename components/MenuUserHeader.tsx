@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button"
-import { MenuIcon, X } from 'lucide-react'
+import {  MenuIcon, X } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -13,20 +13,21 @@ import {
 } from "@/components/ui/sheet"
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';  // Make sure this path matches your actual UserContext location
+import Link from 'next/link';
 
 export default function MenuUserHeaderComponent() {
   const router = useRouter();
   const { logout } = useUser();
   
   const menuItems = [
-    "Home",
-    "My Proofs",
-    "Journeys",
-    "$NACC Tokens",
-    "Generate Single Use ID",
-    "Recommend a Nomad",
-    "Pending Reviews",
-    "About"
+    { name: "Home", url: "/home-user" },
+    { name: "My Proofs", url: "/proofs" },
+    { name: "Journeys", url: "/journeys" },
+    { name: "$NACC Tokens", url: "/tokens" },
+    { name: "Generate Single Use ID", url: "/generate-id" },
+    { name: "Recommend a Nomad", url: "/recommend" },
+    { name: "Pending Reviews", url: "/reviews" },
+    { name: "About", url: "/about" }
   ];
 
   const handleLogout = async () => {
@@ -71,13 +72,13 @@ export default function MenuUserHeaderComponent() {
           <div className="flex-grow overflow-y-auto px-4">
             <nav className="mt-8">
               {menuItems.map((item, index) => (
-                <a
+                <Link
                   key={index}
-                  href="#"
+                  href={item.url}
                   className="block px-4 py-2 text-lg font-semibold text-gray-800 hover:bg-white hover:bg-opacity-30 rounded-lg mb-2"
                 >
-                  {item}
-                </a>
+                  {item.name}
+                </Link>
               ))}
             </nav>
           </div>

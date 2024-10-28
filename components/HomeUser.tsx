@@ -12,6 +12,10 @@ export default function HomeUserComponent() {
     router.push('/user-proofs'); 
   }; 
 
+  const goToJourneys = () => {
+    router.push('/hacker-journeys'); 
+  };
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
       {/* Background gradient */}
@@ -38,6 +42,7 @@ export default function HomeUserComponent() {
         
         <Button 
           className="w-full max-w-[200px] bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          onClick={goToJourneys}
         >
           Journeys
         </Button>
