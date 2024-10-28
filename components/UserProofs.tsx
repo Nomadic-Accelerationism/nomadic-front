@@ -1,22 +1,46 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+"use client";
+
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Search } from 'lucide-react'
 
 import { ProofItem } from "@/interfaces/ProofItem"
-
-const proofItems: ProofItem[] = [
-  { name: "$APE Holder", icon: "/proofs/ape-holder.png", isActive: true },
-  { name: "Bored Ape Yatch Club NFT Holder", icon: "/proofs/bayc-nft.png", isActive: false },
-  { name: "ETHGlobal Attendee", icon: "/proofs/ethglobal-attendee.png", isActive: false },
-  { name: "I've met Patricio POAP", icon: "/proofs/poap-icon.png", isActive: true },
-  { name: "$NOUNS Holder", icon: "/proofs/nouns-icon.png", isActive: true },
-  { name: "Talent Protocol Passport", icon: "/proofs/talent-icon.png", isActive: true },
-  { name: "World ID Human Verification", icon: "/proofs/world-id-icon.png", isActive: true },
-];
+import { useUser } from '@/contexts/UserContext';
+import axios from 'axios';
 
 export default function UserProofsComponent() {
+  const userContext = useUser();
+  const { publicAddress } = userContext;
+  const didToken = userContext.didToken;
+  const [proofItems, setProofItems] = useState<ProofItem[]>([]);
+
+  useEffect(() => {
+    const fetchProofs = async () => {
+      try {
+        const data = await getUserProofs(publicAddress, didToken);
+        setProofItems(data);
+      } catch (error) {
+        console.error("Error fetching proofs:", error);
+      }
+    };
+
+    if (publicAddress && didToken) {
+      fetchProofs();
+    }
+  }, [publicAddress, didToken]);
+
+  const getUserProofs = async (publicAddress: string, didToken: string) => {
+    const response = await axios.post('/api/auth/get-proof-hacker-list', {
+      publicAddress,
+      didToken
+    });
+    console.log("response: ", response);
+    return response.data;
+  }
+
   return (
     <div className="max-w-sm mx-auto py-4 space-y-4 px-8">
       <h1 className="text-2xl font-bold text-center">My Proofs</h1>

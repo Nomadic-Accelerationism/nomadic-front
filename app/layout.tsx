@@ -14,19 +14,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.png" />
-      </head>
-      <body className={inter.className}>
-        <UserProvider>
+    <UserProvider>
+      <html lang="en">
+        <head>
+          <link rel="icon" href="/favicon.png" />
+        </head>
+        <body className={inter.className}>
           {children}
-        </UserProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </UserProvider>
   );
 }
