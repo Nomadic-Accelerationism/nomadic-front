@@ -10,36 +10,53 @@ interface UserMetadata {
 }
 
 interface UserContextType {
-  userMetadata: UserMetadata | null;
-  setUserMetadata: (metadata: UserMetadata | null) => void;
+  userMetadata: any;
+  setUserMetadata: (metadata: any) => void;
+  didToken: string;
+  setDidToken: (token: string) => void;
+  publicAddress: string;
+  setPublicAddress: (address: string) => void;
   isAuthenticated: boolean;
   logout: () => void;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType>({
+  userMetadata: null,
+  setUserMetadata: () => {},
+  didToken: '',
+  setDidToken: () => {},
+  publicAddress: '',
+  setPublicAddress: () => {},
+  isAuthenticated: false,
+  logout: () => {},
+});
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
-  
-  // Compute isAuthenticated based on userMetadata existence
+  const [userMetadata, setUserMetadata] = useState<any>(null);
+  const [didToken, setDidToken] = useState<string>('');
+  const [publicAddress, setPublicAddress] = useState<string>('');
+
   const isAuthenticated = Boolean(userMetadata);
 
-  // Logout function to clear user data
   const logout = useCallback(() => {
     setUserMetadata(null);
-    // You might want to add other cleanup here
-    // For example, clearing localStorage, cookies, etc.
+    setDidToken('');
+    setPublicAddress('');
+    // Add any other cleanup you need here
+    // For example: localStorage.clear();
   }, []);
 
   return (
-    <UserContext.Provider 
-      value={{ 
-        userMetadata, 
-        setUserMetadata, 
-        isAuthenticated,
-        logout 
-      }}
-    >
+    <UserContext.Provider value={{
+      userMetadata,
+      setUserMetadata,
+      didToken,
+      setDidToken,
+      publicAddress,
+      setPublicAddress,
+      isAuthenticated,
+      logout,
+    }}>
       {children}
     </UserContext.Provider>
   );

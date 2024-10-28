@@ -40,7 +40,7 @@ export default function UserLoginComponent() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const { setUserMetadata } = useUser();
+  const { setUserMetadata, setDidToken, setPublicAddress } = useUser();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,20 +64,20 @@ export default function UserLoginComponent() {
       const didToken = await magic.auth.loginWithEmailOTP({ email: email });
       const userInfo = await magic.user.getInfo();
       
-      console.log("email--->", email);
-      console.log("didToken--->", didToken);
-      console.log("UserInfo--->", userInfo);
-
+      setDidToken(didToken || '');
 
       const response = await axios.post('/api/auth/validate-otp', {
         email,
         didToken
       });
-
-      console.log("response--->", response.data);
       
       const metadata = response.data.metadata;
-      setUserMetadata(metadata); // Store metadata in global context
+      console.log('metadata: ', metadata);
+
+      setUserMetadata(metadata);
+      if (metadata.publicAddress && setPublicAddress) {
+        setPublicAddress(metadata.publicAddress);
+      }
 
       router.push('/home-user');
       
