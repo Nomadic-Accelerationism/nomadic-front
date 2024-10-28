@@ -9,8 +9,8 @@ export default function HackerJourneysComponent() {
 
   const router = useRouter();
 
-  const goToProofs = () => {
-    router.push('/user-proofs'); 
+  const goToCreateJourney = () => {
+    router.push('/create-journey'); 
   }; 
 
   return (
@@ -24,7 +24,7 @@ export default function HackerJourneysComponent() {
 
         <Button 
           className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
-          onClick={goToProofs}
+          onClick={goToCreateJourney}
         >
           Create Journey
         </Button>
