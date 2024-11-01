@@ -16,25 +16,36 @@ import {
 
 import { Search } from 'lucide-react'
 
-import { ProofItem } from "@/interfaces/ProofItem"
+import { getMetMessage, getNotMetMessage, ProofItem } from "@/interfaces/ProofItem"
 import { useUser } from '@/contexts/UserContext';
+import { notMetMessages, metMessages } from '@/interfaces/ProofItem';
 import axios from 'axios';
 
 export default function UserProofsComponent() {
 
   const userContext = useUser();
-  const { publicAddress } = userContext;
+  const { publicAddress, setPublicAddress, setDidToken } = userContext;
   const didToken = userContext.didToken;
   const [proofItems, setProofItems] = useState<ProofItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [proofItem, setProofItem] = useState<ProofItem>();
+  
 
-  console.log("publicAddress: ", publicAddress);
-  console.log("didToken: ", didToken);
 
   useEffect(() => {
+
+    const storedAddress = !publicAddress ? localStorage.getItem('publicAddress') || '' : publicAddress;
+    const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken;
+
+
+    if (!publicAddress || !didToken) {
+      setPublicAddress(storedAddress);
+      setDidToken(storedToken);
+    }
+  
     const fetchProofs = async () => {
       try {
-        const data = await getUserProofs(publicAddress, didToken);
+        const data = await getUserProofs(storedAddress, storedToken);
         setProofItems(data);
       } catch (error) {
         console.error("Error fetching proofs:", error);
@@ -47,8 +58,10 @@ export default function UserProofsComponent() {
     }
   }, [publicAddress, didToken]);
 
+
   const verifyProof = async (proof: ProofItem) => {
     console.log("verifyProof: ", proof);
+    setProofItem(proof);
     setOpen(true);
   }
 
@@ -90,7 +103,7 @@ export default function UserProofsComponent() {
       ))}
     </div>
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[325px] rounded-3xl mx-4">
+      <DialogContent className="max-w-[385px] rounded-3xl">
         <DialogHeader className="text-center space-y-4">
           <div className="flex justify-end">
             <Button
@@ -102,17 +115,17 @@ export default function UserProofsComponent() {
             </Button>
           </div>
           <DialogTitle className="text-2xl font-normal">
-            I&apos;ve met Patricio POAP
+            {proofItem?.title}
           </DialogTitle>
           <p className="text-lg text-center text-muted-foreground">
-            This POAP counts the number of times that you have met Patricio IRL
+            {proofItem?.description}
           </p>
         </DialogHeader>
         <div className="flex flex-col items-center space-y-4 py-4">
           <div className="relative">
             <div className="w-32 h-32 rounded-full border-4 border-purple-300 flex items-center justify-center">
               <img
-                src="/placeholder.svg?height=100&width=100"
+                src={`${proofItem?.icon}?height=100&width=100`}
                 alt="POAP Badge"
                 className="w-24 h-24 rounded-full"
               />
@@ -121,12 +134,16 @@ export default function UserProofsComponent() {
           <div className="px-6 py-2 rounded-full bg-muted">
             Not Generated
           </div>
-          <p className="text-lg text-center">
-            It seems that you have not met Patricio
-          </p>
-          <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full">
-            Generate
-          </Button>
+          {proofItem && (
+            <>
+              <p className="text-lg text-center">
+                { proofItem.isActive ? getMetMessage(proofItem.proof.toString()) : getNotMetMessage(proofItem.proof.toString())}
+              </p>
+              <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full">
+                Generate
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>    

@@ -40,11 +40,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     setUserMetadata(null);
-    setDidToken('');
-    setPublicAddress('');
+    storageDidToken('');
+    storagePublicAddress('');
     // Add any other cleanup you need here
     // For example: localStorage.clear();
   }, []);
+
+  const storagePublicAddress = (address: string) => {
+    localStorage.setItem('publicAddress', address);
+    setPublicAddress(address);
+  };
+
+  const storageDidToken = (token: string) => {
+    localStorage.setItem('didToken', token);
+    setDidToken(token);
+  };
 
   return (
     <UserContext.Provider value={{
