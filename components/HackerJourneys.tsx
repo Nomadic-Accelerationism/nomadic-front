@@ -10,7 +10,7 @@ export default function HackerJourneysComponent() {
   const router = useRouter();
 
   const goToCreateJourney = () => {
-    router.push('/create-journey'); 
+    router.push('/journey-create'); 
   }; 
 
   return (

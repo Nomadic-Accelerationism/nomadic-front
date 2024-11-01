@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, MapPinIcon } from 'lucide-react'
 import { format } from 'date-fns'
-
+import { useRouter } from 'next/navigation';
 const filters = [
   { id: 'bayc', icon: '/proofs/bayc-nft.png', color: 'bg-black' },
   { id: 'ape', icon: '/proofs/ape-holder.png', color: 'bg-blue-500' },
@@ -19,10 +19,11 @@ const filters = [
   { id: 'worldid', icon: '/proofs/world-id-icon.png', color: 'bg-red-500' },
 ]
 
-export default function CreateJourneyComponent() {
+export default function JourneyCreateComponent() {
   const [fromDate, setFromDate] = useState<Date>()
   const [toDate, setToDate] = useState<Date>()
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
+  const router = useRouter();
 
   const toggleFilter = (filterId: string) => {
     setSelectedFilters(prev => 
@@ -34,6 +35,7 @@ export default function CreateJourneyComponent() {
 
   const goToPreviewCreate = () => {
     console.log("goToPreviewCreate");
+    router.push('/journey-preview');
   }
 
   return (
@@ -114,16 +116,16 @@ export default function CreateJourneyComponent() {
 
         <div>
           <Label>Filters</Label>
-          <div className="grid grid-cols-4 gap-2 mt-2">
+          <div className="grid grid-cols-8 gap-2 mt-2">
             {filters.map((filter) => (
               <Button
                 key={filter.id}
                 variant="outline"
-                className={`p-2 aspect-square ${selectedFilters.includes(filter.id) ? 'ring-2 ring-orange-500' : ''}`}
+                className={`p-1 aspect-square ${selectedFilters.includes(filter.id) ? 'ring-2 ring-orange-500' : ''}`}
                 onClick={() => toggleFilter(filter.id)}
               >
                 <div className={`w-full h-full rounded-md ${filter.color} flex items-center justify-center`}>
-                  <img src={filter.icon} alt={filter.id} className="w-12 h-8" />
+                  <img src={filter.icon} alt={filter.id} className="w-14 h-8" />
                 </div>
               </Button>
             ))}

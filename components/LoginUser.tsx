@@ -19,6 +19,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from "lucide-react";
 
+
 // Move Magic initialization inside a function to ensure client-side only execution
 const createMagic = () => {
   return typeof window !== 'undefined' 
@@ -77,6 +78,8 @@ export default function UserLoginComponent() {
       setUserMetadata(metadata);
       if (metadata.publicAddress && setPublicAddress) {
         setPublicAddress(metadata.publicAddress);
+        localStorage.setItem('publicAddress',metadata.publicAddress);
+        localStorage.setItem('didToken', didToken || "");
       }
 
       router.push('/home-user');
