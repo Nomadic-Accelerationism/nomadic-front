@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     console.log("didToken--->", didToken);
 
     const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/validaOTP";
-    //const nomadicApiUrl = "http://localhost:3001/validaOTP";
+
 
     console.log("calling nomadic api--->", nomadicApiUrl);
 

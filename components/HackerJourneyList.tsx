@@ -1,10 +1,12 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { useUser } from '@/contexts/UserContext'
+import axios from "axios"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,57 +28,47 @@ interface HackerHouse {
   image: string
 }
 
-// Mock data (replace this with your JSON data)
-const hackerHouses: HackerHouse[] = [
-  {
-    id: 21,
-    name: "Bangkok Talent Protocol",
-    location: "Bangkok",
-    startDate: "2024-11-11",
-    endDate: "2024-11-29",
-    status: "Active",
-    rating: 7,
-    image: "/images/house-bangkok.png?height=250&width=400"
-  },
-  {
-    id: 1,
-    name: "Rome NOUNS",
-    location: "Rome",
-    startDate: "2024-12-01",
-    endDate: "2024-12-22",
-    status: "Upcoming",
-    rating: 5,
-    image: "/images/house-image-02.png?height=250&width=400"
-  },
-  {
-    id: 24,
-    name: "Barcelona APES",
-    location: "Barcelona",
-    startDate: "2024-03-15",
-    endDate: "2024-03-22",
-    status: "Finished",
-    rating: 8,
-    image: "/images/house-image-03.png?height=250&width=400"
-  },
-  {
-    id: 25,
-    name: "Barcelona APES",
-    location: "Barcelona",
-    startDate: "2024-07-08",
-    endDate: "2024-07-16",
-    status: "Cancelled",
-    rating: 0,
-    image: "/images/house-image-04.png?height=250&width=400"
-  }
-]
 
 export default function HackerJourneyListComponent() {
-  const [houses, setHouses] = useState(hackerHouses)
+  const [houses, setHouses] = useState<HackerHouse[]>([])
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { didToken, publicAddress,isAuthenticated } = useUser()
 
-  const sortHouses = (by: 'date' | 'status') => {
+  useEffect(() => {
+    if (!isAuthenticated) {
+      console.log("not authenticated")
+      return;
+    }
+    
+    const fetchHouses = async () => {
+       try {
+         const response = await axios.post('/api/auth/get-hacker-journeys', {
+           didToken,
+           publicAddress
+         });
+ 
+         if (response.data) {
+           const journeys = response.data.journeys || [];
+           setHouses(journeys);
+           if (journeys.length > 0) {
+             sortHouses(sortBy, journeys);
+           }
+         }
+       } catch (err) {
+         setError(err instanceof Error ? err.message : 'An error occurred');
+       } finally {
+         setIsLoading(false);
+       }
+     }
+ 
+     fetchHouses();
+   }, [didToken, publicAddress]);
+
+  const sortHouses = (by: 'date' | 'status', housesToSort = houses) => {
     setSortBy(by)
-    const sorted = [...houses].sort((a, b) => {
+    const sorted = [...housesToSort].sort((a, b) => {
       if (by === 'date') {
         return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
       } else {
@@ -85,6 +77,24 @@ export default function HackerJourneyListComponent() {
       }
     })
     setHouses(sorted)
+  }
+  
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 my-4 flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 my-4">
+        <div className="text-red-500 text-center">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   const getStatusColor = (status: HackerHouse['status']) => {
@@ -120,45 +130,47 @@ export default function HackerJourneyListComponent() {
         </DropdownMenu>
       </div>
 
-      <div className="space-y-4">
-        {houses.map((house) => (
-          // <Link href={`/house-detail/${house.id}`} key={house.id} className="block">
-          <Link href={`/house-detail/`} key={house.id} className="block">
-          <div className="rounded-lg overflow-hidden shadow-lg">
-              <div className="relative h-28">
-                <Image
-                  src={house.image}
-                  alt={house.name}
-                  layout="fill"
-                  objectFit="cover"
-                  style={{ zIndex: -1 }}
-                />
+      {houses.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No journeys found</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {houses.map((house) => (
+            <Link href={`/house-detail/`} key={house.id} className="block">
+              <div className="rounded-lg overflow-hidden shadow-lg">
+                <div className="relative h-28">
+                  <Image
+                    src={house.image}
+                    alt={house.name}
+                    layout="fill"
+                    objectFit="cover"
+                    style={{ zIndex: -1 }}
+                  />
 
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h2 className="text-white text-lg font-semibold">#{house.id} {house.name}</h2>
-                    <p className="text-white text-md">{new Date(house.startDate).toLocaleDateString()} - {new Date(house.endDate).toLocaleDateString()}</p>
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h2 className="text-white text-lg font-semibold">#{house.id} {house.name}</h2>
+                        <p className="text-white text-md">{new Date(house.startDate).toLocaleDateString()} - {new Date(house.endDate).toLocaleDateString()}</p>
+                      </div>
+                      <ChevronRight className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(house.status)}`}>
+                        {house.status}
+                      </span>
+                      <span className="bg-white text-black px-2 py-1 rounded-full text-xs font-semibold">
+                        {house.rating}/10
+                      </span>
+                    </div>
                   </div>
-                  <ChevronRight className="h-6 w-6 text-gray-400" />
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(house.status)}`}>
-                    {house.status}
-                  </span>
-                  <span className="bg-white text-black px-2 py-1 rounded-full text-xs font-semibold">
-                    {house.rating}/10
-                  </span>
                 </div>
               </div>
-
-
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
