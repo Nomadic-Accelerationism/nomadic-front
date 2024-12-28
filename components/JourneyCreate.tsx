@@ -9,33 +9,84 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, MapPinIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation';
+import { JourneyFormData,JourneyStatusEnum } from '@/interfaces/Journey';
+import { ProofNameEnum } from '@/interfaces/ProofItem';
+
 const filters = [
-  { id: 'bayc', icon: '/proofs/bayc-nft.png', color: 'bg-black' },
-  { id: 'ape', icon: '/proofs/ape-holder.png', color: 'bg-blue-500' },
-  { id: 'ethglobal', icon: '/proofs/ethglobal-attendee.png', color: 'bg-gray-700' },
-  { id: 'poap', icon: '/proofs/poap-icon.png', color: 'bg-blue-300' },
-  { id: 'nouns', icon: '/proofs/nouns-icon.png', color: 'bg-pink-300' },
-  { id: 'talent', icon: '/proofs/talent-icon.png', color: 'bg-yellow-500' },
-  { id: 'worldid', icon: '/proofs/world-id-icon.png', color: 'bg-red-500' },
+  { id: 'bayc', icon: '/proofs/bayc-nft.png', color: 'bg-black', proofEnum: ProofNameEnum.BAYC_NFT },
+  { id: 'ape', icon: '/proofs/ape-holder.png', color: 'bg-blue-500' , proofEnum : ProofNameEnum.APE_HOLDER },
+  { id: 'ethglobal', icon: '/proofs/ethglobal-attendee.png', color: 'bg-gray-700' , proofEnum:  ProofNameEnum.ETHGLOBAL_HACKER},
+  { id: 'poap', icon: '/proofs/poap-icon.png', color: 'bg-blue-300' , proofEnum: ProofNameEnum.PATRICIO_POAP},
+  { id: 'nouns', icon: '/proofs/nouns-icon.png', color: 'bg-pink-300', proofEnum: ProofNameEnum.NOUNS_NFT },
+  { id: 'talent', icon: '/proofs/talent-icon.png', color: 'bg-yellow-500' , proofEnum: ProofNameEnum.TALENT_PROTOCOL_PASSPORT},
+  { id: 'worldid', icon: '/proofs/world-id-icon.png', color: 'bg-red-500' , proofEnum: ProofNameEnum.WORLD_ID_POH},
 ]
 
 export default function JourneyCreateComponent() {
-  const [fromDate, setFromDate] = useState<Date>()
-  const [toDate, setToDate] = useState<Date>()
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
+  const [formData, setFormData] = useState<JourneyFormData>({
+    title: '',
+    location: '',
+    description: '',
+    guestCapacity: '',
+    budget: '',
+    startDate: undefined,
+    finishDate: undefined,
+    requiredProofs: [],
+    status: JourneyStatusEnum.ANOUNCED,
+    optionalQuestion: '',
+    photo: ''
+  })
+  
   const router = useRouter();
-
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }))
+  };
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData(prev => ({
+          ...prev,
+          photo: base64String
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
   const toggleFilter = (filterId: string) => {
-    setSelectedFilters(prev => 
-      prev.includes(filterId) 
-        ? prev.filter(id => id !== filterId)
-        : [...prev, filterId]
-    )
-  }
+    const filter = filters.find(f => f.id === filterId);
+    if (!filter) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      requiredProofs: prev.requiredProofs.includes(filter.proofEnum)
+        ? prev.requiredProofs.filter(proof => proof !== filter.proofEnum)
+        : [...prev.requiredProofs, filter.proofEnum]
+    }));
+  };
+    
 
   const goToPreviewCreate = () => {
-    console.log("goToPreviewCreate");
-    router.push('/journey-preview');
+    console.log("Form Data:",formData);
+    if (formData.photo) {
+      localStorage.setItem('journeyTempPhoto', formData.photo);
+    }
+    const serializedFormData = {
+      ...formData, 
+      photo: undefined,
+      startDate: formData.startDate?.toISOString(),
+      finishDate: formData.finishDate?.toISOString()
+    }
+    router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}`);
   }
 
   return (
@@ -44,15 +95,24 @@ export default function JourneyCreateComponent() {
       
       <div className="space-y-4 items-center justify-center">
         <div>
-          <Label htmlFor="journeyTitle">Journey Title</Label>
-          <Input id="journeyTitle" placeholder="Journey Title" />
+          <Label htmlFor="title">Journey Title</Label>
+          <Input 
+          id="title" 
+          value={formData.title}
+          onChange={handleInputChange}
+          placeholder="Journey Title" />
         </div>
 
         <div>
-          <Label htmlFor="where">Where</Label>
+          <Label htmlFor="location">Where</Label>
           <div className="relative">
             <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <Input id="where" placeholder="Where" className="pl-10" />
+            <Input 
+            id="location"
+            value={formData.location}
+            onChange={handleInputChange}
+            placeholder="Where" 
+            className="pl-10" />
           </div>
         </div>
 
@@ -63,11 +123,17 @@ export default function JourneyCreateComponent() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {fromDate ? format(fromDate, "PPP") : <span>Select a date</span>}
+                  {formData.startDate ? format(formData.startDate, "PPP") 
+                    : <span>Select a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={fromDate} onSelect={setFromDate} initialFocus />
+                <Calendar 
+                mode="single" 
+                selected={formData.startDate}
+                onSelect={(date) => setFormData(prev => ({ ...prev,
+                  startDate: date}))}
+                initialFocus />
               </PopoverContent>
             </Popover>
           </div>
@@ -77,11 +143,17 @@ export default function JourneyCreateComponent() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {toDate ? format(toDate, "PPP") : <span>Select a date</span>}
+                  {formData.finishDate ? format(formData.finishDate, "PPP") 
+                    : <span>Select a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={toDate} onSelect={setToDate} initialFocus />
+                <Calendar 
+                mode="single" 
+                selected={formData.finishDate}
+                onSelect={(date) => setFormData(prev => ({...prev,
+                finishDate: date}))}
+                initialFocus />
               </PopoverContent>
             </Popover>
           </div>
@@ -89,29 +161,56 @@ export default function JourneyCreateComponent() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="maxBudget">Max Budget per Nomad</Label>
-            <Input id="maxBudget" placeholder="USDC" />
+            <Label htmlFor="budget">Max Budget per Nomad</Label>
+            <Input
+            id="budget"
+            value = {formData.budget}
+            onChange={handleInputChange}
+            placeholder="USDC" />
           </div>
           <div>
-            <Label htmlFor="maxNomads">Share with max. of...</Label>
-            <Input id="maxNomads" placeholder="# Nomads" />
+            <Label htmlFor="guestCapacity">Share with max. of...</Label>
+            <Input 
+            id="guestCapacity"
+            value = {formData.guestCapacity}
+              onChange={handleInputChange}
+            placeholder="# Nomads" />
           </div>
         </div>
 
         <div>
           <Label htmlFor="description">Description</Label>
-          <Textarea id="description" placeholder="Description" className="h-24" />
+          <Textarea 
+          id="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          placeholder="Description" 
+          className="h-24" />
         </div>
 
         <div>
-          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+          <input
+            type="file"
+            id="photo-upload"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+          <Button 
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            onClick={() => document.getElementById('photo-upload')?.click()}
+          >
             Load photo
           </Button>
         </div>
 
         <div>
           <Label htmlFor="optionalQuestion">Optional questions</Label>
-          <Input id="optionalQuestion" placeholder="Example: What makes you the perfect candidate?" />
+          <Input 
+          id="optionalQuestion" 
+          value={formData.optionalQuestion}
+          onChange={handleInputChange}
+          placeholder="Example: What makes you the perfect candidate?" />
         </div>
 
         <div>
@@ -121,7 +220,7 @@ export default function JourneyCreateComponent() {
               <Button
                 key={filter.id}
                 variant="outline"
-                className={`p-1 aspect-square ${selectedFilters.includes(filter.id) ? 'ring-2 ring-orange-500' : ''}`}
+                className={`p-1 aspect-square ${formData.requiredProofs.includes(filter.proofEnum) ? 'ring-2 ring-orange-500' : ''}`}
                 onClick={() => toggleFilter(filter.id)}
               >
                 <div className={`w-full h-full rounded-md ${filter.color} flex items-center justify-center`}>

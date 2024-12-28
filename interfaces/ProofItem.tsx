@@ -1,4 +1,4 @@
-enum ProofNameEnum {
+export enum ProofNameEnum {
   APE_HOLDER,
   BAYC_NFT,
   ETHGLOBAL_HACKER,
