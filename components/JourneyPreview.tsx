@@ -5,6 +5,10 @@ import { MapPin } from 'lucide-react'
 import {JourneyPreviewProps} from '@/interfaces/Journey';
 import { format} from "date-fns"
 import { ProofNameEnum } from '@/interfaces/ProofItem';
+import {useUser} from '@/contexts/UserContext';
+import axios from "axios";
+import { useRouter } from 'next/navigation';
+import { JourneyStatusEnum } from '@/interfaces/Journey';
 
 export default function JourneyPreviewComponent({
   title,
@@ -25,7 +29,83 @@ export default function JourneyPreviewComponent({
   onEdit,
   onConfirm
 }: JourneyPreviewProps) {
+  const { didToken,publicAddress,isAuthenticated } = useUser();
+  const router = useRouter();
   
+  const compressImage = async (base64: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        
+        const maxWidth = 600;
+        const maxHeight = 400;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
+      };
+    });
+  };
+
+  const handleConfirm = async () => {
+    if (!isAuthenticated) {
+      console.log("not authenticated")
+      return;
+    }
+
+    try {
+      let compressedPhoto = photo;
+      if (photo && !photo.startsWith('/placeholder')) {
+        compressedPhoto = await compressImage(photo);
+      }
+      const journeyData = {
+        title,
+        location,
+        description,
+        guestCapacity: Number(guestCapacity),
+        budget: Number(budget),
+        status: JourneyStatusEnum.ANOUNCED,
+        requiredProofs: requiredProofs.map(proof => ProofNameEnum[proof]),
+        startDate,
+        finishDate: endDate, // cambiado de endDate
+        optionalQuestion,
+        photo: compressedPhoto
+      };
+  
+      const response = await axios.post('/api/auth/create-journey', {
+        didToken,
+        publicAddress,
+        journey: journeyData
+      });
+
+      if (response.data) {
+        console.log('Journey created:', response.data);
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error creating journey:', error);
+    }
+  };
+
   const getProofIcon = (proof: ProofNameEnum): string => {
     const proofIcons: Record<ProofNameEnum, string> = {
       [ProofNameEnum.BAYC_NFT]: 'bayc-nft.png',
@@ -58,7 +138,7 @@ export default function JourneyPreviewComponent({
     <div className="w-full max-w-md mx-auto bg-white p-6 rounded-lg">
       <h1 className="text-2xl font-bold text-center mb-2">Preview your Journey</h1>
       <h2 className="text-xl font-semibold text-center mb-4">{title}</h2>
-      
+
       <p className="text-sm mb-2">Your social media to be contacted:</p>
       <div className="flex space-x-2 mb-4">
         {socialMedia.map((social, index) => (
@@ -132,7 +212,7 @@ export default function JourneyPreviewComponent({
           Edit
         </Button>
         <Button 
-          onClick={onConfirm}
+          onClick={handleConfirm}
           className="w-[48%] bg-orange-500 hover:bg-orange-600 text-black"
         >
           Confirm
