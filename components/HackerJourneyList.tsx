@@ -15,22 +15,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-// Define the structure of a hacker house
-interface HackerHouse {
-  id: number
-  name: string
-  location: string
-  startDate: string
-  endDate: string
-  status: 'Active' | 'Upcoming' | 'Finished' | 'Cancelled'
-  rating: number
-  image: string
-}
+import { Journey, JourneyStatusEnum } from '@/interfaces/Journey'
 
 
 export default function HackerJourneyListComponent() {
-  const [houses, setHouses] = useState<HackerHouse[]>([])
+  const [journeys, setJourneys] = useState<Journey[]>([])
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,10 +39,11 @@ export default function HackerJourneyListComponent() {
          });
  
          if (response.data) {
-           const journeys = response.data.journeys || [];
-           setHouses(journeys);
-           if (journeys.length > 0) {
-             sortHouses(sortBy, journeys);
+           const fetchedJourneys = response.data.journeys || [];
+           console.log(fetchedJourneys);
+           setJourneys(fetchedJourneys);
+           if (fetchedJourneys.length > 0) {
+             sortJourneys(sortBy, fetchedJourneys);
            }
          }
        } catch (err) {
@@ -66,17 +56,24 @@ export default function HackerJourneyListComponent() {
      fetchHouses();
    }, [didToken, publicAddress]);
 
-  const sortHouses = (by: 'date' | 'status', housesToSort = houses) => {
+  const sortJourneys = (by: 'date' | 'status', journeysToSort = journeys) => {
     setSortBy(by)
-    const sorted = [...housesToSort].sort((a, b) => {
+    const sorted = [...journeysToSort].sort((a, b) => {
       if (by === 'date') {
-        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0
+        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0
+        return dateA - dateB
       } else {
-        const statusOrder = ['Active', 'Upcoming', 'Finished', 'Cancelled']
+        const statusOrder = [
+          JourneyStatusEnum.CONFIRMED,
+          JourneyStatusEnum.PENDING,
+          JourneyStatusEnum.FINISHED,
+          JourneyStatusEnum.CANCELLED
+        ]
         return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
       }
     })
-    setHouses(sorted)
+    setJourneys(sorted)
   }
   
   if (isLoading) {
@@ -97,12 +94,12 @@ export default function HackerJourneyListComponent() {
     );
   }
 
-  const getStatusColor = (status: HackerHouse['status']) => {
+  const getStatusColor = (status: JourneyStatusEnum) => {
     switch (status) {
-      case 'Active': return 'bg-green-500'
-      case 'Upcoming': return 'bg-orange-500'
-      case 'Finished': return 'bg-gray-500'
-      case 'Cancelled': return 'bg-red-500'
+      case JourneyStatusEnum.CONFIRMED: return 'bg-green-500'
+      case JourneyStatusEnum.PENDING: return 'bg-orange-500'
+      case JourneyStatusEnum.FINISHED: return 'bg-gray-500'
+      case JourneyStatusEnum.CANCELLED: return 'bg-red-500'
       default: return 'bg-gray-500'
     }
   }
@@ -120,29 +117,29 @@ export default function HackerJourneyListComponent() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => sortHouses('date')}>
+            <DropdownMenuItem onClick={() => sortJourneys('date')}>
               Date {sortBy === 'date' && '✓'}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => sortHouses('status')}>
+            <DropdownMenuItem onClick={() => sortJourneys('status')}>
               Status {sortBy === 'status' && '✓'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {houses.length === 0 ? (
+      {journeys.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500">No journeys found</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {houses.map((house) => (
-            <Link href={`/house-detail/`} key={house.id} className="block">
+          {journeys.map((journey) => (
+            <Link href={`/journey/${journey.id}`} key={journey.id} className="block">
               <div className="rounded-lg overflow-hidden shadow-lg">
                 <div className="relative h-28">
                   <Image
-                    src={house.image}
-                    alt={house.name}
+                  src={journey.photo || '/placeholder.svg'}
+                  alt={journey.title}
                     layout="fill"
                     objectFit="cover"
                     style={{ zIndex: -1 }}
@@ -151,17 +148,19 @@ export default function HackerJourneyListComponent() {
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h2 className="text-white text-lg font-semibold">#{house.id} {house.name}</h2>
-                        <p className="text-white text-md">{new Date(house.startDate).toLocaleDateString()} - {new Date(house.endDate).toLocaleDateString()}</p>
-                      </div>
+                        <h2 className="text-white text-lg font-semibold"> {journey.title}</h2>
+                        <p className="text-white text-md">
+                          {journey.startDate ? new Date(journey.startDate).toLocaleDateString() : 'TBA'} - 
+                          {journey.endDate ? new Date(journey.endDate).toLocaleDateString() : 'TBA'}
+                        </p>                      </div>
                       <ChevronRight className="h-6 w-6 text-gray-400" />
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(house.status)}`}>
-                        {house.status}
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(journey.status)}`}>
+                        {journey.status}
                       </span>
                       <span className="bg-white text-black px-2 py-1 rounded-full text-xs font-semibold">
-                        {house.rating}/10
+                        {journey.budget}$
                       </span>
                     </div>
                   </div>

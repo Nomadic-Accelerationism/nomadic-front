@@ -32,7 +32,7 @@ export default function JourneyCreateComponent() {
     startDate: undefined,
     finishDate: undefined,
     requiredProofs: [],
-    status: JourneyStatusEnum.ANOUNCED,
+    status: JourneyStatusEnum.PENDING,
     optionalQuestion: '',
     photo: ''
   })

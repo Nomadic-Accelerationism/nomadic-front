@@ -83,14 +83,13 @@ export default function JourneyPreviewComponent({
         description,
         guestCapacity: Number(guestCapacity),
         budget: Number(budget),
-        status: JourneyStatusEnum.ANOUNCED,
+        status: JourneyStatusEnum.PENDING,
         requiredProofs: requiredProofs.map(proof => ProofNameEnum[proof]),
         startDate,
-        finishDate: endDate, // cambiado de endDate
+        finishDate: endDate,
         optionalQuestion,
         photo: compressedPhoto
       };
-  
       const response = await axios.post('/api/auth/create-journey', {
         didToken,
         publicAddress,
@@ -98,8 +97,8 @@ export default function JourneyPreviewComponent({
       });
 
       if (response.data) {
-        console.log('Journey created:', response.data);
-        router.push('/dashboard');
+        localStorage.setItem('createdJourney', JSON.stringify(journeyData))
+        router.push('/journey-success');
       }
     } catch (error) {
       console.error('Error creating journey:', error);

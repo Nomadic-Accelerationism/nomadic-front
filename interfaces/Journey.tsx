@@ -1,13 +1,12 @@
  import { ProofNameEnum } from "./ProofItem"
 
 
-export enum JourneyStatusEnum{ 
-  ANOUNCED = 'ANOUNCED',
-  OPEN = 'OPEN',
-  ONGOING = 'ONGOING',
-  FINISHED = 'FINISHED',
-  CANCELED = 'CANCELED'
-}
+ export enum JourneyStatusEnum { 
+   PENDING = 'PENDING',
+   CONFIRMED = 'CONFIRMED',
+   FINISHED = 'FINISHED',
+   CANCELLED = 'CANCELLED'
+ }
 
 export interface Journey { 
   id?: string
