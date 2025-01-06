@@ -134,7 +134,15 @@ export default function HackerJourneyListComponent() {
       ) : (
         <div className="space-y-4">
           {journeys.map((journey) => (
-            <Link href={`/journey/${journey.id}`} key={journey.id} className="block">
+            <Link 
+              href={
+                journey.status === JourneyStatusEnum.PENDING 
+                  ? `/journey-success?status=pending&id=${journey.id}&title=${encodeURIComponent(journey.title)}&photo=${encodeURIComponent(journey.photo || '')}`
+                  : `/journey/${journey.id}`
+              } 
+              key={journey.id} 
+              className="block"
+            >
               <div className="rounded-lg overflow-hidden shadow-lg">
                 <div className="relative h-28">
                   <Image
