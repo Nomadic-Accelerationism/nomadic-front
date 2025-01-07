@@ -30,14 +30,14 @@ export default function HackerJourneyListComponent() {
       console.log("not authenticated")
       return;
     }
-    
+
     const fetchHouses = async () => {
        try {
          const response = await axios.post('/api/auth/get-hacker-journeys', {
            didToken,
            publicAddress
          });
- 
+
          if (response.data) {
            const fetchedJourneys = response.data.journeys || [];
            console.log(fetchedJourneys);
@@ -52,7 +52,7 @@ export default function HackerJourneyListComponent() {
          setIsLoading(false);
        }
      }
- 
+
      fetchHouses();
    }, [didToken, publicAddress]);
 
@@ -75,7 +75,7 @@ export default function HackerJourneyListComponent() {
     })
     setJourneys(sorted)
   }
-  
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 my-4 flex justify-center items-center h-64">
@@ -133,21 +133,18 @@ export default function HackerJourneyListComponent() {
         </div>
       ) : (
         <div className="space-y-4">
-          {journeys.map((journey) => (
-            <Link 
-              href={
-                journey.status === JourneyStatusEnum.PENDING 
-                  ? `/journey-success?status=pending&id=${journey.id}&title=${encodeURIComponent(journey.title)}&photo=${encodeURIComponent(journey.photo || '')}`
-                  : `/journey/${journey.id}`
-              } 
-              key={journey.id} 
-              className="block"
-            >
-              <div className="rounded-lg overflow-hidden shadow-lg">
+          {journeys.map((journey) => {
+            const isClickable = journey.status !== JourneyStatusEnum.CANCELLED && 
+                              journey.status !== JourneyStatusEnum.FINISHED;
+
+            const JourneyContent = (
+              <div className={`rounded-lg overflow-hidden shadow-lg ${
+                !isClickable ? 'opacity-75 cursor-not-allowed' : ''
+              }`}>
                 <div className="relative h-28">
                   <Image
-                  src={journey.photo || '/placeholder.svg'}
-                  alt={journey.title}
+                    src={journey.photo || '/placeholder.svg'}
+                    alt={journey.title}
                     layout="fill"
                     objectFit="cover"
                     style={{ zIndex: -1 }}
@@ -156,12 +153,13 @@ export default function HackerJourneyListComponent() {
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h2 className="text-white text-lg font-semibold"> {journey.title}</h2>
+                        <h2 className="text-white text-lg font-semibold">{journey.title}</h2>
                         <p className="text-white text-md">
                           {journey.startDate ? new Date(journey.startDate).toLocaleDateString() : 'TBA'} - 
                           {journey.endDate ? new Date(journey.endDate).toLocaleDateString() : 'TBA'}
-                        </p>                      </div>
-                      <ChevronRight className="h-6 w-6 text-gray-400" />
+                        </p>
+                      </div>
+                      {isClickable && <ChevronRight className="h-6 w-6 text-gray-400" />}
                     </div>
                     <div className="flex justify-between items-center">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(journey.status)}`}>
@@ -174,8 +172,26 @@ export default function HackerJourneyListComponent() {
                   </div>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+
+            return isClickable ? (
+              <Link 
+                href={
+                  journey.status === JourneyStatusEnum.PENDING 
+                    ? `/journey-success?status=pending&id=${journey.id}&title=${encodeURIComponent(journey.title)}&photo=${encodeURIComponent(journey.photo || '')}`
+                    : `/journey/${journey.id}`
+                } 
+                key={journey.id} 
+                className="block"
+              >
+                {JourneyContent}
+              </Link>
+            ) : (
+              <div key={journey.id}>
+                {JourneyContent}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

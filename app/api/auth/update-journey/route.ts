@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { journeyId, didToken } = await request.json();
+    const { journeyId, status, didToken } = await request.json();
 
     if (!didToken) {
       return NextResponse.json(
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/delete-journey";
+    const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/update-journey-status";
 
     const response = await fetch(nomadicApiUrl, {
       method: 'POST',
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         'Authorization': `Bearer ${didToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ journey: journeyId }),
+      body: JSON.stringify({ journeyId, status }),
     });
 
     const data = await response.json();
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.error || 'Failed to delete journey' },
+        { error: data.error || 'Failed to update journey status' },
         { status: response.status }
       );
     }
