@@ -23,7 +23,7 @@ export default function MenuUserHeaderComponent() {
     { name: "Home", url: "/home-user" },
     { name: "My Proofs", url: "/user-proofs" },
     { name: "Journeys", url: "/hacker-journeys" },
-    { name: "$NACC Tokens", url: "/tokens" },
+    { name: "$NACC Tokens", url: "/nacc-tokens" },
     { name: "Generate Single Use ID", url: "/generate-id" },
     { name: "Recommend a Nomad", url: "/recommend" },
     { name: "Pending Reviews", url: "/reviews" },
