@@ -21,8 +21,8 @@ export default function MenuUserHeaderComponent() {
   
   const menuItems = [
     { name: "Home", url: "/home-user" },
-    { name: "My Proofs", url: "/proofs" },
-    { name: "Journeys", url: "/journeys" },
+    { name: "My Proofs", url: "/user-proofs" },
+    { name: "Journeys", url: "/hacker-journeys" },
     { name: "$NACC Tokens", url: "/tokens" },
     { name: "Generate Single Use ID", url: "/generate-id" },
     { name: "Recommend a Nomad", url: "/recommend" },
@@ -70,30 +70,49 @@ export default function MenuUserHeaderComponent() {
             </SheetTitle>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto px-4">
-            <nav className="mt-8">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={index}
-                  href={item.url}
-                  className="block px-4 py-2 text-lg font-semibold text-gray-800 hover:bg-white hover:bg-opacity-30 rounded-lg mb-2"
+
+            <nav className="flex flex-1 flex-col gap-2 mt-4">
+              {menuItems.map((item) => (
+                <Button
+                  key={item.name}
+                  asChild
+                  variant="secondary"
+                  className="h-14 justify-start rounded-2xl bg-gray-100 text-lg font-normal text-black hover:bg-white/90 border border-black"
                 >
-                  {item.name}
-                </Link>
+                  <Link href={item.url}>{item.name}</Link>
+                </Button>
               ))}
             </nav>
           </div>
-          <div className="mt-auto p-4 space-y-4 border-t">
-            <Button variant="ghost" className="w-full text-left justify-start">
-              Switch to Hacker House Profile
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full text-left justify-start"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-            <p className="text-xs text-center mt-4">v.0.01a</p>
+
+          <div className="mt-auto p-4 space-y-1">
+
+            <div className="flex flex-col">
+              <div className="w-1/2 border-t border-black mb-2"></div>
+              <Button variant="ghost" className="w-full text-left justify-start pl-0">
+                Switch to Hacker House Profile
+              </Button>
+            </div>
+            
+            <div className="flex flex-col">
+              <div className="w-1/2 border-t border-black mb-2"></div>
+              <Button variant="ghost" className="w-full text-left justify-start pl-0">
+                Bug Report
+              </Button>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="w-1/2 border-t border-black mb-2"></div>
+              <Button 
+                variant="ghost" 
+                className="w-full text-left justify-start pl-0"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </div>
+
+            <p className="text-xs text-center mt-4 pt-4">v.0.01a</p>
           </div>
         </div>
       </SheetContent>
