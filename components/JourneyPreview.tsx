@@ -77,7 +77,13 @@ export default function JourneyPreviewComponent({
       if (photo && !photo.startsWith('/placeholder')) {
         compressedPhoto = await compressImage(photo);
       }
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const formDataParam = urlParams.get('formData');
+      const parsedFormData = formDataParam ? JSON.parse(formDataParam) : {};
+      
       const journeyData = {
+         id: parsedFormData.id,
         title,
         location,
         description,
@@ -88,20 +94,25 @@ export default function JourneyPreviewComponent({
         startDate,
         finishDate: endDate,
         optionalQuestion,
-        photo: compressedPhoto
+        photo: compressedPhoto,
+        creatorAddress: publicAddress
+        
       };
-      const response = await axios.post('/api/auth/create-journey', {
+      const isEdit = new URLSearchParams(window.location.search).get('isEdit') === 'true';
+      const endpoint = isEdit ? '/api/auth/update-journey-edit' : '/api/auth/create-journey';
+  
+      const response = await axios.post(endpoint, {
         didToken,
         publicAddress,
         journey: journeyData
       });
-
+  
       if (response.data) {
         localStorage.setItem('createdJourney', JSON.stringify(journeyData))
         router.push('/journey-success');
       }
     } catch (error) {
-      console.error('Error creating journey:', error);
+      console.error('Error with journey:', error);
     }
   };
 

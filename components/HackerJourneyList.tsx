@@ -18,18 +18,20 @@ import {
 import { Journey, JourneyStatusEnum } from '@/interfaces/Journey'
 
 
+
 export default function HackerJourneyListComponent() {
   const [journeys, setJourneys] = useState<Journey[]>([])
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { didToken, publicAddress,isAuthenticated } = useUser()
+  const { didToken, publicAddress,isAuthenticated,userMetadata } = useUser()
 
   useEffect(() => {
     if (!isAuthenticated) {
       console.log("not authenticated")
       return;
     }
+
 
     const fetchHouses = async () => {
        try {
@@ -177,9 +179,14 @@ export default function HackerJourneyListComponent() {
             return isClickable ? (
               <Link 
                 href={
-                  journey.status === JourneyStatusEnum.PENDING 
-                    ? `/journey-success?status=pending&id=${journey.id}&title=${encodeURIComponent(journey.title)}&photo=${encodeURIComponent(journey.photo || '')}`
-                    : `/journey/${journey.id}`
+                  journey.status === JourneyStatusEnum.CONFIRMED 
+                    ? {
+                        pathname: '/house-detail',
+                        query: { journey: JSON.stringify(journey) }
+                      }
+                    : journey.status === JourneyStatusEnum.PENDING 
+                      ? `/journey-success?status=pending&id=${journey.id}&title=${encodeURIComponent(journey.title)}&photo=${encodeURIComponent(journey.photo || '')}`
+                      : `/journey/${journey.id}`
                 } 
                 key={journey.id} 
                 className="block"

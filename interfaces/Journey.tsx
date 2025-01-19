@@ -1,15 +1,14 @@
- import { ProofNameEnum } from "./ProofItem"
+import { ProofNameEnum } from "./ProofItem";
 
+export enum JourneyStatusEnum {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  FINISHED = "FINISHED",
+  CANCELLED = "CANCELLED",
+}
 
- export enum JourneyStatusEnum { 
-   PENDING = 'PENDING',
-   CONFIRMED = 'CONFIRMED',
-   FINISHED = 'FINISHED',
-   CANCELLED = 'CANCELLED'
- }
-
-export interface Journey { 
-  id?: string
+export interface Journey {
+  id?: string;
   title: string;
   location: string;
   description: string;
@@ -22,9 +21,11 @@ export interface Journey {
   endDate: Date | undefined;
   optionalQuestion?: string;
   photo?: string;
+  creatorAddress: string;
 }
 
 export interface JourneyFormData {
+  id?: string;
   title: string;
   location: string;
   description: string;
@@ -33,12 +34,14 @@ export interface JourneyFormData {
   startDate: Date | undefined;
   finishDate: Date | undefined;
   requiredProofs: ProofNameEnum[];
-  status : JourneyStatusEnum;
+  status: JourneyStatusEnum;
   optionalQuestion: string;
   photo?: string;
+  creatorAddress: string;
 }
 
 export interface JourneyPreviewProps {
+    id?: string; 
   title: string;
   location: string;
   startDate: Date | undefined;
@@ -51,7 +54,7 @@ export interface JourneyPreviewProps {
   description: string;
   onEdit: () => void;
   onConfirm: () => void;
-  socialMedia?: { platform: string;  username:string }
+  socialMedia?: { platform: string; username: string };
 }
 
 export const journeyFormToModel = (formData: JourneyFormData): Journey => ({
@@ -65,5 +68,6 @@ export const journeyFormToModel = (formData: JourneyFormData): Journey => ({
   startDate: formData.startDate,
   endDate: formData.finishDate,
   optionalQuestion: formData.optionalQuestion,
-  photo: formData.photo
+  photo: formData.photo,
+  creatorAddress: formData.creatorAddress,
 });
