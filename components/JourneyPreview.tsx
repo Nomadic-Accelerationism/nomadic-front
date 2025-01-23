@@ -2,74 +2,153 @@
 
 import { Button } from "@/components/ui/button"
 import { MapPin } from 'lucide-react'
-
-interface JourneyPreviewProps {
-  title: string
-  socialMedia: { platform: string; username: string }[]
-  location: string
-  startDate: string
-  endDate: string
-  budget: number
-  maxNomads: number
-  requiredProofs: string[]
-  question: string
-  photo: string
-  description: string
-  onEdit: () => void
-  onConfirm: () => void
-}
+import {JourneyPreviewProps} from '@/interfaces/Journey';
+import { format} from "date-fns"
+import { ProofNameEnum } from '@/interfaces/ProofItem';
+import {useUser} from '@/contexts/UserContext';
+import axios from "axios";
+import { useRouter } from 'next/navigation';
+import { JourneyStatusEnum } from '@/interfaces/Journey';
 
 export default function JourneyPreviewComponent({
-  title = "Bangkok Beer House",
+  title,
+  //this need to be changed, where do we get the social media? input?
   socialMedia = [
     { platform: 'telegram', username: '@Llamame' },
     { platform: 'twitter', username: '@Llamame' }
   ],
-  location = "Bangkok conference center area,48966, Thailand...",
-  startDate = "11 Nov 24",
-  endDate = "17 Nov 24",
-  budget = 400,
-  maxNomads = 5,
-  requiredProofs = ['ethereum', 'polygon', 'ens', 'lens', 'gitcoin', 'bored-ape', 'proof-of-humanity', 'optimism', 'female'],
-  question = "What makes you the perfect candidate?",
-  photo = "/placeholder.svg?height=300&width=400",
-  description = "Lorem ipsum dolor sit amet consectetur...",
-  onEdit = () => {},
-  onConfirm = () => {}
+  location,
+  startDate,
+  endDate,
+  budget,
+  guestCapacity,
+  requiredProofs,
+  optionalQuestion,
+  photo,
+  description,
+  onEdit,
+  onConfirm
 }: JourneyPreviewProps) {
-  const getProofIcon = (proof: string): string => {
-    const proofIcons: Record<string, string> = {
-      'bayc': 'bayc-nft.png',
-      'ape': 'ape-holder.png',
-      'ethglobal': 'ethglobal-attendee.png',
-      'poap': 'poap-icon.png',
-      'nouns': 'nouns-icon.png',
-      'talent': 'talent-icon.png',
-      'worldid': 'world-id-icon.png',
-      // Add more mappings as needed
-    }
-    return proofIcons[proof] || 'default-icon.png'
-  }
+  const { didToken,publicAddress,isAuthenticated } = useUser();
+  const router = useRouter();
+  
+  const compressImage = async (base64: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        
+        const maxWidth = 600;
+        const maxHeight = 400;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
+      };
+    });
+  };
 
-  const getProofColor = (proof: string): string => {
-    const proofColors: Record<string, string> = {
-      'bayc': 'bg-black',
-      'ape': 'bg-blue-500',
-      'ethglobal': 'bg-gray-700',
-      'poap': 'bg-blue-300',
-      'nouns': 'bg-pink-300',
-      'talent': 'bg-yellow-500',
-      'worldid': 'bg-red-500',
-      // Add more mappings as needed
+  const handleConfirm = async () => {
+    if (!isAuthenticated) {
+      console.log("not authenticated")
+      return;
     }
-    return proofColors[proof] || 'bg-gray-200'
-  }
+
+    try {
+      let compressedPhoto = photo;
+      if (photo && !photo.startsWith('/placeholder')) {
+        compressedPhoto = await compressImage(photo);
+      }
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const formDataParam = urlParams.get('formData');
+      const parsedFormData = formDataParam ? JSON.parse(formDataParam) : {};
+      
+      const journeyData = {
+         id: parsedFormData.id,
+        title,
+        location,
+        description,
+        guestCapacity: Number(guestCapacity),
+        budget: Number(budget),
+        status: JourneyStatusEnum.PENDING,
+        requiredProofs: requiredProofs.map(proof => ProofNameEnum[proof]),
+        startDate,
+        finishDate: endDate,
+        optionalQuestion,
+        photo: compressedPhoto,
+        creatorAddress: publicAddress
+        
+      };
+      const isEdit = new URLSearchParams(window.location.search).get('isEdit') === 'true';
+      const endpoint = isEdit ? '/api/auth/update-journey-edit' : '/api/auth/create-journey';
+  
+      const response = await axios.post(endpoint, {
+        didToken,
+        publicAddress,
+        journey: journeyData
+      });
+  
+      if (response.data) {
+        localStorage.setItem('createdJourney', JSON.stringify(journeyData))
+        router.push('/journey-success');
+      }
+    } catch (error) {
+      console.error('Error with journey:', error);
+    }
+  };
+
+  const getProofIcon = (proof: ProofNameEnum): string => {
+    const proofIcons: Record<ProofNameEnum, string> = {
+      [ProofNameEnum.BAYC_NFT]: 'bayc-nft.png',
+      [ProofNameEnum.APE_HOLDER]: 'ape-holder.png',
+      [ProofNameEnum.ETHGLOBAL_HACKER]: 'ethglobal-attendee.png',
+      [ProofNameEnum.PATRICIO_POAP]: 'poap-icon.png',
+      [ProofNameEnum.NOUNS_NFT]: 'nouns-icon.png',
+      [ProofNameEnum.TALENT_PROTOCOL_PASSPORT]: 'talent-icon.png',
+      [ProofNameEnum.WORLD_ID_POH]: 'world-id-icon.png',
+      [ProofNameEnum.ETHGLOBAL_VOLUNTEER]: 'ethglobal-attendee.png', 
+    };
+    return `/proofs/${proofIcons[proof] || 'default-icon.png'}`;
+  };
+
+  const getProofColor = (proof: ProofNameEnum): string => {
+    const proofColors: Record<ProofNameEnum, string> = {
+      [ProofNameEnum.BAYC_NFT]: 'bg-black',
+      [ProofNameEnum.APE_HOLDER]: 'bg-blue-500',
+      [ProofNameEnum.ETHGLOBAL_HACKER]: 'bg-gray-700',
+      [ProofNameEnum.PATRICIO_POAP]: 'bg-blue-300',
+      [ProofNameEnum.NOUNS_NFT]: 'bg-pink-300',
+      [ProofNameEnum.TALENT_PROTOCOL_PASSPORT]: 'bg-yellow-500',
+      [ProofNameEnum.WORLD_ID_POH]: 'bg-red-500',
+      [ProofNameEnum.ETHGLOBAL_VOLUNTEER]: 'bg-gray-700', 
+    };
+    return proofColors[proof] || 'bg-gray-200';
+  };
 
   return (
     <div className="w-full max-w-md mx-auto bg-white p-6 rounded-lg">
       <h1 className="text-2xl font-bold text-center mb-2">Preview your Journey</h1>
       <h2 className="text-xl font-semibold text-center mb-4">{title}</h2>
-      
+
       <p className="text-sm mb-2">Your social media to be contacted:</p>
       <div className="flex space-x-2 mb-4">
         {socialMedia.map((social, index) => (
@@ -95,10 +174,10 @@ export default function JourneyPreviewComponent({
       </div>
 
       <div className="space-y-1 mb-4">
-        <p className="text-sm text-orange-500">Journey first day: {startDate}</p>
-        <p className="text-sm text-orange-500">Journey last day: {endDate}</p>
+        <p className="text-sm text-orange-500">Journey first day: {startDate ? format(startDate, "PPP") : "Not Set"}</p>
+        <p className="text-sm text-orange-500">Journey last day: {endDate ? format(endDate, "PPP") : "Not Set"}</p>
         <p className="text-sm text-orange-500">Max Budget per Nomad: {budget} USDC</p>
-        <p className="text-sm text-orange-500">Max Nomads in the Journey: {maxNomads} Nomads</p>
+        <p className="text-sm text-orange-500">Max Nomads in the Journey: {guestCapacity} Nomads</p>
       </div>
 
       <div className="mb-4">
@@ -110,8 +189,8 @@ export default function JourneyPreviewComponent({
               className={`w-12 h-12 rounded-md flex items-center justify-center ${getProofColor(proof)}`}
             >
               <img 
-                src={`/proofs/${getProofIcon(proof)}`} 
-                alt={proof} 
+              src={getProofIcon(proof)} 
+              alt={String(proof)} 
                 className="w-12 h-12"
               />
             </div>
@@ -121,7 +200,7 @@ export default function JourneyPreviewComponent({
 
       <div className="mb-4">
         <h3 className="font-semibold mb-2">Question to be answered:</h3>
-        <p className="text-sm">{question}</p>
+        <p className="text-sm">{optionalQuestion}</p>
       </div>
 
       <div className="mb-4">
@@ -143,7 +222,7 @@ export default function JourneyPreviewComponent({
           Edit
         </Button>
         <Button 
-          onClick={onConfirm}
+          onClick={handleConfirm}
           className="w-[48%] bg-orange-500 hover:bg-orange-600 text-black"
         >
           Confirm

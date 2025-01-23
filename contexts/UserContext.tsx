@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback,useEffect } from 'react';
 
 // Define a type for the user metadata
 interface UserMetadata {
@@ -35,15 +35,30 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [userMetadata, setUserMetadata] = useState<any>(null);
   const [didToken, setDidToken] = useState<string>('');
   const [publicAddress, setPublicAddress] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  useEffect(() => {
+    const storedDidToken = localStorage.getItem('didToken') || '';
+    const storedPublicAddress = localStorage.getItem('publicAddress') || '';
+    const storedUserMetadata = localStorage.getItem('userMetadata');
+    
+    setDidToken(storedDidToken);
+    setPublicAddress(storedPublicAddress);
+    if (storedUserMetadata) {
+      setUserMetadata(JSON.parse(storedUserMetadata))
+    }
+    setIsInitialized(true);
+  }, []);
 
   const isAuthenticated = Boolean(userMetadata);
 
   const logout = useCallback(() => {
     setUserMetadata(null);
+    localStorage.removeItem('userMetadata');
+    localStorage.removeItem('didToken');
+    localStorage.removeItem('publicAddress');
     storageDidToken('');
     storagePublicAddress('');
-    // Add any other cleanup you need here
-    // For example: localStorage.clear();
   }, []);
 
   const storagePublicAddress = (address: string) => {
@@ -55,15 +70,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('didToken', token);
     setDidToken(token);
   };
+  
+  const setUserMetadataWithStorage = (metadata: any) => {
+    localStorage.setItem('userMetadata', JSON.stringify(metadata))
+    setUserMetadata(metadata);
+  }
 
   return (
     <UserContext.Provider value={{
       userMetadata,
-      setUserMetadata,
+      setUserMetadata : setUserMetadataWithStorage,
       didToken,
-      setDidToken,
+      setDidToken : storageDidToken,
       publicAddress,
-      setPublicAddress,
+      setPublicAddress : storagePublicAddress,
       isAuthenticated,
       logout,
     }}>
