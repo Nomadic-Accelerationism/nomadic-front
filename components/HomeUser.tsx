@@ -1,10 +1,15 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { useRouter } from 'next/navigation';
+import { ConfirmationCodeModal } from './modals/confirmation-code-modal';
+import { SuccessfulModal } from './modals/successful-modal';
 
 export default function HomeUserComponent() {
+
+  const [isOpen, setIsOpen] = useState(false)
+  const [isOpenSuccess, setIsOpenSuccess] = useState(false)
 
   const router = useRouter();
 
@@ -46,7 +51,28 @@ export default function HomeUserComponent() {
         >
           Journeys
         </Button>
+
+
+      <div>
+      <br />
+        <Button onClick={() => setIsOpen(true)} variant="outline" className="text-lg">
+          Confirmation Code
+        </Button>
+        <ConfirmationCodeModal open={isOpen} onOpenChange={setIsOpen} />
       </div>
+
+      <br />
+      <Button onClick={() => setIsOpenSuccess(true)} variant="outline" className="text-lg">
+        Show Success
+      </Button>
+
+      <SuccessfulModal open={isOpenSuccess} onOpenChange={setIsOpenSuccess} />
+
+      </div>
+
+
+      <div>
+    </div>      
 
       {/* Version number */}
       <div className="relative z-10 mb-4">
