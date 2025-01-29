@@ -26,6 +26,26 @@ export default function HackerJourneyListComponent() {
   const [error, setError] = useState<string | null>(null)
   const { didToken, publicAddress,isAuthenticated,userMetadata } = useUser()
 
+  const sortJourneys = (by: 'date' | 'status', journeysToSort = journeys) => {
+    setSortBy(by)
+    const sorted = [...journeysToSort].sort((a, b) => {
+      if (by === 'date') {
+        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0
+        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0
+        return dateA - dateB
+      } else {
+        const statusOrder = [
+          JourneyStatusEnum.CONFIRMED,
+          JourneyStatusEnum.PENDING,
+          JourneyStatusEnum.FINISHED,
+          JourneyStatusEnum.CANCELLED
+        ]
+        return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
+      }
+    })
+    setJourneys(sorted)
+  }
+
   useEffect(() => {
     if (!isAuthenticated) {
       console.log("not authenticated")
@@ -56,27 +76,7 @@ export default function HackerJourneyListComponent() {
      }
 
      fetchHouses();
-   }, [didToken, publicAddress]);
-
-  const sortJourneys = (by: 'date' | 'status', journeysToSort = journeys) => {
-    setSortBy(by)
-    const sorted = [...journeysToSort].sort((a, b) => {
-      if (by === 'date') {
-        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0
-        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0
-        return dateA - dateB
-      } else {
-        const statusOrder = [
-          JourneyStatusEnum.CONFIRMED,
-          JourneyStatusEnum.PENDING,
-          JourneyStatusEnum.FINISHED,
-          JourneyStatusEnum.CANCELLED
-        ]
-        return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
-      }
-    })
-    setJourneys(sorted)
-  }
+   }, [didToken, publicAddress, isAuthenticated, sortBy, sortJourneys]);
 
   if (isLoading) {
     return (

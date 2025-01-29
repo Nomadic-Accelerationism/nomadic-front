@@ -1,19 +1,12 @@
-"use client"
-import MenuUserHeaderComponent from "@/components/MenuUserHeader";
-import JourneyEditComponent from "@/components/JourneyEdit";
-import { useSearchParams } from 'next/navigation'
+import { Suspense } from "react";
+import JourneyEditClient from "./JourneyEditClient";
 
-export default function JourneyEditPage() {
-  const searchParams = useSearchParams()
-  const journeyParam = searchParams.get('journey')
-  const journey = journeyParam ? JSON.parse(journeyParam) : null
+export const dynamic = "force-dynamic";
 
-  if (!journey) return <div>Journey not found</div>
-
+export default function JourneyEdit() {
   return (
-    <>
-      <MenuUserHeaderComponent />
-      <JourneyEditComponent journey={journey} />
-    </>
-  )
+    <Suspense fallback={<div>Loading...</div>}>
+      <JourneyEditClient />
+    </Suspense>
+  );
 }

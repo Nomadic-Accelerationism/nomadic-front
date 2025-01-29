@@ -102,7 +102,6 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
       startDate: formData.startDate?.toISOString(),
       finishDate: formData.finishDate?.toISOString(),
       creatorAddress: publicAddress,
-      id: journey.id,
       isEdit: true 
     }
     router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}&isEdit=true`);

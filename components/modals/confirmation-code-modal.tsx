@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X } from "lucide-react"
-import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
 
 interface ConfirmationCodeModalProps {
   open: boolean
@@ -12,6 +11,10 @@ interface ConfirmationCodeModalProps {
 export function ConfirmationCodeModal({ open, onOpenChange }: ConfirmationCodeModalProps) {
   const [code, setCode] = React.useState<string[]>(Array(6).fill(""))
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
+
+  const setInputRef = React.useCallback((index: number) => (el: HTMLInputElement | null) => {
+    inputRefs.current[index] = el;
+  }, []);
 
   const handleInputChange = (index: number, value: string) => {
     if (value.length <= 1) {
@@ -66,7 +69,7 @@ export function ConfirmationCodeModal({ open, onOpenChange }: ConfirmationCodeMo
             {code.map((digit, index) => (
               <input
                 key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
+                ref={setInputRef(index)}
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -101,4 +104,3 @@ export function ConfirmationCodeModal({ open, onOpenChange }: ConfirmationCodeMo
     </Dialog>
   )
 }
-

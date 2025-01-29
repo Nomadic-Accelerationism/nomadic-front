@@ -41,7 +41,7 @@ export interface JourneyFormData {
 }
 
 export interface JourneyPreviewProps {
-    id?: string; 
+  id?: string;
   title: string;
   location: string;
   startDate: Date | undefined;
@@ -54,7 +54,7 @@ export interface JourneyPreviewProps {
   description: string;
   onEdit: () => void;
   onConfirm: () => void;
-  socialMedia?: { platform: string; username: string };
+  socialMedia?: { platform: string; username: string }[];
 }
 
 export const journeyFormToModel = (formData: JourneyFormData): Journey => ({
