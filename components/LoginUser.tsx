@@ -67,10 +67,16 @@ export default function UserLoginComponent() {
       
       setDidToken(didToken || '');
 
+      console.log('didToken: ', didToken);
+
+      console.log("calling validate-otp");
+
       const response = await axios.post('/api/auth/validate-otp', {
         email,
         didToken
       });
+
+      console.log('response: ', response);
       
       const metadata = response.data.metadata;
       console.log('metadata: ', metadata);
