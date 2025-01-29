@@ -1,12 +1,12 @@
-import Image from "next/image";
-import MenuUserHeaderComponent from "@/components/MenuUserHeader";
-import JourneySucessComponent from "@/components/journey-success/JourneySuccess";
+import { Suspense } from "react";
+import JourneySuccessClient from "./JourneySuccessClient";
 
-export default function HomeHouse() {
+export const dynamic = "force-dynamic";
+
+export default function JourneySuccess() {
   return (
-    <>
-      <MenuUserHeaderComponent />
-      <JourneySucessComponent />
-    </>
+    <Suspense fallback={<div>Loading...</div>}>
+      <JourneySuccessClient />
+    </Suspense>
   );
 }
