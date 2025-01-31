@@ -39,14 +39,14 @@ export default function HomeUserComponent() {
         <h1 className="text-2xl font-bold mb-12 text-center">Are you ready?</h1>
         
         <Button 
-          className="w-full max-w-[200px] mb-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          className="w-full max-w-[200px] mb-4 nomadic-button"
           onClick={goToProofs}
         >
           My Proofs
         </Button>
         
         <Button 
-          className="w-full max-w-[200px] bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          className="w-full max-w-[200px] nomadic-button"
           onClick={goToJourneys}
         >
           Journeys

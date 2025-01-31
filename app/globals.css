@@ -88,3 +88,7 @@
 html {
   font-family: var(--font-satoshi);
 }
+
+.nomadic-button {
+  @apply w-full max-w-[200px] mb-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl ring-1 ring-[#C03E00] ring-inset font-bold;
+}
