@@ -10,6 +10,9 @@ const config = {
 	],
   prefix: "",
   theme: {
+    fontFamily: {
+      satoshi: ['var(--font-satoshi)'],
+    },
     container: {
       center: true,
       padding: "2rem",
@@ -18,7 +21,11 @@ const config = {
       },
     },
     extend: {
-      colors: {
+        fontFamily: {
+          sans: ['Satoshi', 'sans-serif'], // This makes Satoshi the default font
+          satoshi: ['Satoshi', 'sans-serif'],
+        },
+        colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
