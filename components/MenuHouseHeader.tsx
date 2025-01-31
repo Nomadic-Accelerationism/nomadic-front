@@ -50,7 +50,7 @@ export default function MenuHouseHeaderComponent() {
           <SheetHeader className="p-4 flex justify-between items-center border-b">
             <SheetTitle className="flex items-center">
               <Image
-                src="/images/nomadic.png"
+                src="/images/nomadic.svg"
                 alt="Nomadic Logo"
                 width={40}
                 height={40}
