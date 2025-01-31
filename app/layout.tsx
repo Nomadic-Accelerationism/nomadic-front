@@ -29,7 +29,7 @@ export default function RootLayout({
         <head>
           <link rel="icon" href="/favicon.png" />
         </head>
-        <body className={`${satoshi.variable} ${inter.className}`}>
+        <body className={`${satoshi.variable} font-satoshi`}>
           {children}
         </body>
       </html>
