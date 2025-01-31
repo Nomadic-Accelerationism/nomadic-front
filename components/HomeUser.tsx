@@ -53,8 +53,8 @@ export default function HomeUserComponent() {
         </Button>
 
 
-      <div>
-      <br />
+      {/* <div>
+        <br />
         <Button onClick={() => setIsOpen(true)} variant="outline" className="text-lg">
           Confirmation Code
         </Button>
@@ -66,7 +66,7 @@ export default function HomeUserComponent() {
         Show Success
       </Button>
 
-      <SuccessfulModal open={isOpenSuccess} onOpenChange={setIsOpenSuccess} />
+      <SuccessfulModal open={isOpenSuccess} onOpenChange={setIsOpenSuccess} /> */}
 
       </div>
 

@@ -47,7 +47,7 @@ export default function LandingComponent() {
           }`}
         >
           <Image
-            src="/images/nomadic-logo.png"
+            src="/images/nomadic.webp"
             alt="Nomadic Logo"
             width={100}
             height={100}
