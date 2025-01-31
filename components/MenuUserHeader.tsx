@@ -40,7 +40,7 @@ export default function MenuUserHeaderComponent() {
       <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
         <div className="flex items-center">
           <Image
-            src="/images/nomadic.png"
+            src="/images/nomadic.svg"
             alt="Nomadic Logo"
             width={43}
             height={43}
@@ -60,7 +60,7 @@ export default function MenuUserHeaderComponent() {
           <SheetHeader className="p-4 flex justify-between items-center border-b">
             <SheetTitle className="flex items-center">
               <Image
-                src="/images/nomadic.png"
+                src="/images/nomadic.svg"
                 alt="Nomadic Logo"
                 width={40}
                 height={40}

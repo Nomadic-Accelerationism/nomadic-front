@@ -128,7 +128,7 @@ export default function UserLoginComponent() {
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center mt-36">
           <Image
-            src="/images/nomadic-logo.png"
+            src="/images/nomadic.webp"
             alt="Nomadic Logo"
             width={100}
             height={100}
