@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState,useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronRight, SlidersHorizontal } from 'lucide-react'
@@ -17,18 +17,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Journey, JourneyStatusEnum } from '@/interfaces/Journey'
 
-
-
 export default function HackerJourneyListComponent() {
   const [journeys, setJourneys] = useState<Journey[]>([])
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { didToken, publicAddress,isAuthenticated,userMetadata } = useUser()
+  const { didToken, publicAddress, isAuthenticated } = useUser()
 
-  const sortJourneys = (by: 'date' | 'status', journeysToSort = journeys) => {
-    setSortBy(by)
-    const sorted = [...journeysToSort].sort((a, b) => {
+  const sortJourneysByType = useCallback((by: 'date' | 'status', journeysToSort: Journey[]) => {
+    return [...journeysToSort].sort((a, b) => {
       if (by === 'date') {
         const dateA = a.startDate ? new Date(a.startDate).getTime() : 0
         const dateB = b.startDate ? new Date(b.startDate).getTime() : 0
@@ -42,41 +39,40 @@ export default function HackerJourneyListComponent() {
         ]
         return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
       }
-    })
-    setJourneys(sorted)
-  }
+    });
+  }, []);
+
+  const fetchJourneys = useCallback(async () => {
+    try {
+      const response = await axios.post('/api/auth/get-hacker-journeys', {
+        didToken,
+        publicAddress
+      });
+
+      if (response.data) {
+        const fetchedJourneys = response.data.journeys || [];
+        const sortedJourneys = sortJourneysByType(sortBy, fetchedJourneys);
+        setJourneys(sortedJourneys);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [didToken, publicAddress, sortBy, sortJourneysByType]);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log("not authenticated")
+      console.log("not authenticated");
       return;
     }
+    fetchJourneys();
+  }, [isAuthenticated, fetchJourneys]);
 
-
-    const fetchHouses = async () => {
-       try {
-         const response = await axios.post('/api/auth/get-hacker-journeys', {
-           didToken,
-           publicAddress
-         });
-
-         if (response.data) {
-           const fetchedJourneys = response.data.journeys || [];
-           console.log(fetchedJourneys);
-           setJourneys(fetchedJourneys);
-           if (fetchedJourneys.length > 0) {
-             sortJourneys(sortBy, fetchedJourneys);
-           }
-         }
-       } catch (err) {
-         setError(err instanceof Error ? err.message : 'An error occurred');
-       } finally {
-         setIsLoading(false);
-       }
-     }
-
-     fetchHouses();
-   }, [didToken, publicAddress, isAuthenticated, sortBy, sortJourneys]);
+  const handleSort = useCallback((by: 'date' | 'status') => {
+    setSortBy(by);
+    setJourneys(prev => sortJourneysByType(by, prev));
+  }, [sortJourneysByType]);
 
   if (isLoading) {
     return (
@@ -119,10 +115,10 @@ export default function HackerJourneyListComponent() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => sortJourneys('date')}>
+            <DropdownMenuItem onClick={() => handleSort('date')}>
               Date {sortBy === 'date' && '✓'}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => sortJourneys('status')}>
+            <DropdownMenuItem onClick={() => handleSort('status')}>
               Status {sortBy === 'status' && '✓'}
             </DropdownMenuItem>
           </DropdownMenuContent>

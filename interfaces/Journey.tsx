@@ -34,6 +34,7 @@ export interface JourneyFormData {
   startDate: Date | undefined;
   finishDate: Date | undefined;
   requiredProofs: ProofNameEnum[];
+  customProofs: ProofNameEnum[];
   status: JourneyStatusEnum;
   optionalQuestion: string;
   photo?: string;
@@ -49,6 +50,7 @@ export interface JourneyPreviewProps {
   budget: string;
   guestCapacity: string;
   requiredProofs: ProofNameEnum[];
+  customProofs?: ProofNameEnum[]; 
   optionalQuestion: string;
   photo?: string;
   description: string;
@@ -71,3 +73,8 @@ export const journeyFormToModel = (formData: JourneyFormData): Journey => ({
   photo: formData.photo,
   creatorAddress: formData.creatorAddress,
 });
+
+export interface FilterState {
+  clickCount: number;
+  lastClickTime: number;
+}

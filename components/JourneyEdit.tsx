@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,8 @@ import { Journey, JourneyFormData, JourneyStatusEnum } from '@/interfaces/Journe
 import { ProofNameEnum } from '@/interfaces/ProofItem';
 import { useUser } from '@/contexts/UserContext'
 import Image from 'next/image'
+import { useProofSelection } from '@/hooks/useProofSelection';
+import { ProofSelector } from '@/components/ProofSelector';
 
 const filters = [
   { id: 'bayc', icon: '/proofs/bayc-nft.png', color: 'bg-black', proofEnum: ProofNameEnum.BAYC_NFT },
@@ -30,6 +32,11 @@ interface JourneyEditProps {
 
 export default function JourneyEditComponent({ journey }: JourneyEditProps) {
   const { publicAddress } = useUser();
+  const { formData: proofData, handleProofClick, isProofRequired, isProofCustom } = useProofSelection({
+    initialRequiredProofs: journey.requiredProofs,
+    initialCustomProofs: journey.customProofs
+  });
+
   const [formData, setFormData] = useState<JourneyFormData>({
     id: journey.id,
     title: journey.title,
@@ -39,7 +46,8 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
     budget: journey.budget.toString(),
     startDate: journey.startDate ? new Date(journey.startDate) : undefined,
     finishDate: journey.endDate ? new Date(journey.endDate) : undefined, 
-    requiredProofs: journey.requiredProofs,
+    requiredProofs: proofData.requiredProofs,
+    customProofs: proofData.customProofs,
     status: journey.status,
     optionalQuestion: journey.optionalQuestion || '',
     photo: journey.photo || '',
@@ -47,6 +55,14 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
   });
 
   const router = useRouter();
+  
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      requiredProofs: proofData.requiredProofs,
+      customProofs: proofData.customProofs
+    }));
+  }, [proofData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -78,38 +94,29 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
     }));
   };
 
-  const toggleFilter = (filterId: string) => {
-    const filter = filters.find(f => f.id === filterId);
-    if (!filter) return;
-  
-    setFormData(prev => ({
-      ...prev,
-      requiredProofs: prev.requiredProofs.includes(filter.proofEnum)
-        ? prev.requiredProofs.filter(proof => proof !== filter.proofEnum)
-        : [...prev.requiredProofs, filter.proofEnum]
-    }));
-  };
-
   const goToPreviewEdit = () => {
-    if (formData.photo) {
-      localStorage.setItem('journeyTempPhoto', formData.photo);
+    if (typeof window !== 'undefined') {
+      if (formData.photo) {
+        localStorage.setItem('journeyTempPhoto', formData.photo);
+      }
+
+      const convertedProofs = formData.requiredProofs.map(proofEnum =>
+        ProofNameEnum[proofEnum] as string
+      );
+
+      const serializedFormData = {
+        ...formData,
+        id: journey.id,
+        photo: undefined,
+        startDate: formData.startDate?.toISOString(),
+        finishDate: formData.finishDate?.toISOString(),
+        creatorAddress: publicAddress,
+        requiredProofs: proofData.requiredProofs,
+        customProofs: proofData.customProofs,
+        isEdit: true
+      }
+      router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}&isEdit=true`);
     }
-    
-    const convertedProofs = formData.requiredProofs.map(proofEnum => 
-      ProofNameEnum[proofEnum] as string
-    );
-    
-    const serializedFormData = {
-      ...formData,
-      id: journey.id, 
-      photo: undefined,
-      startDate: formData.startDate?.toISOString(),
-      finishDate: formData.finishDate?.toISOString(),
-      creatorAddress: publicAddress,
-      requiredProofs: convertedProofs,
-      isEdit: true 
-    }
-    router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}&isEdit=true`);
   }
 
   return (
@@ -268,23 +275,12 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
 
         <div>
           <Label>Filters</Label>
-          <div className="grid grid-cols-8 gap-2 mt-2">
-            {filters.map((filter) => (
-              <Button
-                key={filter.id}
-                variant="outline"
-                className={`p-1 aspect-square ${formData.requiredProofs.includes(filter.proofEnum) ? 'ring-2 ring-orange-500' : ''}`}
-                onClick={() => toggleFilter(filter.id)}
-              >
-                <div className={`w-full h-full rounded-md ${filter.color} flex items-center justify-center`}>
-                  <Image src={filter.icon} alt={filter.id} width={56} height={32} className="w-14 h-8" />
-                </div>
-              </Button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Tap once to activate a Requested Proof. Tap twice to make it mandatory 🔒
-          </p>
+          <ProofSelector
+            filters={filters}
+            onProofClick={handleProofClick}
+            isProofRequired={isProofRequired}
+            isProofCustom={isProofCustom}
+          />
         </div>
 
         <div className="flex justify-between gap-4">
