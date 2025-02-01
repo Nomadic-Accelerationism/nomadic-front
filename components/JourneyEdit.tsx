@@ -81,7 +81,7 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
   const toggleFilter = (filterId: string) => {
     const filter = filters.find(f => f.id === filterId);
     if (!filter) return;
-
+  
     setFormData(prev => ({
       ...prev,
       requiredProofs: prev.requiredProofs.includes(filter.proofEnum)
@@ -95,6 +95,10 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
       localStorage.setItem('journeyTempPhoto', formData.photo);
     }
     
+    const convertedProofs = formData.requiredProofs.map(proofEnum => 
+      ProofNameEnum[proofEnum] as string
+    );
+    
     const serializedFormData = {
       ...formData,
       id: journey.id, 
@@ -102,6 +106,7 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
       startDate: formData.startDate?.toISOString(),
       finishDate: formData.finishDate?.toISOString(),
       creatorAddress: publicAddress,
+      requiredProofs: convertedProofs,
       isEdit: true 
     }
     router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}&isEdit=true`);

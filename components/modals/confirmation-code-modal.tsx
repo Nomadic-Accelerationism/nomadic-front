@@ -1,14 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 interface ConfirmationCodeModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onCodeSubmit?: (code: string) => void;
 }
 
-export function ConfirmationCodeModal({ open, onOpenChange }: ConfirmationCodeModalProps) {
+export function ConfirmationCodeModal({ isOpen, onClose, onCodeSubmit }: ConfirmationCodeModalProps) {
   const [code, setCode] = React.useState<string[]>(Array(6).fill(""))
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
 
@@ -46,19 +47,25 @@ export function ConfirmationCodeModal({ open, onOpenChange }: ConfirmationCodeMo
     inputRefs.current[lastIndex]?.focus()
   }
 
+  const handleSubmit = () => {
+    const completeCode = code.join('');
+    if (completeCode.length === 6 && onCodeSubmit) {
+      onCodeSubmit(completeCode);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogOverlay className="bg-black/50 fixed inset-0" />
       <DialogContent className="bg-[#ffffff] rounded-[32px] w-7/8 max-w-md p-8 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-none">
-        <button
-          className="absolute right-8 top-8 text-[#000000] hover:text-[#808080] transition-colors"
-          onClick={() => onOpenChange(false)}
-        >
-        </button>
+        <DialogTitle className="text-2xl font-medium text-[#000000] text-center">
+          Confirmation Code
+        </DialogTitle>
+        <DialogDescription className="text-[#808080] mt-2">
+          Please enter the verification code sent to your email.
+        </DialogDescription>
 
         <div className="space-y-6">
-          <h2 className="text-2xl font-medium text-[#000000] text-center">Confirmation code</h2>
-
           <p className="text-[#ff671f] font-medium">
             You&apos;re about to cancel this HH request, this action cannot be reverted.
           </p>
@@ -91,12 +98,19 @@ export function ConfirmationCodeModal({ open, onOpenChange }: ConfirmationCodeMo
             Send new code
           </button>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-4">
             <button
-              className="w-1/2 py-3 bg-gray-500 text-black rounded-xl transition-colors font-bold shadow-xl border-2 border-gray-600 "
-              onClick={() => onOpenChange(false)}
+              className="w-1/2 py-3 bg-gray-500 text-black rounded-xl transition-colors font-bold shadow-xl border-2 border-gray-600"
+              onClick={() => onClose()}
             >
               Go Back
+            </button>
+            <button
+              className="w-1/2 py-3 bg-primary text-white rounded-xl transition-colors font-bold shadow-xl"
+              onClick={handleSubmit}
+              disabled={code.join('').length !== 6}
+            >
+              Verify
             </button>
           </div>
         </div>

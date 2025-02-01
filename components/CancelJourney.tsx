@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { JourneyDisplay } from "./journey-success/JourneyDisplay";
+import { ConfirmationCodeModal } from "./modals/confirmation-code-modal";
 
 const magic =
   typeof window !== "undefined"
@@ -33,7 +34,9 @@ export function CancelJourney({ journey, isPending }: CancelJourneyProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
+  const [isConfirmationCodeModalOpen, setIsConfirmationCodeModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [didToken, setDidToken] = useState<string | null>(null);
   const router = useRouter();
   const { userMetadata } = useUser();
 
@@ -41,45 +44,53 @@ export function CancelJourney({ journey, isPending }: CancelJourneyProps) {
     try {
       setIsLoading(true);
 
-      if (!magic) {
-        throw new Error("Magic SDK is not initialized");
+      if (!magic || !userMetadata?.email) {
+        throw new Error("Magic SDK not initialized or email not available");
       }
 
-      if (!userMetadata?.email) {
-        throw new Error("No email available");
-      }
-
-      const newDidToken = await magic.auth
-        .loginWithEmailOTP({
-          email: userMetadata.email,
-          showUI: true,
-        })
-        .catch((error) => {
-          console.error("Magic OTP error:", error);
-          throw error;
-        });
-
-      const validationResponse = await axios.post("/api/auth/validate-otp", {
+      const newDidToken = await magic.auth.loginWithEmailOTP({
         email: userMetadata.email,
-        didToken: newDidToken,
+        showUI: false,
       });
 
-      if (validationResponse.data) {
-        const updateResponse = await axios.post("/api/auth/update-journey", {
-          journeyId: journey.id,
-          status: "CANCELLED",
-          didToken: newDidToken,
-        });
+      console.log("Got didToken:", newDidToken);
+      setDidToken(newDidToken);
+      setIsCancelDialogOpen(false);
+      setIsConfirmationCodeModalOpen(true);
 
-        if (updateResponse.data) {
-          setIsCancelDialogOpen(false);
-          router.push("/hacker-journeys");
-        }
-      }
     } catch (error) {
       console.error("Complete error details:", error);
       setErrorMessage(
         error instanceof Error ? error.message : "Verification failed",
+      );
+      setIsErrorDialogOpen(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCodeVerification = async (code: string) => {
+    try {
+      setIsLoading(true);
+
+      if (!didToken) {
+        throw new Error("No authentication token available");
+      }
+
+      const updateResponse = await axios.post("/api/auth/update-journey", {
+        journeyId: journey.id,
+        status: "CANCELLED",
+        didToken: didToken, 
+      });
+
+      if (updateResponse.data) {
+        setIsConfirmationCodeModalOpen(false);
+        router.push("/hacker-journeys");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Code verification failed"
       );
       setIsErrorDialogOpen(true);
     } finally {
@@ -123,6 +134,19 @@ export function CancelJourney({ journey, isPending }: CancelJourneyProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConfirmationCodeModal 
+        isOpen={isConfirmationCodeModalOpen}
+        onClose={() => setIsConfirmationCodeModalOpen(false)}
+        onCodeSubmit={async (code) => {
+          if (!didToken) {
+            setErrorMessage("No authentication token available");
+            setIsErrorDialogOpen(true);
+            return;
+          }
+          await handleCodeVerification(code);
+        }}
+      />
 
       <AlertDialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
         <AlertDialogContent>
