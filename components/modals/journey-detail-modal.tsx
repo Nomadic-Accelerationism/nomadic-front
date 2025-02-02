@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -7,6 +6,7 @@ import { MapPin } from 'lucide-react'
 import { format } from "date-fns"
 import Image from 'next/image'
 import { ProofNameEnum } from '@/interfaces/ProofItem'
+import { useRouter } from 'next/navigation'
 
 interface JourneyDetailModalProps {
   isOpen: boolean;
@@ -16,6 +16,8 @@ interface JourneyDetailModalProps {
 }
 
 export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: JourneyDetailModalProps) {
+  const router = useRouter();
+
   const getProofIcon = (proof: ProofNameEnum): string => {
     const proofIcons: Record<ProofNameEnum, string> = {
       [ProofNameEnum.BAYC_NFT]: 'bayc-nft.png',
@@ -28,6 +30,11 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
       [ProofNameEnum.ETHGLOBAL_VOLUNTEER]: 'ethglobal-attendee.png',
     };
     return `/proofs/${proofIcons[proof] || 'default-icon.png'}`;
+  };
+
+  const handleApply = () => {
+    const journeyData = encodeURIComponent(JSON.stringify(journey));
+    router.push(`/journey-apply?journeyData=${journeyData}`);
   };
 
   return (
@@ -65,7 +72,7 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
                   const proofEnum = ProofNameEnum[proof as keyof typeof ProofNameEnum];
                   const isRequired = journey.requiredProofs?.includes(proof);
 
-                  console.log('Proof:', proof, 'Enum:', proofEnum, 'Icon:', getProofIcon(proofEnum)); // Para debug
+                  console.log('Proof:', proof, 'Enum:', proofEnum, 'Icon:', getProofIcon(proofEnum));
 
                   return (
                     <div 
@@ -119,7 +126,7 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
 
           <div className="flex justify-center">
             <Button 
-              onClick={onApply}
+              onClick={handleApply}
               className="py-3 px-12 bg-[#ff671e] hover:bg-orange-500 text-black rounded-xl transition-colors font-bold shadow-xl border-2 border-gray-600"
             >
               Apply
