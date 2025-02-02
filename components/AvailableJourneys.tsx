@@ -4,15 +4,19 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Journey, JourneyStatusEnum } from '@/interfaces/Journey';
 import { useUser } from '@/contexts/UserContext';
 import axios from 'axios';
-import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { JourneyDetailModal } from './modals/journey-detail-modal';
+import { useRouter } from 'next/navigation';
 
 export function AvailableJourneys() {
   const [availableJourneys, setAvailableJourneys] = useState<Journey[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedJourney, setSelectedJourney] = useState<Journey | null>(null);
   const { didToken, publicAddress, isAuthenticated } = useUser();
+  const router = useRouter();
 
   const fetchAvailableJourneys = useCallback(async () => {
     try {
@@ -55,6 +59,18 @@ export function AvailableJourneys() {
     );
   };
 
+  const handleJourneyClick = (journey: Journey) => {
+    setSelectedJourney(journey);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleApply = () => {
+    if (selectedJourney) {
+      router.push(`/journey-success?status=pending&id=${selectedJourney.id}&title=${encodeURIComponent(selectedJourney.title)}&photo=${encodeURIComponent(selectedJourney.photo || '')}`);
+      setIsDetailModalOpen(false);
+    }
+  };
+
   if (isLoading) return null;
   if (availableJourneys.length === 0) return null;
 
@@ -77,34 +93,35 @@ export function AvailableJourneys() {
                     : 'z-0 scale-80 opacity-0'
                 }`}
               >
-                <Link href={`/journey/${journey.id}`}>
-                  <div className="rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="relative h-[200px]">
-                      <Image
-                        src={journey.photo || '/placeholder.jpg'}
-                        alt={journey.title}
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-2xl"
-                      />
-                      <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-2 px-4">
-                        <h3 className="text-white text-xl font-bold text-center">
-                          {journey.title}
-                        </h3>
-                      </div>
+                <div 
+                  className="rounded-2xl overflow-hidden shadow-2xl cursor-pointer"
+                  onClick={() => handleJourneyClick(journey)}
+                >
+                  <div className="relative h-[200px]">
+                    <Image
+                      src={journey.photo || '/placeholder.jpg'}
+                      alt={journey.title}
+                      layout="fill"
+                      objectFit="cover"
+                      className="rounded-2xl"
+                    />
+                    <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-2 px-4">
+                      <h3 className="text-white text-xl font-bold text-center">
+                        {journey.title}
+                      </h3>
+                    </div>
 
-                      <div className="absolute bottom-0 w-full py-2 px-4 bg-black/70 backdrop-blur-sm flex justify-between items-center">
-                        <span className="text-white font-semibold">
-                          ${journey.budget}
-                        </span>
-                        <span className="text-white text-sm">
-                          {new Date(journey.startDate).toLocaleDateString()} - 
-                          {new Date(journey.finishDate).toLocaleDateString()}
-                        </span>
-                      </div>
+                    <div className="absolute bottom-0 w-full py-2 px-4 bg-black/70 backdrop-blur-sm flex justify-between items-center">
+                      <span className="text-white font-semibold">
+                        ${journey.budget}
+                      </span>
+                      <span className="text-white text-sm">
+                        {new Date(journey.startDate).toLocaleDateString()} - 
+                        {new Date(journey.endDate).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
-                </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -123,6 +140,15 @@ export function AvailableJourneys() {
           <ChevronRight className="h-6 w-6 text-white" />
         </button>
       </div>
+
+      {selectedJourney && (
+        <JourneyDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          journey={selectedJourney}
+          onApply={handleApply}
+        />
+      )}
     </div>
   );
 }
