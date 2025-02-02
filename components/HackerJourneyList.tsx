@@ -105,7 +105,7 @@ export default function HackerJourneyListComponent() {
   return (
     <div className="container mx-auto px-4 my-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Journeys</h1>
+        <h1 className="text-2xl font-bold text-center">My Journeys</h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">

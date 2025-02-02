@@ -16,10 +16,13 @@ export default function HackerJourneysComponent() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      {/* Main Title */}
+      <h1 className="text-3xl font-bold text-center mt-8 mb-6">
+        Journeys & Hacker Houses
+      </h1>
 
       {/* Content */}
-
-      <div className="relative z-10 flex flex-col items-center mt-8 flex-grow w-full max-w-md px-6">
+      <div className=" flex flex-col items-center flex-grow w-full max-w-md px-6">
         <AvailableJourneys />
         <HackerJourneyListComponent />
 
@@ -29,10 +32,8 @@ export default function HackerJourneysComponent() {
         >
           Create Journey
         </Button>
-        
       </div>
 
-      {/* Version number */}
       <div className="relative z-10 mb-4">
         <p className="text-xs text-gray-800">v.0.01a</p>
       </div>
