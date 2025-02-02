@@ -4,6 +4,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button"
 import { useRouter } from 'next/navigation';
 import HackerJourneyListComponent from './HackerJourneyList';
+import { AvailableJourneys } from "./AvailableJourneys";
 
 export default function HackerJourneysComponent() {
 
@@ -19,7 +20,7 @@ export default function HackerJourneysComponent() {
       {/* Content */}
 
       <div className="relative z-10 flex flex-col items-center mt-8 flex-grow w-full max-w-md px-6">
-
+        <AvailableJourneys />
         <HackerJourneyListComponent />
 
         <Button 
