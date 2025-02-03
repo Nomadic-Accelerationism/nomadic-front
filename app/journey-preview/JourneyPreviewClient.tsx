@@ -48,6 +48,7 @@ export default function JourneyPreviewPage() {
         budget={formData.budget}
         guestCapacity={formData.guestCapacity}
         requiredProofs={formData.requiredProofs}
+        customProofs={formData.customProofs}
         optionalQuestion={formData.optionalQuestion}
         photo={formData.photo || "/placeholder.svg?height=300&width=400"}
         description={formData.description}

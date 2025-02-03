@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,9 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, MapPinIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation';
-import { JourneyFormData,JourneyStatusEnum } from '@/interfaces/Journey';
+import { JourneyFormData, JourneyStatusEnum } from '@/interfaces/Journey';
 import { ProofNameEnum } from '@/interfaces/ProofItem';
 import { useUser } from '@/contexts/UserContext'
+import Image from 'next/image'
+import { useProofSelection } from '@/hooks/useProofSelection';
+import { ProofSelector } from '@/components/ProofSelector';
 
 const filters = [
   { id: 'bayc', icon: '/proofs/bayc-nft.png', color: 'bg-black', proofEnum: ProofNameEnum.BAYC_NFT },
@@ -25,6 +28,7 @@ const filters = [
 
 export default function JourneyCreateComponent() {
   const { publicAddress } = useUser();
+  const { formData: proofData, handleProofClick, isProofRequired, isProofCustom } = useProofSelection();
   const [formData, setFormData] = useState<JourneyFormData>({
     title: '',
     location: '',
@@ -34,15 +38,23 @@ export default function JourneyCreateComponent() {
     startDate: undefined,
     finishDate: undefined,
     requiredProofs: [],
+    customProofs: [],
     status: JourneyStatusEnum.PENDING,
     optionalQuestion: '',
     photo: '',
     creatorAddress: publicAddress 
   })
-  
-  const router = useRouter();
 
+  const router = useRouter();
   
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      requiredProofs: proofData.requiredProofs,
+      customProofs: proofData.customProofs
+    }));
+  }, [proofData]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({
@@ -51,6 +63,10 @@ export default function JourneyCreateComponent() {
     }))
   };
   
+  const handleProofSelection = (proofEnum: ProofNameEnum) => {
+    handleProofClick(proofEnum);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -65,19 +81,6 @@ export default function JourneyCreateComponent() {
       reader.readAsDataURL(file);
     }
   };
-  
-  const toggleFilter = (filterId: string) => {
-    const filter = filters.find(f => f.id === filterId);
-    if (!filter) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      requiredProofs: prev.requiredProofs.includes(filter.proofEnum)
-        ? prev.requiredProofs.filter(proof => proof !== filter.proofEnum)
-        : [...prev.requiredProofs, filter.proofEnum]
-    }));
-  };
-    
 
   const goToPreviewCreate = () => {
     console.log("Form Data:",formData);
@@ -85,19 +88,21 @@ export default function JourneyCreateComponent() {
       localStorage.setItem('journeyTempPhoto', formData.photo);
     }
     const serializedFormData = {
-      ...formData, 
+      ...formData,
       photo: undefined,
       startDate: formData.startDate?.toISOString(),
       finishDate: formData.finishDate?.toISOString(),
-      creatorAddress: publicAddress
-    }
+      creatorAddress: publicAddress,
+      requiredProofs: formData.requiredProofs,
+      customProofs: formData.customProofs
+    };
     router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}`);
   }
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
       <h1 className="text-2xl font-bold mb-6">Create a Journey</h1>
-      
+
       <div className="space-y-4 items-center justify-center">
         <div>
           <Label htmlFor="title">Journey Title</Label>
@@ -218,40 +223,21 @@ export default function JourneyCreateComponent() {
           placeholder="Example: What makes you the perfect candidate?" />
         </div>
 
-        <div>
-          <Label>Filters</Label>
-          <div className="grid grid-cols-8 gap-2 mt-2">
-            {filters.map((filter) => (
-              <Button
-                key={filter.id}
-                variant="outline"
-                className={`p-1 aspect-square ${formData.requiredProofs.includes(filter.proofEnum) ? 'ring-2 ring-orange-500' : ''}`}
-                onClick={() => toggleFilter(filter.id)}
-              >
-                <div className={`w-full h-full rounded-md ${filter.color} flex items-center justify-center`}>
-                  <img src={filter.icon} alt={filter.id} className="w-14 h-8" />
-                </div>
-              </Button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Tap once to activate a Requested Proof. Tap twice to make it mandatory 🔒
-          </p>
+        <ProofSelector
+          filters={filters}
+          onProofClick={handleProofSelection}
+          isProofRequired={isProofRequired}
+          isProofCustom={isProofCustom}
+        />
 
-        </div>
-
-
-        <div  className="flex items-center justify-center">
-        <Button 
-          className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 mx-auto"
+        <div className="flex items-center justify-center">
+          <Button 
+            className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 mx-auto"
             onClick={goToPreviewCreate}
           >
-          Preview & Create
+            Preview & Create
           </Button>
-
         </div>
-
-
       </div>
     </div>
   )
