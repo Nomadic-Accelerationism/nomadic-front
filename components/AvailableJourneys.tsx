@@ -116,8 +116,8 @@ export function AvailableJourneys() {
                         ${journey.budget}
                       </span>
                       <span className="text-white text-sm">
-                        {new Date(journey.startDate).toLocaleDateString()} - 
-                        {new Date(journey.endDate).toLocaleDateString()}
+                        {journey.startDate ? new Date(journey.startDate).toLocaleDateString() : '-'} -
+                        {journey.endDate ? new Date(journey.endDate).toLocaleDateString() : '-'}
                       </span>
                     </div>
                   </div>

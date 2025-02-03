@@ -19,6 +19,7 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
   const router = useRouter();
 
   const getProofIcon = (proof: ProofNameEnum): string => {
+    const proofName = ProofNameEnum[proof] as keyof typeof ProofNameEnum;
     const proofIcons: Record<ProofNameEnum, string> = {
       [ProofNameEnum.BAYC_NFT]: 'bayc-nft.png',
       [ProofNameEnum.APE_HOLDER]: 'ape-holder.png',
@@ -29,7 +30,7 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
       [ProofNameEnum.WORLD_ID_POH]: 'world-id-icon.png',
       [ProofNameEnum.ETHGLOBAL_VOLUNTEER]: 'ethglobal-attendee.png',
     };
-    return `/proofs/${proofIcons[proof] || 'default-icon.png'}`;
+    return `/proofs/${proofIcons[proofName] || 'default-icon.png'}`;
   };
 
   const handleApply = () => {
@@ -64,15 +65,14 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
             <p className="text-sm whitespace-pre-wrap">{journey.description}</p>
           </div>
 
-          {(journey.requiredProofs?.length > 0 || journey.customProofs?.length > 0) && (
+          {((journey.requiredProofs && journey.requiredProofs.length > 0) || 
+            (journey.customProofs && journey.customProofs.length > 0)) && (
             <div className="mb-6">
               <h3 className="font-semibold mb-3">Required Proofs:</h3>
               <div className="grid grid-cols-3 gap-4">
                 {[...(journey.requiredProofs || []), ...(journey.customProofs || [])].map((proof, index) => {
-                  const proofEnum = ProofNameEnum[proof as keyof typeof ProofNameEnum];
-                  const isRequired = journey.requiredProofs?.includes(proof);
-
-                  console.log('Proof:', proof, 'Enum:', proofEnum, 'Icon:', getProofIcon(proofEnum));
+                  const proofEnum = proof as ProofNameEnum;
+                  const isRequired = journey.requiredProofs?.includes(proofEnum);
 
                   return (
                     <div 

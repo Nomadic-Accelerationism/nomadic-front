@@ -193,7 +193,7 @@ export default function JourneyPreviewComponent({
           </div>
 
           <div className="mb-4">
-            {(requiredProofs.length > 0 || customProofs?.length > 0) && (
+            {(requiredProofs.length > 0 || (customProofs && customProofs.length > 0)) && (
               <div className="mb-4">
                 <h3 className="font-semibold mb-2">Requested Proofs:</h3>
                 <div className="flex flex-wrap gap-2">
