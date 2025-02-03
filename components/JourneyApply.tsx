@@ -24,7 +24,6 @@ export default function JourneyApplyComponent() {
   });
 
   useEffect(() => {
-    // Recuperar los datos del journey desde los parámetros URL
     const journeyData = searchParams.get('journeyData');
     if (journeyData) {
       setJourney(JSON.parse(decodeURIComponent(journeyData)));
@@ -40,9 +39,8 @@ export default function JourneyApplyComponent() {
   };
 
   const handleSubmit = async () => {
-    // Aquí implementarías la lógica para enviar la aplicación
+
     console.log('Form Data:', formData);
-    // Redirigir a una página de confirmación
     router.push('/journey-success?status=applied');
   };
 
