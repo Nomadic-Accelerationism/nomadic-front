@@ -106,13 +106,13 @@ export default function UserProofsComponent() {
       <DialogContent className="max-w-[385px] rounded-3xl">
         <DialogHeader className="text-center space-y-4">
           <div className="flex justify-end">
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               className="absolute right-4 top-4 rounded-full"
             >
               <span className="sr-only">Close</span>
-            </Button>
+            </Button> */}
           </div>
           <DialogTitle className="text-2xl font-normal">
             {proofItem?.title}
@@ -123,11 +123,11 @@ export default function UserProofsComponent() {
         </DialogHeader>
         <div className="flex flex-col items-center space-y-4 py-4">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full border-4 border-purple-300 flex items-center justify-center">
+            <div className="w-32 h-32 flex items-center justify-center">
               <img
                 src={`${proofItem?.icon}?height=100&width=100`}
                 alt="POAP Badge"
-                className="w-24 h-24 rounded-full"
+                className="w-24 h-24"
               />
             </div>
           </div>
