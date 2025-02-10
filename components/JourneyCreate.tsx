@@ -71,12 +71,12 @@ export default function JourneyCreateComponent() {
 
       if (parsedData.requiredProofs) {
         parsedData.requiredProofs.forEach((proof: ProofNameEnum) => {
-          handleProofClick(proof, true);
+          handleProofClick(proof);
         });
       }
       if (parsedData.customProofs) {
         parsedData.customProofs.forEach((proof: ProofNameEnum) => {
-          handleProofClick(proof, false);
+          handleProofClick(proof);
         });
       }
 
