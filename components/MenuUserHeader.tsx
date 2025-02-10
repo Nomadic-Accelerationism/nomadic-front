@@ -23,10 +23,10 @@ export default function MenuUserHeaderComponent() {
     { name: "Home", url: "/home-user" },
     { name: "My Proofs", url: "/user-proofs" },
     { name: "Journeys", url: "/hacker-journeys" },
-    { name: "$NACC Tokens", url: "/nacc-tokens" },
-    { name: "Generate Single Use ID", url: "/generate-single-use-id" },
-    { name: "Recommend a Nomad", url: "/recommend" },
-    { name: "Pending Reviews", url: "/reviews" },
+    // { name: "$NACC Tokens", url: "/nacc-tokens" },
+    // { name: "Generate Single Use ID", url: "/generate-single-use-id" },
+    // { name: "Recommend a Nomad", url: "/recommend" },
+    // { name: "Pending Reviews", url: "/reviews" },
     { name: "About", url: "/about" }
   ];
 
