@@ -12,10 +12,10 @@ export default function JourneyPreviewPage() {
 
   const formDataString = searchParams.get('formData');
   let formData: JourneyFormData | null = null;
-  
+
   if (formDataString) {
     const parsedData = JSON.parse(formDataString);
-     const savedPhoto = localStorage.getItem('journeyTempPhoto');
+    const savedPhoto = localStorage.getItem('journeyTempPhoto');
     formData = {
       ...parsedData,
       startDate: parsedData.startDate ? new Date(parsedData.startDate) : undefined,
@@ -23,6 +23,7 @@ export default function JourneyPreviewPage() {
       photo: savedPhoto || '/placeholder.svg?height=300&width=400' 
     };
   }
+
   useEffect(() => {
     return () => {
       localStorage.removeItem('journeyTempPhoto');
@@ -30,6 +31,18 @@ export default function JourneyPreviewPage() {
   }, []);
 
   const onEdit = () => {
+    if (formData) {
+      const dataToSave = {
+        ...formData,
+        startDate: formData.startDate?.toISOString(),
+        finishDate: formData.finishDate?.toISOString(),
+      };
+      localStorage.setItem('journeyEditData', JSON.stringify(dataToSave));
+
+      if (formData.photo && formData.photo !== '/placeholder.svg?height=300&width=400') {
+        localStorage.setItem('journeyTempPhoto', formData.photo);
+      }
+    }
     router.push('/journey-create');
   };
 

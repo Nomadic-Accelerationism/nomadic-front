@@ -46,7 +46,7 @@ export default function JourneyCreateComponent() {
   })
 
   const router = useRouter();
-  
+
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
@@ -55,6 +55,35 @@ export default function JourneyCreateComponent() {
     }));
   }, [proofData]);
 
+  useEffect(() => {
+    const savedData = localStorage.getItem('journeyEditData');
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      const startDate = parsedData.startDate ? new Date(parsedData.startDate) : undefined;
+      const finishDate = parsedData.finishDate ? new Date(parsedData.finishDate) : undefined;
+
+      setFormData(prev => ({
+        ...prev,
+        ...parsedData,
+        startDate,
+        finishDate
+      }));
+
+      if (parsedData.requiredProofs) {
+        parsedData.requiredProofs.forEach((proof: ProofNameEnum) => {
+          handleProofClick(proof, true);
+        });
+      }
+      if (parsedData.customProofs) {
+        parsedData.customProofs.forEach((proof: ProofNameEnum) => {
+          handleProofClick(proof, false);
+        });
+      }
+
+      localStorage.removeItem('journeyEditData');
+    }
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({
@@ -62,7 +91,7 @@ export default function JourneyCreateComponent() {
       [id]: value
     }))
   };
-  
+
   const handleProofSelection = (proofEnum: ProofNameEnum) => {
     handleProofClick(proofEnum);
   };
@@ -232,7 +261,7 @@ export default function JourneyCreateComponent() {
 
         <div className="flex items-center justify-center">
           <Button 
-            className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 mx-auto"
+            className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 mx-auto font-bold"
             onClick={goToPreviewCreate}
           >
             Preview & Create
