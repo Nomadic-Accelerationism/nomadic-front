@@ -27,7 +27,7 @@ export default function HackerJourneysComponent() {
         <HackerJourneyListComponent />
 
         <Button 
-          className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 font-bold"
           onClick={goToCreateJourney}
         >
           Create Journey

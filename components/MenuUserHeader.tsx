@@ -39,14 +39,18 @@ export default function MenuUserHeaderComponent() {
     <Sheet>
       <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
         <div className="flex items-center">
-          <Image
-            src="/images/nomadic.svg"
-            alt="Nomadic Logo"
-            width={43}
-            height={43}
-            className="mr-2"
-          />
-          <span className="text-2xl font-bold">Nomadic</span>
+          <Link href="/home-user">
+            <div className="flex items-center cursor-pointer">
+              <Image
+                src="/images/nomadic.svg"
+                alt="Nomadic Logo"
+                width={43}
+                height={43}
+                className="mr-2"
+              />
+              <span className="text-2xl font-bold">Nomadic</span>
+            </div>
+          </Link>
         </div>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="text-gray-700">

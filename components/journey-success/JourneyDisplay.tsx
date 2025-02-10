@@ -46,7 +46,7 @@ export function JourneyDisplay({ journey, isPending, onCancel }: JourneyDisplayP
 
       <div className="flex items-center justify-center mb-6">
         <Button 
-          className="w-full max-w-[230px] bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          className="w-full max-w-[230px] bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 font-bold"
           onClick={() => router.push('/hacker-journeys')}
         >
           LFG

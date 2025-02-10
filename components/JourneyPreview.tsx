@@ -249,13 +249,13 @@ export default function JourneyPreviewComponent({
             <Button 
               variant="outline" 
               onClick={onEdit}
-              className="w-[48%] bg-gray-200 hover:bg-gray-300 text-black"
+              className="w-[48%] bg-gray-200 hover:bg-gray-300 text-black font-bold"
             >
               Edit
             </Button>
             <Button 
               onClick={handleConfirm}
-              className="w-[48%] bg-orange-500 hover:bg-orange-600 text-black"
+              className="w-[48%] bg-orange-500 hover:bg-orange-600 text-black font-bold"
             >
               Confirm
             </Button>
