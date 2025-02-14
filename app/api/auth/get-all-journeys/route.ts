@@ -10,9 +10,13 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-    
+
+    console.log('publicAddress', publicAddress);
+    console.log('didToken', didToken);
 
     const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/get-all-journeys";
+
+    console.log('nomadicApiUrl', nomadicApiUrl);
     
     const response = await fetch(nomadicApiUrl, {
       method: 'GET',
