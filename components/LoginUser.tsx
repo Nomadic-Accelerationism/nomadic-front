@@ -180,14 +180,17 @@ export default function UserLoginComponent() {
           </div>
         </div> */}
 
+          <div className="flex justify-center">
           <Button
             type="button"
             variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-900"
+            className="w-full text-gray-600 hover:text-gray-900 mx-8"
             onClick={requestNewOTP}
           >
             Send new code
           </Button>
+
+          </div>
         </form>
       </div>
 
