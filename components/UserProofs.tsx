@@ -87,16 +87,16 @@ export default function UserProofsComponent() {
       {proofItems.map((item, index) => (
         <Card 
           key={index} 
-          className={`flex items-center justify-between rounded-xl border border-gray-700 ${
+          className={`flex items-center justify-between rounded-xl border border-gray-700 py-1 ${
             item.isActive ? 'bg-white' : 'bg-gray-200'
           }`}
           onClick={() => verifyProof(item)}
         >
           <span className="text-sm font-medium p-3 ml-3">{item.name}</span>
           <div className="relative">
-            <img src={item.icon} alt={item.name} className="w-12 h-12" />
+            <img src={item.icon} alt={item.name} className="w-12 h-12 mr-1" />
             {!item.isActive && (
-              <div className="absolute inset-0 bg-gray-500 opacity-50"></div>
+              <div className="absolute inset-0 bg-gray-500 opacity-50 mr-1 rounded-lg"></div>
             )}
           </div>
         </Card>
