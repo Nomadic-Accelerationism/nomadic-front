@@ -161,7 +161,7 @@ export default function JourneyPreviewComponent({
           <h1 className="text-2xl font-bold text-center mb-2">Preview your Journey</h1>
           <h2 className="text-xl font-semibold text-center mb-4">{title}</h2>
 
-          <p className="text-sm mb-2">Your social media to be contacted:</p>
+          {/* <p className="text-sm mb-2">Your social media to be contacted:</p>
           <div className="flex space-x-2 mb-4">
             {socialMedia.map((social, index) => (
               <div key={index} className="flex items-center border rounded-full px-3 py-1">
@@ -178,7 +178,7 @@ export default function JourneyPreviewComponent({
                 <span className="text-sm">{social.username}</span>
               </div>
             ))}
-          </div>
+          </div> */}
 
           <div className="flex items-center space-x-2 mb-4">
             <MapPin size={16} className="text-gray-500" />
