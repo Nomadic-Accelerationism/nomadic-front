@@ -25,7 +25,7 @@ export default function HackerJourneysComponent() {
       <div className=" flex flex-col items-center flex-grow w-full max-w-md px-6">
         <AvailableJourneys />
         <HackerJourneyListComponent />
-
+ 
         <Button 
           className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 font-bold"
           onClick={goToCreateJourney}

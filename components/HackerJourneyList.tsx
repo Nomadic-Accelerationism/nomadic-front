@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronRight, SlidersHorizontal } from 'lucide-react'
@@ -16,12 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Journey, JourneyStatusEnum } from '@/interfaces/Journey'
+import { useQuery } from '@tanstack/react-query'
 
 export default function HackerJourneyListComponent() {
-  const [journeys, setJourneys] = useState<Journey[]>([])
   const [sortBy, setSortBy] = useState<'date' | 'status'>('date')
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const { didToken, publicAddress, isAuthenticated } = useUser()
 
   const sortJourneysByType = useCallback((by: 'date' | 'status', journeysToSort: Journey[]) => {
@@ -39,40 +37,31 @@ export default function HackerJourneyListComponent() {
         ]
         return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
       }
-    });
-  }, []);
+    })
+  }, [])
 
-  const fetchJourneys = useCallback(async () => {
-    try {
+  const { data: journeys = [], isLoading, error } = useQuery({
+    queryKey: ['hackerJourneys', didToken, publicAddress],
+    queryFn: async () => {
       const response = await axios.post('/api/auth/get-hacker-journeys', {
         didToken,
         publicAddress
-      });
-
-      if (response.data) {
-        const fetchedJourneys = response.data.journeys || [];
-        const sortedJourneys = sortJourneysByType(sortBy, fetchedJourneys);
-        setJourneys(sortedJourneys);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [didToken, publicAddress, sortBy, sortJourneysByType]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      console.log("not authenticated");
-      return;
-    }
-    fetchJourneys();
-  }, [isAuthenticated, fetchJourneys]);
+      })
+      const fetchedJourneys = response.data.journeys || []
+      return sortJourneysByType(sortBy, fetchedJourneys)
+    },
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10 // 10 minutes
+  })
 
   const handleSort = useCallback((by: 'date' | 'status') => {
-    setSortBy(by);
-    setJourneys(prev => sortJourneysByType(by, prev));
-  }, [sortJourneysByType]);
+    setSortBy(by)
+    if (journeys) {
+      const sortedJourneys = sortJourneysByType(by, journeys)
+      return sortedJourneys
+    }
+  }, [journeys, sortJourneysByType])
 
   if (isLoading) {
     return (
@@ -86,7 +75,7 @@ export default function HackerJourneyListComponent() {
     return (
       <div className="container mx-auto px-4 my-4">
         <div className="text-red-500 text-center">
-          {error}
+          {error instanceof Error ? error.message : error}
         </div>
       </div>
     );
