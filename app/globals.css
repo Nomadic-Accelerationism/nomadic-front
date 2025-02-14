@@ -90,5 +90,17 @@ html {
 }
 
 .nomadic-button {
-  @apply w-full max-w-[200px] mb-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl ring-1 ring-[#C03E00] ring-inset font-bold;
+  @apply w-full max-w-[200px] mb-4 bg-[#ff671e] hover:bg-orange-500 active:scale-[0.98] transition-transform text-black text-xl py-8 rounded-xl shadow-xl ring-1 ring-[#C03E00] ring-inset font-bold;
+}
+
+.nomadic-button:hover {
+  @apply bg-orange-500;
+}
+
+.nomadic-button:active {
+  @apply bg-orange-500;
+}
+
+.nomadic-button:focus {
+  @apply bg-orange-500;
 }
