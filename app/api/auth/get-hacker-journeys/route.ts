@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const { publicAddress, didToken } = await request.json();
-    console.log("From get-hacker-journeys route");
-    console.log('didToken: ', didToken);
-    console.log('publicAddress: ', publicAddress);
+    // console.log("From get-hacker-journeys route");
+    // console.log('didToken: ', didToken);
+    // console.log('publicAddress: ', publicAddress);
 
     if (!didToken) {
       return NextResponse.json(
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     });
 
     const data = await response.json();
-    console.log("data: ", data);
+    // console.log("data: ", data);
 
     if (!response.ok) {
       return NextResponse.json(

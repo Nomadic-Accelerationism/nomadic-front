@@ -8,45 +8,37 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { JourneyDetailModal } from './modals/journey-detail-modal';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+
+// Move the fetch function outside the component
+async function fetchJourneys({ didToken, publicAddress }: { didToken: string, publicAddress: string }) {
+  if (!didToken || !publicAddress) return []
+  
+  const response = await axios.post('/api/auth/get-all-journeys', {
+    didToken,
+    publicAddress,
+  })
+
+  const journeys = response.data?.journeys || []
+  return journeys.filter(
+    (journey: Journey) =>
+      journey.creatorAddress !== publicAddress &&
+      journey.status === JourneyStatusEnum.CONFIRMED
+  )
+}
 
 export function AvailableJourneys() {
-  const [availableJourneys, setAvailableJourneys] = useState<Journey[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedJourney, setSelectedJourney] = useState<Journey | null>(null);
   const { didToken, publicAddress, isAuthenticated } = useUser();
   const router = useRouter();
 
-  const fetchAvailableJourneys = useCallback(async () => {
-    try {
-      console.log('fetching available journeys');
-      const response = await axios.post('/api/auth/get-all-journeys', {
-        didToken,
-        publicAddress,
-      });
-
-      if (response.data) {
-        const journeys = response.data.journeys || [];
-        const filtered = journeys.filter(
-          (journey: Journey) =>
-            journey.creatorAddress !== publicAddress &&
-            journey.status === JourneyStatusEnum.CONFIRMED
-        );
-        setAvailableJourneys(filtered);
-      }
-    } catch (error) {
-      console.error('Error fetching available journeys:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [didToken, publicAddress]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchAvailableJourneys();
-    }
-  }, [isAuthenticated, fetchAvailableJourneys]);
+  const { data: availableJourneys = [], isLoading } = useQuery({
+    queryKey: ['available-journeys', didToken, publicAddress],
+    queryFn: () => fetchJourneys({ didToken, publicAddress }),
+    enabled: isAuthenticated && Boolean(didToken) && Boolean(publicAddress),
+  });
 
   const nextJourney = () => {
     setCurrentIndex((prev) => 
