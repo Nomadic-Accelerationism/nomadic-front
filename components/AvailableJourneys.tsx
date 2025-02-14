@@ -20,6 +20,7 @@ export function AvailableJourneys() {
 
   const fetchAvailableJourneys = useCallback(async () => {
     try {
+      console.log('fetching available journeys');
       const response = await axios.post('/api/auth/get-all-journeys', {
         didToken,
         publicAddress,
