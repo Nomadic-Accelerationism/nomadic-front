@@ -26,7 +26,7 @@ export function JourneyDisplay({ journey, isPending, onCancel }: JourneyDisplayP
           src={journey.photo || '/placeholder.svg'}
           alt={journey.title}
           fill
-          className="object-cover"
+          className="object-contain"
           priority
         />
       </div>
