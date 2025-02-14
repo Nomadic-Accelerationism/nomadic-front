@@ -129,15 +129,16 @@ export default function HackerJourneyListComponent() {
                 !isClickable ? 'opacity-75 cursor-not-allowed' : ''
               }`}>
                 <div className="relative h-28">
+                  <div className="absolute inset-0 bg-gray-500/40 z-0" />
                   <Image
                     src={journey.photo || '/placeholder.svg'}
                     alt={journey.title}
                     layout="fill"
-                    objectFit="cover"
-                    style={{ zIndex: -1 }}
+                    className="object-contain"
+                    style={{ zIndex: -2 }}
                   />
 
-                  <div className="p-4">
+                  <div className="p-4 relative z-10">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h2 className="text-white text-lg font-semibold">{journey.title}</h2>
