@@ -87,7 +87,7 @@ export default function JourneyPreviewComponent({
       const parsedFormData = formDataParam ? JSON.parse(formDataParam) : {};
 
       const journeyData = {
-         id: parsedFormData.id,
+        id: parsedFormData.id,
         title,
         location,
         description,
@@ -120,7 +120,7 @@ export default function JourneyPreviewComponent({
         if (isEdit) {
           setShowSuccessModal(true)
         } else {
-          router.push('/journey-success');
+          router.push(`/journey-success?id=${response.data.journey.id}`);
         }
       }
     } catch (error) {
