@@ -8,6 +8,8 @@ import "./globals.css";
 import React from 'react';
 import { UserProvider } from '@/contexts/UserContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {PrivyProvider} from '@privy-io/react-auth';
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,7 +36,9 @@ export default function RootLayout({
             <link rel="icon" href="/favicon.png" />
           </head>
           <body className={`${satoshi.variable} font-satoshi`}>
-            {children}
+            <PrivyProvider appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}>
+              {children}
+            </PrivyProvider>
           </body>
         </html>
       </QueryClientProvider>
