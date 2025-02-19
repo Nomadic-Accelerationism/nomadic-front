@@ -168,10 +168,13 @@ export default function HackerJourneyListComponent() {
                   journey.status === JourneyStatusEnum.CONFIRMED 
                     ? {
                         pathname: '/house-detail',
-                        query: { journey: JSON.stringify(journey) }
+                        query: { id: journey.id }
                       }
                     : journey.status === JourneyStatusEnum.PENDING 
-                      ? `/journey-success?status=pending&id=${journey.id}&title=${encodeURIComponent(journey.title)}&photo=${encodeURIComponent(journey.photo || '')}`
+                      ? {
+                          pathname: '/journey-success',
+                          query: { id: journey.id }
+                        }
                       : `/journey/${journey.id}`
                 } 
                 key={journey.id} 
