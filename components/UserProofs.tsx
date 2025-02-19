@@ -124,6 +124,28 @@ export default function UserProofsComponent() {
         console.log("responseTalent: ", responseTalent)
         setProofItemResult(responseTalent.data.proof)
         break
+      case "NOUNS_NFT":
+        const responseNouns = await axios.post('/api/auth/get-nouns', {
+          wallet: walletAddress,
+          didToken
+        })
+        console.log("responseNouns: ", responseNouns)
+        break
+      case "APE_HOLDER":
+        const responseApe = await axios.post('/api/auth/get-ape', {
+          wallet: walletAddress,
+          didToken
+        })
+        console.log("responseApe: ", responseApe)
+        break
+      case "BAYC_NFT":
+        const responseBayc = await axios.post('/api/auth/get-azuki', {
+          wallet: walletAddress,
+          didToken
+        })
+        console.log("responseBayc: ", responseBayc)
+        break
+        
       default:
         console.warn(`Unhandled proof type: ${proofItem.proof}`)
     }
