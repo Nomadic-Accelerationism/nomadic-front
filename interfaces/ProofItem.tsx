@@ -17,6 +17,7 @@ export interface ProofItem {
   hasCount: boolean;
   count: number;
   isActive: boolean;
+  status: boolean;
 }
 
 export const notMetMessages = {

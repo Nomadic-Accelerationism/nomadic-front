@@ -32,17 +32,29 @@ export default function UserProofsComponent() {
   const [open, setOpen] = useState(false);
   const [openResult, setOpenResult] = useState(false);
   const [proofItem, setProofItem] = useState<ProofItem>();
+  const [proofItemResult, setProofItemResult] = useState<ProofItem>();
+  
   
   const { authenticated, ready, user,logout } = usePrivy()
 
   const {login} = useLogin({
     onComplete: () => {
       console.log("login complete")
-      if (user?.wallet?.address) processProof(user.wallet.address)
+      const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken;
+      if (user?.wallet?.address) processProof(user.wallet.address, storedToken)
       logout()
       console.log("logged out")
     }
   });
+
+  const fetchProofs = async (storedAddress: string, storedToken: string) => {
+    try {
+      const data = await getUserProofs(storedAddress, storedToken);
+      setProofItems(data);
+    } catch (error) {
+      console.error("Error fetching proofs:", error);
+    }
+  };  
 
   useEffect(() => {
 
@@ -54,19 +66,19 @@ export default function UserProofsComponent() {
       setPublicAddress(storedAddress);
       setDidToken(storedToken);
     }
-  
-    const fetchProofs = async () => {
+
+    const fetchProofs2 = async () => {
       try {
         const data = await getUserProofs(storedAddress, storedToken);
         setProofItems(data);
       } catch (error) {
         console.error("Error fetching proofs:", error);
       }
-    };
-
+    };  
+  
     if (publicAddress && didToken) {
       console.log("fetching proofs");
-      fetchProofs();
+      fetchProofs2();
     }
   }, [publicAddress, didToken]);
 
@@ -88,18 +100,40 @@ export default function UserProofsComponent() {
 
   // **********
 
-  const processProof = async (walletAddress: string) => {
-    console.log("walletAddress: ", walletAddress);
-    console.log("processProof: ", proofItem);
-    // const response = await axios.post('/api/auth/create-journey', {
-    //   walletAddress,
-    //   proofItem
-    // });
-    // console.log("response: ", response);
+  const processProof = async (walletAddress: string, didToken: string) => {
+    console.log("walletAddress: ", walletAddress)
+    console.log("processProof: ", proofItem)
+    console.log("didToken: ", didToken)
+
+    if (!proofItem?.proof) return
+
+    switch (proofItem.proof.toString().toUpperCase()) {
+      case "PATRICIO_POAP":
+        const responsePoaps = await axios.post('/api/auth/get-poaps', {
+          wallet: walletAddress,
+          didToken
+        })
+        console.log("responsePoaps: ", responsePoaps)
+        setProofItemResult(responsePoaps.data.proof)
+        break
+      case "TALENT_PROTOCOL_PASSPORT":
+        const responseTalent = await axios.post('/api/auth/get-talent', {
+          wallet: walletAddress,
+          didToken
+        })
+        console.log("responseTalent: ", responseTalent)
+        setProofItemResult(responseTalent.data.proof)
+        break
+      default:
+        console.warn(`Unhandled proof type: ${proofItem.proof}`)
+    }
 
     // show the second dialog
-    setOpenResult(true);
+    setOpenResult(true)
 
+    const storedAddress = !publicAddress ? localStorage.getItem('publicAddress') || '' : publicAddress
+    const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken
+    fetchProofs(storedAddress, storedToken)
   }
 
 
@@ -153,7 +187,7 @@ export default function UserProofsComponent() {
             </div>
           </div>
           <div className="px-6 py-2 rounded-full bg-muted">
-            Not Generated
+            { proofItem?.isActive ? "Generated" : "Not Generated"}
           </div>
           {proofItem && (
             <>
@@ -162,7 +196,7 @@ export default function UserProofsComponent() {
               </p>
               <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full"
                 onClick={() => login()}>
-                Generate
+                { proofItem?.isActive ? "Update" : "Generate"}
               </Button>
             </>
           )}
@@ -189,8 +223,10 @@ export default function UserProofsComponent() {
               />
             </div>
           </div>
-          <div className="px-6 py-2 rounded-full bg-green-500">
-            Generated
+          <div className={`px-6 py-2 rounded-full ${
+            proofItemResult?.status ? 'bg-green-500' : 'bg-[#FF5C00]'
+          }`}>
+            {proofItemResult?.status ? "Generated" : "Not Found"}
           </div>
           {proofItem && (
             <>
@@ -199,7 +235,7 @@ export default function UserProofsComponent() {
               </p> */}
               <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full"
                 onClick={() => setOpenResult(false)}>
-                LFG!
+                { proofItemResult?.status ? "LFG!" : "Try Again"}
               </Button>
             </>
           )}
