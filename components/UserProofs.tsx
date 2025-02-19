@@ -21,6 +21,8 @@ import { useUser } from '@/contexts/UserContext';
 import { notMetMessages, metMessages } from '@/interfaces/ProofItem';
 import axios from 'axios';
 
+import { useLogin,usePrivy } from '@privy-io/react-auth'
+
 export default function UserProofsComponent() {
 
   const userContext = useUser();
@@ -28,9 +30,19 @@ export default function UserProofsComponent() {
   const didToken = userContext.didToken;
   const [proofItems, setProofItems] = useState<ProofItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [openResult, setOpenResult] = useState(false);
   const [proofItem, setProofItem] = useState<ProofItem>();
   
+  const { authenticated, ready, user,logout } = usePrivy()
 
+  const {login} = useLogin({
+    onComplete: () => {
+      console.log("login complete")
+      if (user?.wallet?.address) processProof(user.wallet.address)
+      logout()
+      console.log("logged out")
+    }
+  });
 
   useEffect(() => {
 
@@ -74,6 +86,23 @@ export default function UserProofsComponent() {
     return response.data;
   }
 
+  // **********
+
+  const processProof = async (walletAddress: string) => {
+    console.log("walletAddress: ", walletAddress);
+    console.log("processProof: ", proofItem);
+    // const response = await axios.post('/api/auth/create-journey', {
+    //   walletAddress,
+    //   proofItem
+    // });
+    // console.log("response: ", response);
+
+    // show the second dialog
+    setOpenResult(true);
+
+  }
+
+
   return (
     <>
     <div className="max-w-sm mx-auto py-4 space-y-4 px-8">
@@ -102,20 +131,12 @@ export default function UserProofsComponent() {
         </Card>
       ))}
     </div>
+
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-[385px] rounded-3xl">
-        <DialogHeader className="text-center space-y-4">
-          <div className="flex justify-end">
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4 rounded-full"
-            >
-              <span className="sr-only">Close</span>
-            </Button> */}
-          </div>
-          <DialogTitle className="text-2xl font-normal">
-            {proofItem?.title}
+          <DialogHeader className="text-center space-y-4">
+            <DialogTitle className="text-2xl font-normal">
+              {proofItem?.title}
           </DialogTitle>
           <p className="text-lg text-center text-muted-foreground">
             {proofItem?.description}
@@ -139,13 +160,54 @@ export default function UserProofsComponent() {
               <p className="text-lg text-center">
                 { proofItem.isActive ? getMetMessage(proofItem.proof.toString()) : getNotMetMessage(proofItem.proof.toString())}
               </p>
-              <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full">
+              <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full"
+                onClick={() => login()}>
                 Generate
               </Button>
             </>
           )}
         </div>
       </DialogContent>
+
+      <Dialog open={openResult} onOpenChange={setOpenResult}>
+      <DialogContent className="max-w-[385px] rounded-3xl">
+          <DialogHeader className="text-center space-y-4">
+            <DialogTitle className="text-2xl font-normal">
+              {proofItem?.title}
+          </DialogTitle>
+          <p className="text-lg text-center text-muted-foreground">
+            {proofItem?.description}
+          </p>
+        </DialogHeader>
+        <div className="flex flex-col items-center space-y-4 py-4">
+          <div className="relative">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={`${proofItem?.icon}?height=100&width=100`}
+                alt="POAP Badge"
+                className="w-24 h-24"
+              />
+            </div>
+          </div>
+          <div className="px-6 py-2 rounded-full bg-green-500">
+            Generated
+          </div>
+          {proofItem && (
+            <>
+              {/* <p className="text-lg text-center">
+                { proofItem.isActive ? getMetMessage(proofItem.proof.toString()) : getNotMetMessage(proofItem.proof.toString())}
+              </p> */}
+              <Button className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full"
+                onClick={() => setOpenResult(false)}>
+                LFG!
+              </Button>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>    
+
+
     </Dialog>    
     </>
   );
