@@ -6,25 +6,17 @@ import MenuUserHeaderComponent from "@/components/MenuUserHeader";
 import JourneySucessComponent from "@/components/journey-success/JourneySuccess";
 import { Journey } from '@/interfaces/Journey'
 import { useUser } from '@/contexts/UserContext'
-import axios from 'axios'
+import { api } from '@/lib/axios'
 
-async function fetchJourney({ id, didToken, publicAddress }: { 
+async function fetchJourney({ id, publicAddress, didToken }: { 
   id: string
-  didToken: string
   publicAddress: string 
+  didToken: string
 }) {
-
-  console.log('--------------------------------')
-  console.log("UI fetching journey")
-  console.log('id', id)
-  console.log('didToken', didToken)
-  console.log('publicAddress', publicAddress)
-  console.log('--------------------------------')
-
-  const response = await axios.post('/api/auth/get-journey', {
+  const response = await api.post('/api/auth/get-journey', {
     journeyId: id,
-    didToken,
-    publicAddress
+    publicAddress,
+    didToken
   })
   return response.data.journey
 }
@@ -38,8 +30,8 @@ export default function JourneySuccessClient() {
     queryKey: ['journey', journeyId, didToken, publicAddress],
     queryFn: () => fetchJourney({ 
       id: journeyId as string, 
-      didToken, 
-      publicAddress 
+      publicAddress,
+      didToken 
     }),
     enabled: Boolean(journeyId) && isAuthenticated
   })

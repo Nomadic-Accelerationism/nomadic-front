@@ -9,14 +9,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { JourneyDetailModal } from './modals/journey-detail-modal';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/axios';
 
 // Move the fetch function outside the component
-async function fetchJourneys({ didToken, publicAddress }: { didToken: string, publicAddress: string }) {
-  if (!didToken || !publicAddress) return []
+async function fetchJourneys({ publicAddress, didToken }: { publicAddress: string; didToken: string }) {
+  if (!publicAddress || !didToken) return []
   
-  const response = await axios.post('/api/auth/get-all-journeys', {
-    didToken,
+  const response = await api.post('/api/auth/get-all-journeys', {
     publicAddress,
+    didToken
   })
 
   const journeys = response.data?.journeys || []
@@ -36,7 +37,7 @@ export function AvailableJourneys() {
 
   const { data: availableJourneys = [], isLoading } = useQuery({
     queryKey: ['available-journeys', didToken, publicAddress],
-    queryFn: () => fetchJourneys({ didToken, publicAddress }),
+    queryFn: () => fetchJourneys({ publicAddress, didToken }),
     enabled: isAuthenticated && Boolean(didToken) && Boolean(publicAddress),
   });
 

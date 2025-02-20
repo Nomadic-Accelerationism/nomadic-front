@@ -62,30 +62,21 @@ export default function UserLoginComponent() {
         throw new Error('Magic SDK is not initialized');
       }
       
-      const didToken = await magic.auth.loginWithEmailOTP({ email: email });
+      const didToken = await magic.auth.loginWithEmailOTP({ email });
       const userInfo = await magic.user.getInfo();
       
       setDidToken(didToken || '');
 
-      console.log('didToken: ', didToken);
-
-      console.log("calling validate-otp");
-
-      const response = await axios.post('/api/auth/validate-otp', {
+      const response = await axios.post('/api/auth/validate-otp', { 
         email,
-        didToken
+        didToken 
       });
-
-      console.log('response: ', response);
       
       const metadata = response.data.metadata;
-      console.log('metadata: ', metadata);
-
       setUserMetadata(metadata);
-      if (metadata.publicAddress && setPublicAddress) {
+
+      if (metadata.publicAddress) {
         setPublicAddress(metadata.publicAddress);
-        localStorage.setItem('publicAddress',metadata.publicAddress);
-        localStorage.setItem('didToken', didToken || "");
       }
 
       router.push('/home-user');

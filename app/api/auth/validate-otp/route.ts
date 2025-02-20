@@ -2,18 +2,16 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-
-    //console.log("request--->", request);
-
     const { email, didToken } = await request.json();
-    console.log("*** From the API route ***");
-    console.log("email--->", email);
-    console.log("didToken--->", didToken);
+    
+    if (!didToken) {
+      return NextResponse.json(
+        { error: 'Authorization token required' },
+        { status: 401 }
+      );
+    }
 
     const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/validaOTP";
-
-
-    console.log("calling nomadic api--->", nomadicApiUrl);
 
     const response = await fetch(nomadicApiUrl, {
       method: 'POST',
@@ -24,9 +22,15 @@ export async function POST(request: Request) {
       body: JSON.stringify({ email }),
     });
 
-    console.log("response--->", response);
-
     const data = await response.json();
+    
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || 'Failed to validate OTP' },
+        { status: response.status }
+      );
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('API Error:', error);
