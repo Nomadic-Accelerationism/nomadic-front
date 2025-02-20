@@ -212,7 +212,8 @@ export default function UserProofsComponent() {
       'TALENT_PROTOCOL_PASSPORT': '/api/auth/get-talent',
       'NOUNS_NFT': '/api/auth/get-nouns',
       'APE_HOLDER': '/api/auth/get-ape',
-      'BAYC_NFT': '/api/auth/get-azuki'
+      'BAYC_NFT': '/api/auth/get-azuki',
+      'ETHGLOBAL_HACKER': '/api/auth/get-builder',
     } as const
 
     try {
