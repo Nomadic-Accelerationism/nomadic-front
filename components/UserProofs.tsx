@@ -22,6 +22,7 @@ import { notMetMessages, metMessages } from '@/interfaces/ProofItem';
 import axios from 'axios';
 
 import { useLogin,usePrivy } from '@privy-io/react-auth'
+import { useQuery } from '@tanstack/react-query'
 
 interface DialogState {
   verify: boolean
@@ -123,81 +124,62 @@ function ResultDialog({ open, onOpenChange, proof, result }: {
   )
 }
 
+// Move the fetch function outside the component
+async function fetchUserProofs({ publicAddress, didToken }: { 
+  publicAddress: string
+  didToken: string 
+}) {
+  if (!publicAddress || !didToken) return []
+  
+  const response = await axios.post('/api/auth/get-proof-hacker-list', {
+    publicAddress,
+    didToken
+  })
+  return response.data
+}
+
 export default function UserProofsComponent() {
-
-  const userContext = useUser();
-  const { publicAddress, setPublicAddress, setDidToken } = userContext;
-  const didToken = userContext.didToken;
-  const [proofItems, setProofItems] = useState<ProofItem[]>([]);
-  const [dialogState, setDialogState] = useState<DialogState>({ verify: false, result: false });
-  const [selectedProof, setSelectedProof] = useState<ProofItem>();
-  const [proofResult, setProofResult] = useState<ProofItem>();
+  const userContext = useUser()
+  const { publicAddress, setPublicAddress, setDidToken, didToken } = userContext
+  const [dialogState, setDialogState] = useState<DialogState>({ verify: false, result: false })
+  const [selectedProof, setSelectedProof] = useState<ProofItem>()
+  const [proofResult, setProofResult] = useState<ProofItem>()
   
-  
-  const { authenticated, ready, user,logout } = usePrivy()
+  const { authenticated, ready, user, logout } = usePrivy()
 
-  const {login} = useLogin({
+  // Handle local storage and context initialization
+  useEffect(() => {
+    const storedAddress = !publicAddress ? localStorage.getItem('publicAddress') || '' : publicAddress
+    const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken
+
+    if (!publicAddress || !didToken) {
+      setPublicAddress(storedAddress)
+      setDidToken(storedToken)
+    }
+  }, [publicAddress, didToken, setPublicAddress, setDidToken])
+
+  // Use React Query to fetch proofs
+  const { data: proofItems = [] } = useQuery({
+    queryKey: ['proofs', publicAddress, didToken],
+    queryFn: () => fetchUserProofs({ publicAddress, didToken }),
+    enabled: Boolean(publicAddress) && Boolean(didToken)
+  })
+
+  const { login } = useLogin({
     onComplete: () => {
       console.log("login complete")
-      const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken;
+      const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken
       if (user?.wallet?.address) processProof(user.wallet.address, storedToken)
       logout()
       console.log("logged out")
     }
-  });
-
-  const fetchProofs = async (storedAddress: string, storedToken: string) => {
-    try {
-      const data = await getUserProofs(storedAddress, storedToken);
-      setProofItems(data);
-    } catch (error) {
-      console.error("Error fetching proofs:", error);
-    }
-  };  
-
-  useEffect(() => {
-
-    const storedAddress = !publicAddress ? localStorage.getItem('publicAddress') || '' : publicAddress;
-    const storedToken = !didToken ? localStorage.getItem('didToken') || '' : didToken;
-
-
-    if (!publicAddress || !didToken) {
-      setPublicAddress(storedAddress);
-      setDidToken(storedToken);
-    }
-
-    const fetchProofs2 = async () => {
-      try {
-        const data = await getUserProofs(storedAddress, storedToken);
-        setProofItems(data);
-      } catch (error) {
-        console.error("Error fetching proofs:", error);
-      }
-    };  
-  
-    if (publicAddress && didToken) {
-      console.log("fetching proofs");
-      fetchProofs2();
-    }
-  }, [publicAddress, didToken]);
-
+  })
 
   const verifyProof = async (proof: ProofItem) => {
     console.log("verifyProof: ", proof);
     setSelectedProof(proof);
     setDialogState(prev => ({ ...prev, verify: true }));
   }
-
-  const getUserProofs = async (publicAddress: string, didToken: string) => {
-    const response = await axios.post('/api/auth/get-proof-hacker-list', {
-      publicAddress,
-      didToken
-    });
-    console.log("response: ", response);
-    return response.data;
-  }
-
-  // **********
 
   const processProof = async (walletAddress: string, didToken: string) => {
     console.log("walletAddress: ", walletAddress)
@@ -228,12 +210,10 @@ export default function UserProofsComponent() {
       }
 
       setDialogState(prev => ({ verify: false, result: true }))
-      await fetchProofs(walletAddress, didToken)
     } catch (error) {
       console.error(`Error processing proof: ${error}`)
     }
   }
-
 
   return (
     <>
