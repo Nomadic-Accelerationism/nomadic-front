@@ -227,7 +227,7 @@ export default function UserProofsComponent() {
         console.warn(`Unhandled proof type: ${proofType}`)
       }
 
-      setDialogState(prev => ({ ...prev, result: true }))
+      setDialogState(prev => ({ verify: false, result: true }))
       await fetchProofs(walletAddress, didToken)
     } catch (error) {
       console.error(`Error processing proof: ${error}`)
