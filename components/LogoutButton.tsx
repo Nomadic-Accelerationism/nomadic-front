@@ -14,7 +14,7 @@ export function LogoutButton() {
       logout();
       
       // Redirect to login page
-      router.push('/login');
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
     }

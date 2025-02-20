@@ -19,7 +19,7 @@ import { Search } from 'lucide-react'
 import { getMetMessage, getNotMetMessage, ProofItem } from "@/interfaces/ProofItem"
 import { useUser } from '@/contexts/UserContext';
 import { notMetMessages, metMessages } from '@/interfaces/ProofItem';
-import axios from 'axios';
+import { api } from '@/lib/axios';
 
 import { useLogin,usePrivy } from '@privy-io/react-auth'
 import { useQuery } from '@tanstack/react-query'
@@ -125,13 +125,10 @@ function ResultDialog({ open, onOpenChange, proof, result }: {
 }
 
 // Move the fetch function outside the component
-async function fetchUserProofs({ publicAddress, didToken }: { 
-  publicAddress: string
-  didToken: string 
-}) {
+async function fetchUserProofs({ publicAddress, didToken }: { publicAddress: string, didToken: string }) {
   if (!publicAddress || !didToken) return []
   
-  const response = await axios.post('/api/auth/get-proof-hacker-list', {
+  const response = await api.post('/api/auth/get-proof-hacker-list', {
     publicAddress,
     didToken
   })
@@ -161,9 +158,9 @@ export default function UserProofsComponent() {
 
   // Use React Query to fetch proofs
   const { data: proofItems = [] } = useQuery({
-    queryKey: ['proofs', publicAddress, didToken],
+    queryKey: ['userProofs', publicAddress],
     queryFn: () => fetchUserProofs({ publicAddress, didToken }),
-    enabled: Boolean(publicAddress) && Boolean(didToken)
+    enabled: Boolean(publicAddress && didToken)
   })
 
   const { login } = useLogin({
@@ -183,10 +180,6 @@ export default function UserProofsComponent() {
   }
 
   const processProof = async (walletAddress: string, didToken: string) => {
-    console.log("walletAddress: ", walletAddress)
-    console.log("processProof: ", selectedProof)
-    console.log("didToken: ", didToken)
-
     if (!selectedProof?.proof) return
 
     const proofType = selectedProof.proof.toString().toUpperCase()
@@ -201,7 +194,7 @@ export default function UserProofsComponent() {
 
     try {
       if (proofType in endpoints) {
-        const response = await axios.post(endpoints[proofType as keyof typeof endpoints], {
+        const response = await api.post(endpoints[proofType as keyof typeof endpoints], {
           wallet: walletAddress,
           didToken
         })

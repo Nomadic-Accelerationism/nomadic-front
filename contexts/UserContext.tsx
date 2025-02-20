@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback,useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { AuthService } from '@/services/auth-service';
 
 // Define a type for the user metadata
 interface UserMetadata {
@@ -33,7 +34,7 @@ export const UserContext = createContext<UserContextType>({
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userMetadata, setUserMetadata] = useState<any>(null);
-  const [didToken, setDidToken] = useState<string>('');
+  const [didToken, setDidTokenState] = useState<string>(AuthService.getToken());
   const [publicAddress, setPublicAddress] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   
@@ -42,23 +43,38 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const storedPublicAddress = localStorage.getItem('publicAddress') || '';
     const storedUserMetadata = localStorage.getItem('userMetadata');
     
-    setDidToken(storedDidToken);
+    setDidTokenState(storedDidToken);
     setPublicAddress(storedPublicAddress);
-    if (storedUserMetadata) {
-      setUserMetadata(JSON.parse(storedUserMetadata))
+    
+    try {
+      if (storedUserMetadata) {
+        const parsedMetadata = JSON.parse(storedUserMetadata);
+        if (parsedMetadata) setUserMetadata(parsedMetadata);
+      }
+    } catch (error) {
+      console.warn('Failed to parse stored user metadata:', error);
+      localStorage.removeItem('userMetadata'); // Clear invalid data
     }
+    
     setIsInitialized(true);
   }, []);
 
-  const isAuthenticated = Boolean(userMetadata);
+  const isAuthenticated = Boolean(userMetadata && didToken);
 
   const logout = useCallback(() => {
-    setUserMetadata(null);
-    localStorage.removeItem('userMetadata');
-    localStorage.removeItem('didToken');
-    localStorage.removeItem('publicAddress');
-    storageDidToken('');
-    storagePublicAddress('');
+    try {
+      // Clear state
+      setUserMetadata(null);
+      setDidTokenState('');
+      setPublicAddress('');
+      
+      // Clear storage
+      AuthService.removeToken();
+      localStorage.removeItem('userMetadata');
+      localStorage.removeItem('publicAddress');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   }, []);
 
   const storagePublicAddress = (address: string) => {
@@ -66,10 +82,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setPublicAddress(address);
   };
 
-  const storageDidToken = (token: string) => {
-    localStorage.setItem('didToken', token);
-    setDidToken(token);
-  };
+  const setDidToken = useCallback((token: string) => {
+    AuthService.setToken(token);
+    setDidTokenState(token);
+  }, []);
   
   const setUserMetadataWithStorage = (metadata: any) => {
     localStorage.setItem('userMetadata', JSON.stringify(metadata))
@@ -81,7 +97,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       userMetadata,
       setUserMetadata : setUserMetadataWithStorage,
       didToken,
-      setDidToken : storageDidToken,
+      setDidToken,
       publicAddress,
       setPublicAddress : storagePublicAddress,
       isAuthenticated,
