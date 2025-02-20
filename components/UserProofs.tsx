@@ -144,6 +144,7 @@ export default function UserProofsComponent() {
   const [dialogState, setDialogState] = useState<DialogState>({ verify: false, result: false })
   const [selectedProof, setSelectedProof] = useState<ProofItem>()
   const [proofResult, setProofResult] = useState<ProofItem>()
+  const [searchQuery, setSearchQuery] = useState("")
   
   const { authenticated, ready, user, logout } = usePrivy()
 
@@ -215,6 +216,12 @@ export default function UserProofsComponent() {
     }
   }
 
+  // Filter proofs based on search query
+  const filteredProofs = proofItems.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <>
     <div className="max-w-sm mx-auto py-4 space-y-4 px-8">
@@ -222,10 +229,16 @@ export default function UserProofsComponent() {
       
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <Input type="text" placeholder="Search" className="pl-10 rounded-xl bg-gray-100" />
+        <Input 
+          type="text" 
+          placeholder="Search" 
+          className="pl-10 rounded-xl bg-gray-100"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
       
-      {proofItems.map((item, index) => (
+      {filteredProofs.map((item, index) => (
         <Card 
           key={index} 
           className={`flex items-center justify-between rounded-xl border border-gray-700 py-1 ${
