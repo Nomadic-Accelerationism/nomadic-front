@@ -85,7 +85,21 @@ export default function JourneyCreateComponent() {
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
+    const { id, value } = e.target
+    
+    // Handle numeric inputs
+    if (id === 'budget' || id === 'guestCapacity') {
+      // Only allow numbers and empty string
+      if (value === '' || /^\d+$/.test(value)) {
+        setFormData(prev => ({
+          ...prev,
+          [id]: value
+        }))
+      }
+      return
+    }
+
+    // Handle other inputs normally
     setFormData(prev => ({
       ...prev,
       [id]: value
@@ -202,18 +216,24 @@ export default function JourneyCreateComponent() {
           <div>
             <Label htmlFor="budget">Max Budget per Nomad</Label>
             <Input
-            id="budget"
-            value = {formData.budget}
-            onChange={handleInputChange}
-            placeholder="USDC" />
+              id="budget"
+              value={formData.budget}
+              onChange={handleInputChange}
+              placeholder="USDC"
+              type="text"
+              inputMode="numeric"
+              pattern="\d*" />
           </div>
           <div>
             <Label htmlFor="guestCapacity">Share with max. of...</Label>
             <Input 
-            id="guestCapacity"
-            value = {formData.guestCapacity}
+              id="guestCapacity"
+              value={formData.guestCapacity}
               onChange={handleInputChange}
-            placeholder="# Nomads" />
+              placeholder="# Nomads"
+              type="text"
+              inputMode="numeric"
+              pattern="\d*" />
           </div>
         </div>
 
