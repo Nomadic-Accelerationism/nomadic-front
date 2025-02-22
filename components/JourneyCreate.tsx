@@ -247,20 +247,56 @@ export default function JourneyCreateComponent() {
           className="h-24" />
         </div>
 
-        <div>
-          <input
-            type="file"
-            id="photo-upload"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageChange}
-          />
-          <Button 
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-            onClick={() => document.getElementById('photo-upload')?.click()}
-          >
-            Load photo
-          </Button>
+        <div className="space-y-2">
+          <Label>Journey Photo</Label>
+          <div className="flex flex-col items-center gap-4">
+            {formData.photo && (
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setFormData(prev => ({ ...prev, photo: '' }))}
+                  className="absolute top-2 right-2 z-10 p-2 rounded-full bg-red-500/80 hover:bg-red-600 transition-colors"
+                  type="button"
+                  aria-label="Remove image"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-white"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  </svg>
+                </button>
+                <Image
+                  src={formData.photo}
+                  alt="Journey preview"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              id="photo-upload"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+            <Button 
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => document.getElementById('photo-upload')?.click()}
+            >
+              {formData.photo ? 'Change photo' : 'Load photo'}
+            </Button>
+          </div>
         </div>
 
         <div>
