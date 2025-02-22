@@ -182,11 +182,11 @@ export default function JourneyCreateComponent() {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar 
-                mode="single" 
-                selected={formData.startDate}
-                onSelect={(date) => setFormData(prev => ({ ...prev,
-                  startDate: date}))}
-                initialFocus />
+                  mode="single" 
+                  selected={formData.startDate}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, startDate: date }))}
+                  disabled={{ before: new Date() }}
+                  initialFocus />
               </PopoverContent>
             </Popover>
           </div>
@@ -202,11 +202,11 @@ export default function JourneyCreateComponent() {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar 
-                mode="single" 
-                selected={formData.finishDate}
-                onSelect={(date) => setFormData(prev => ({...prev,
-                finishDate: date}))}
-                initialFocus />
+                  mode="single" 
+                  selected={formData.finishDate}
+                  onSelect={(date) => setFormData(prev => ({...prev, finishDate: date}))}
+                  disabled={{ before: formData.startDate || new Date() }}
+                  initialFocus />
               </PopoverContent>
             </Popover>
           </div>
