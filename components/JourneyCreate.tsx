@@ -126,10 +126,32 @@ export default function JourneyCreateComponent() {
   };
 
   const goToPreviewCreate = () => {
-    console.log("Form Data:",formData);
-    if (formData.photo) {
-      localStorage.setItem('journeyTempPhoto', formData.photo);
+    // Required fields validation
+    const requiredFields = {
+      title: 'Journey Title',
+      location: 'Location',
+      description: 'Description',
+      guestCapacity: 'Guest Capacity',
+      budget: 'Budget',
+      startDate: 'Start Date',
+      finishDate: 'Finish Date',
+      photo: 'Journey Photo'
     }
+
+    const missingFields = Object.entries(requiredFields).reduce((acc: string[], [key, label]) => {
+      if (!formData[key as keyof typeof formData]) acc.push(label)
+      return acc
+    }, [])
+
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields:\n${missingFields.join('\n')}`)
+      return
+    }
+
+    if (formData.photo) {
+      localStorage.setItem('journeyTempPhoto', formData.photo)
+    }
+    
     const serializedFormData = {
       ...formData,
       photo: undefined,
@@ -138,8 +160,9 @@ export default function JourneyCreateComponent() {
       creatorAddress: publicAddress,
       requiredProofs: formData.requiredProofs,
       customProofs: formData.customProofs
-    };
-    router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}`);
+    }
+    
+    router.push(`/journey-preview?formData=${encodeURIComponent(JSON.stringify(serializedFormData))}`)
   }
 
   return (
