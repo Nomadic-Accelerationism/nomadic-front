@@ -27,6 +27,7 @@ import { useQuery } from '@tanstack/react-query'
 interface DialogState {
   verify: boolean
   result: boolean
+  xAccount: boolean
 }
 
 function VerifyDialog({ open, onOpenChange, proof, onVerify }: {
@@ -124,6 +125,55 @@ function ResultDialog({ open, onOpenChange, proof, result }: {
   )
 }
 
+function XAccountDialog({ open, onOpenChange, proof, onVerify }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  proof?: ProofItem
+  onVerify: () => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[385px] rounded-3xl">
+        <DialogHeader className="text-center space-y-4">
+          <DialogTitle className="text-2xl font-normal">
+            {proof?.title} **
+          </DialogTitle>
+          <p className="text-lg text-center text-muted-foreground">
+            Connect your X account to verify your identity **
+          </p>
+        </DialogHeader>
+        <div className="flex flex-col items-center space-y-4 py-4">
+          <div className="relative">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={`${proof?.icon}?height=100&width=100`}
+                alt="X Account Badge"
+                className="w-24 h-24"
+              />
+            </div>
+          </div>
+          <div className="px-6 py-2 rounded-full bg-muted">
+            {proof?.isActive ? "Connected" : "Not Connected"}
+          </div>
+          {proof && (
+            <>
+              <p className="text-lg text-center">
+                {proof.isActive ? "Your X account is connected" : "Connect your X account to continue"}
+              </p>
+              <Button 
+                className="w-full h-12 text-lg bg-black hover:bg-black/90 text-white rounded-full"
+                onClick={onVerify}
+              >
+                {proof?.isActive ? "Update Connection" : "Connect X Account"}
+              </Button>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // Move the fetch function outside the component
 async function fetchUserProofs({ publicAddress, didToken }: { publicAddress: string, didToken: string }) {
   if (!publicAddress || !didToken) return []
@@ -138,7 +188,7 @@ async function fetchUserProofs({ publicAddress, didToken }: { publicAddress: str
 export default function UserProofsComponent() {
   const userContext = useUser()
   const { publicAddress, setPublicAddress, setDidToken, didToken } = userContext
-  const [dialogState, setDialogState] = useState<DialogState>({ verify: false, result: false })
+  const [dialogState, setDialogState] = useState<DialogState>({ verify: false, result: false, xAccount: false })
   const [selectedProof, setSelectedProof] = useState<ProofItem>()
   const [proofResult, setProofResult] = useState<ProofItem>()
   const [searchQuery, setSearchQuery] = useState("")
@@ -176,7 +226,17 @@ export default function UserProofsComponent() {
   const verifyProof = async (proof: ProofItem) => {
     console.log("verifyProof: ", proof);
     setSelectedProof(proof);
-    setDialogState(prev => ({ ...prev, verify: true }));
+    // Convert to uppercase and trim any whitespace
+    const proofType = proof.proof.toString().toUpperCase().trim();
+    console.log("Proof type:", proofType); // Debug log
+    
+    if (proofType === 'X-ACCOUNT') {
+      console.log("Opening X Account dialog"); // Debug log
+      setDialogState(prev => ({ ...prev, verify: false, xAccount: true }));
+    } else {
+      console.log("Opening regular verify dialog"); // Debug log
+      setDialogState(prev => ({ ...prev, verify: true, xAccount: false }));
+    }
   }
 
   const processProof = async (walletAddress: string, didToken: string) => {
@@ -190,6 +250,7 @@ export default function UserProofsComponent() {
       'APE_HOLDER': '/api/auth/get-ape',
       'BAYC_NFT': '/api/auth/get-azuki',
       'ETHGLOBAL_HACKER': '/api/auth/get-builder',
+      'X-ACCOUNT': '/api/auth/get-x-account'
     } as const
 
     try {
@@ -258,7 +319,14 @@ export default function UserProofsComponent() {
     <ResultDialog open={dialogState.result} onOpenChange={(open) => setDialogState(prev => ({ ...prev, result: open }))}
       proof={selectedProof}
       result={proofResult}
-    />    
+    />
+
+    <XAccountDialog 
+      open={dialogState.xAccount} 
+      onOpenChange={(open) => setDialogState(prev => ({ ...prev, xAccount: open }))}
+      proof={selectedProof}
+      onVerify={() => login()}
+    />
     </>
   );
 }
