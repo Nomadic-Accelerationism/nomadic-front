@@ -1,9 +1,15 @@
 # Lisbon MVP — ETHGlobal Lisbon 2026
 
 > Status: **product definition** (documentation only).  
-> Authority: `docs/PROJECT_CONTEXT.md`, `docs/FRONTEND_AUDIT.md`, backend findings, revised plan feedback.  
+> Authority: `docs/PROJECT_CONTEXT.md`, `docs/FRONTEND_AUDIT.md`, backend findings, final documentation corrections.  
 > Branch: `lisboa2026`  
-> No application code ships with this document.
+> No application code, package installs, schemas, or migrations ship with this document.
+
+External technical references for ENS:
+
+- Official ENS docs (Universal Resolver / resolution): https://docs.ens.domains/resolvers/universal/
+- ENSv2 overview / preview materials: https://ens.domains/ensv2  
+- ENSjs / viem resolution via the canonical Universal Resolver path
 
 ---
 
@@ -14,10 +20,13 @@ A minimal **Nomadic Passport** demo that proves continuity of identity across co
 1. A person signs in with existing **Magic** email auth.
 2. They open a **Passport** that shows wallet-based identity and ENS as a human alias.
 3. They claim **one** Lisbon credential that requires **World Selfie Check**.
-4. The same real person cannot claim that credential twice.
-5. They share a **public Passport** URL.
+4. The same **verified World identity** cannot create a second claim for the same credential action.
+5. They share a **public Passport** URL associated with the wallet.
 
-The product must not over-claim. Selfie Check proves **unique-human claim eligibility**, not ETHGlobal attendance, residency, or organizer-issued status.
+The product must not over-claim:
+
+- Selfie Check verifies a World identity for a fixed action; it is **not** absolute proof of global unique-personhood beyond that verification model.
+- Selfie Check does **not** prove ETHGlobal attendance, residency, or organizer-issued status.
 
 ---
 
@@ -28,15 +37,18 @@ The product must not over-claim. Selfie Check proves **unique-human claim eligib
 | Rule | Decision |
 | --- | --- |
 | Login | Keep **Magic** email OTP + DID Bearer validation (existing) |
-| Canonical key | **Wallet address** (`publicAddress`) is the stable identity key |
-| ENS | Alias only: name, avatar, human-readable display, public lookup entry |
-| Not in scope | Replacing Magic; multi-wallet account management; wallet-as-login |
+| Canonical key | **Wallet address** is the stable identity key |
+| ENS | Alias only: verified primary name, avatar, human-readable display, public lookup entry |
+| ENS integration style | **ENSv2-ready application integration** via ENSjs + Universal Resolver (see architecture) |
+| Not in scope | Replacing Magic; multi-wallet management; wallet-as-login; direct draft ENSv2 registry contracts |
 
 **Wallet sourcing (P0):**
 
-- Prefer `publicAddress` from **server-validated Magic metadata** and persist it on `User` when Magic Admin returns it stably.
+- Prefer `publicAddress` from **server-validated Magic metadata** when the installed Magic Admin/client SDKs actually provide it.
+- Treat `User.publicAddress` as a **proposed nullable field** until a Magic wallet metadata readiness spike confirms the real response shape.
 - Do **not** trust an arbitrary `walletAddress` from the claim request body as proof of ownership.
-- If Magic does not provide a stable address, document and implement: public Passport by wallet is available only after a claim that binds a wallet through a **reliable** mechanism (to be confirmed during backend implementation; not client-blind trust).
+- Centralize wallet extraction; never log complete Magic metadata, DID tokens, or email addresses.
+- If Magic does not provide a stable address: public Passport-by-wallet becomes available only after a later reliable wallet bind (documented at spike time).
 
 ### 2.2 Passport
 
@@ -45,8 +57,8 @@ Passport is **not** a new database entity for the MVP.
 It is an **aggregated product view** of:
 
 - user identity (Magic session / email-backed user);
-- wallet (`publicAddress`);
-- ENS data (resolved from wallet);
+- trusted wallet (`publicAddress` when bound);
+- ENS data resolved at the frontend (never persisted in Nomadic DB for P0);
 - new Lisbon `CredentialClaim` records;
 - optional secondary listing of existing legacy proofs (`UserProofs`) if already present.
 
@@ -55,14 +67,16 @@ It is an **aggregated product view** of:
 | Route | Audience |
 | --- | --- |
 | `/passport` | Authenticated owner |
-| `/p/[identifier]` | Public; `identifier` = ENS name **or** wallet address |
+| `/p/[identifier]` | Public; `identifier` = ENS-resolvable name **or** wallet address |
 
-Internal public resolution:
+Internal public resolution (frontend / BFF only):
 
 ```text
 identifier
-  → if ENS name: resolve to wallet
-  → retrieve Passport aggregate by wallet
+  → normalize
+  → if domain-like: ENS resolve name → wallet
+  → if wallet: use normalized wallet
+  → Express GET /passport/public/:address  (wallet only)
 ```
 
 ENS may change owner over time; the wallet remains the stable retrieval key.
@@ -73,22 +87,29 @@ ENS may change owner over time; the wallet remains the stable retrieval key.
 | --- | --- |
 | User-facing UI | **Credential** |
 | Internal / legacy code & DB | Keep existing **Proof** / `UserProofs` names |
-| New Lisbon claims | New table **`CredentialClaim`** (do not force World uniqueness into `UserProofs`) |
+| New Lisbon claims | New table **`CredentialClaim`** |
 
 **P0 primary credential (honest naming):**
 
 ```text
 credentialKey:   NOMADIC_LISBON_2026
 displayName:     Nomadic Lisbon 2026
-description:     A unique-human credential claimed through Nomadic during ETHGlobal Lisbon 2026.
+description:     A World Selfie Check–verified credential claimed through Nomadic during ETHGlobal Lisbon 2026.
 ```
 
-**Requirement:** World Selfie Check + uniqueness (one real human per credential; one user per credential).
+**Requirement:** World Selfie Check for fixed allowlisted action `claim_nomadic_lisbon_2026`, with uniqueness scoped to the verified World identity for that action; one Nomadic user per credential key.
 
-**Not for P0 display as primary:**
+**Public disclosure (required before claim completion):**
+
+- Explain that a successful claim will appear on a **publicly accessible Passport** associated with the wallet.
+- Disclose which fields will be public (wallet, ENS alias when resolved client-side, credential display fields, claimedAt).
+- Never expose email.
+- Do not make the public route discoverable by email.
+
+**Not for P0 as primary:**
 
 - NFT/social marketplace-style proof lists dominating the UI.
-- A credential named “ETHGlobal Lisbon Participant” (would require organizer evidence: QR, check-in, allowlist, or issuer attestation).
+- A credential named “ETHGlobal Lisbon Participant” without organizer evidence.
 
 **Future credential keys** (only when attribute evidence exists):
 
@@ -103,13 +124,13 @@ COMMUNITY_CONTRIBUTOR
 
 Public Passport shows:
 
-- ENS name **or** truncated wallet;
-- ENS avatar when available;
+- verified ENS name **or** truncated wallet;
+- ENS avatar when available (avatar failure never breaks the page);
 - wallet address;
 - verified credentials (`CredentialClaim` list; Lisbon first);
 - optional legacy proofs as a secondary “Other verifications” section if already present.
 
-**Not shown:** social graph, reviews, reputation score, complex privacy controls, journey history in P0 (journeys are not reliably public today).
+**Not shown:** email, social graph, reviews, reputation score, complex privacy controls, journey history in P0.
 
 ---
 
@@ -117,21 +138,22 @@ Public Passport shows:
 
 ```text
 1. Land on Nomadic → Nomad Email Login (Magic).
-2. Backend validates DID and returns / persists user (+ publicAddress when available).
+2. Backend validates DID and returns user; wallet bind only if Magic metadata spike confirms it.
 3. App opens /passport (primary post-login destination for the demo).
 4. Passport shows:
-   - ENS name/avatar if resolvable from wallet;
+   - verified primary ENS name/avatar if reverse+forward checks succeed;
    - else truncated wallet;
    - credentials section with Nomadic Lisbon 2026 claim CTA or claimed state.
-5. User opens claim flow for Nomadic Lisbon 2026.
-6. User completes World Selfie Check (client).
-7. Frontend sends proof to backend claim endpoint.
-8. Backend verifies World proof server-side, enforces uniqueness, stores CredentialClaim.
-9. Passport refreshes and shows the credential as claimed.
-10. User copies/opens /p/<ens-or-wallet>.
-11. Visitor (no login) sees public Passport with the credential.
-12. Same human / same user attempting a second claim gets an idempotent success
-    (already owned) or a clear conflict if uniqueness is violated by another account.
+5. User opens claim flow; reads public-disclosure copy; continues.
+6. Client requests RP signing context from backend (fixed action claim_nomadic_lisbon_2026).
+7. Client opens supported IDKit Selfie Check flow.
+8. Client sends complete IDKit result to claim endpoint.
+9. Backend verifies with World, extracts action-scoped uniqueness value, stores CredentialClaim.
+10. Passport refreshes and shows the credential as claimed.
+11. User copies/opens /p/<ens-or-wallet>.
+12. Visitor (no login) sees public Passport with the credential.
+13. Same verified World identity / same user attempting a second claim for the same action
+    gets idempotent success (already owned) or a clear uniqueness conflict.
 ```
 
 ```mermaid
@@ -139,22 +161,25 @@ sequenceDiagram
   participant User
   participant Front as nomadic_front
   participant Back as nomadic_back
-  participant ENS as ENS_RPC
-  participant World as World_SelfieCheck
+  participant ENS as ENS_UniversalResolver
+  participant World as World_IDKit
 
   User->>Front: Magic email login
   Front->>Back: validate OTP with DID
-  Back-->>Front: user metadata and publicAddress when available
+  Back-->>Front: user metadata and publicAddress when confirmed
   User->>Front: Open /passport
-  Front->>ENS: resolve name and avatar from wallet
-  Front->>Back: GET private passport aggregate
-  User->>Front: Claim Nomadic Lisbon 2026
-  Front->>World: Selfie Check client flow
-  Front->>Back: POST credential claim with World proof
+  Front->>ENS: reverse and forward verify plus avatar
+  Front->>Back: GET /passport/me
+  User->>Front: Start Nomadic Lisbon 2026 claim
+  Front->>Back: POST /world/request
+  Back-->>Front: signed RP request context
+  Front->>World: IDKit Selfie Check
+  Front->>Back: POST /credentials/claim with IDKit result
   Back->>Back: verify World and enforce uniqueness
   Back-->>Front: created or idempotent existing claim
   User->>Front: Share /p/ensOrWallet
-  Front->>Back: GET public passport by wallet
+  Front->>ENS: resolve identifier to wallet when needed
+  Front->>Back: GET /passport/public/:address
 ```
 
 ---
@@ -162,14 +187,15 @@ sequenceDiagram
 ## 4. In scope (P0)
 
 - Magic auth reuse (no auth replacement).
-- Persist wallet on `User` when Magic metadata supplies it (additive field).
+- Magic wallet metadata readiness spike; proposed `User.publicAddress` only after confirmation.
 - Private Passport page `/passport`.
-- Public Passport `/p/[identifier]` with ENS→wallet resolution.
-- ENS name + avatar display and lookup.
-- `NOMADIC_LISBON_2026` claim via World Selfie Check.
-- Server-side World verification + uniqueness via `CredentialClaim`.
+- Public Passport `/p/[identifier]` with frontend/BFF ENS→wallet resolution.
+- ENSv2-ready resolution via ENSjs + viem + Universal Resolver (no draft ENSv2 registry contracts).
+- `NOMADIC_LISBON_2026` claim via World Selfie Check with server RP signing + server verification.
+- `CredentialClaim` uniqueness after World readiness spike.
+- Public disclosure before claim.
 - Hide legacy house/NACC/single-use/journey-heavy CTAs from the **main demo path** (do not delete).
-- Continuity documentation (`PREEXISTING_VS_LISBON.md` and related docs).
+- Continuity documentation.
 
 ---
 
@@ -177,7 +203,10 @@ sequenceDiagram
 
 - New application or monorepo.
 - Passport database entity.
-- Renaming legacy Prisma models (`UserProofs`, Journey, etc.).
+- Persisting ENS names/avatars/text records in Nomadic DB.
+- Direct interaction with draft ENSv2 Permissioned Registry / Resolver / ETH Registrar / migration contracts.
+- Express-side ENS resolution.
+- Renaming legacy Prisma models.
 - Deleting journeys, houses, legacy proof verify UI.
 - Showing journeys on the public Passport.
 - Credential named ETHGlobal Participant without organizer evidence.
@@ -187,25 +216,25 @@ sequenceDiagram
 - Social graph, reviews, reputation scores, complex privacy.
 - Deployable demo bypasses that mint fake World claims (`DEMO_WORLD_BYPASS` forbidden).
 - Collecting or storing selfies, biometrics, documents, or full World payloads.
+- Claiming absolute global unique-personhood beyond World’s verified action-scoped identity model.
 
 ---
 
 ## 6. Demo success criteria
 
-The demo succeeds when all of the following are true:
-
 1. **Login:** User completes Magic login and reaches `/passport`.
-2. **Identity:** Passport shows ENS name/avatar **or** a truncated wallet (honest fallback if ENS fails).
-3. **Claim:** User claims **Nomadic Lisbon 2026** with Selfie Check once.
-4. **Uniqueness:** A second claim by the same real person / same user does not create a duplicate row (idempotent return or clear conflict UX).
-5. **Public share:** `/p/[identifier]` loads without auth and shows the claimed credential.
-6. **Honesty:** UI copy does not claim ETHGlobal attendance or organizer issuance.
-7. **Continuity:** Judges can see what was pre-existing vs Lisbon-built (`PREEXISTING_VS_LISBON.md`).
+2. **Identity:** Passport shows a **verified** ENS primary name/avatar **or** a truncated wallet.
+3. **Claim disclosure:** User sees public Passport disclosure before completing claim.
+4. **Claim:** User claims **Nomadic Lisbon 2026** with Selfie Check once.
+5. **Uniqueness:** The same verified World identity cannot create a second claim for the same credential action; same Nomadic user re-submit is idempotent.
+6. **Public share:** `/p/[identifier]` loads without auth and shows the claimed credential (no email).
+7. **Honesty:** UI copy does not claim ETHGlobal attendance or absolute global uniqueness beyond World verification.
+8. **Continuity:** Judges can see pre-existing vs Lisbon-built work.
 
-**Failure modes that still allow a credible partial demo:**
+**Credible partial-demo failure modes:**
 
-- ENS unavailable → show truncated wallet; public route still works by address.
-- World unavailable → honest unavailable state; use a **pre-recorded successful demo** (video/screens) and a **local-only** test adapter that cannot be enabled in preview/production builds.
+- ENS unavailable → truncated wallet; public route still works by address.
+- World unavailable → honest unavailable state; pre-recorded successful demo; local-only test adapter that cannot be enabled in preview/production.
 
 ---
 
@@ -214,7 +243,7 @@ The demo succeeds when all of the following are true:
 - One developer; incremental changes; keep the app deployable.
 - Evolve `nomadic-front` + additive `nomadic-back`; no clean rewrite.
 - Every sponsor integration (ENS, World) must serve this Passport story.
-- Walrus only after P0 is complete (optional later).
+- Walrus and direct ENSv2 experimentation only after P0.
 
 ---
 
@@ -222,7 +251,7 @@ The demo succeeds when all of the following are true:
 
 | Doc | Purpose |
 | --- | --- |
-| [`LISBON_ARCHITECTURE.md`](./LISBON_ARCHITECTURE.md) | FE/BE split, schema, flows |
-| [`LISBON_ROUTES.md`](./LISBON_ROUTES.md) | Pages and API contracts |
-| [`LISBON_IMPLEMENTATION_PLAN.md`](./LISBON_IMPLEMENTATION_PLAN.md) | P0/P1/P2 tasks |
+| [`LISBON_ARCHITECTURE.md`](./LISBON_ARCHITECTURE.md) | FE/BE split, ENSv2-ready strategy, World RP, schema |
+| [`LISBON_ROUTES.md`](./LISBON_ROUTES.md) | Locked methods and contracts |
+| [`LISBON_IMPLEMENTATION_PLAN.md`](./LISBON_IMPLEMENTATION_PLAN.md) | Build order, ENS tests, spikes |
 | [`PREEXISTING_VS_LISBON.md`](./PREEXISTING_VS_LISBON.md) | Continuity honesty |

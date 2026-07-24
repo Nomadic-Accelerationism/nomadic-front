@@ -29,6 +29,7 @@ Do not delete pre-existing features to “look cleaner.” Hide them from the de
 - Users persisted by **email**.
 - Session storage pattern (`didToken`, `userMetadata`, `publicAddress` in frontend context/localStorage).
 - Existing OTP BFF proxy (`/api/auth/validate-otp` → `/validaOTP`).
+- Wallet not yet a confirmed first-class persisted `User` field (Lisbon proposes this only after a Magic metadata spike).
 
 ### Journeys
 
@@ -49,6 +50,7 @@ Do not delete pre-existing features to “look cleaner.” Hide them from the de
 - Next.js 14 App Router app (`nomadic-front`).
 - Landing, home-user, menus, Satoshi branding, shadcn/Radix UI kit.
 - Axios + React Query patterns; `app/api/auth/*` BFF proxies.
+- Transitive `viem` via Privy (currently lockfile `2.23.2`); no ENSjs yet.
 
 ### Other pre-existing surfaces (often incomplete or mock)
 
@@ -61,7 +63,7 @@ Do not delete pre-existing features to “look cleaner.” Hide them from the de
 
 - Express + TypeScript + Prisma + PostgreSQL.
 - Existing proof and journey endpoints/tables.
-- No Passport entity; no public Passport endpoint; no ENS; no working World verification endpoint; no nullifier/uniqueness store; `UserProofs` allows duplicates; wallet not a first-class User field.
+- No Passport entity; no public Passport endpoint; no ENS resolution; no working World verification / RP signing; no uniqueness store; `UserProofs` allows duplicates.
 
 ---
 
@@ -71,16 +73,18 @@ Do not delete pre-existing features to “look cleaner.” Hide them from the de
 
 - Nomadic **Passport** as an aggregated product view (not a new Passport table).
 - Private route `/passport`.
-- Public route `/p/[identifier]` (ENS alias → wallet canonical lookup).
+- Public route `/p/[identifier]` (frontend ENS alias → wallet; Express by address only).
 - Demo navigation that promotes Passport and demotes legacy CTAs (without deleting routes).
 - User-facing **Credential** language for Lisbon UI while keeping internal `Proof` names.
+- Public-disclosure requirement before claim completion.
 
-### Identity
+### Identity (ENS)
 
-- ENS name + avatar display and public lookup (alias layer).
-- Decision to treat **wallet as canonical** identity key.
-- Additive persistence of `User.publicAddress` from **server-validated Magic metadata** when available.
-- Claim path that does **not** blindly trust client-supplied wallet addresses.
+- **ENSv2-ready application integration** using ENSjs + viem + canonical Universal Resolver.
+- No direct dependency on draft ENSv2 registry/registrar contracts in P0.
+- Wallet-canonical identity; ENS as alias with reverse+forward verification and avatar.
+- ENS data not persisted in Nomadic DB for P0.
+- Express never resolves ENS in P0.
 
 ### Credentials and uniqueness
 
@@ -89,30 +93,32 @@ Do not delete pre-existing features to “look cleaner.” Hide them from the de
 ```text
 NOMADIC_LISBON_2026
 Nomadic Lisbon 2026
-A unique-human credential claimed through Nomadic during ETHGlobal Lisbon 2026.
+A World Selfie Check–verified credential claimed through Nomadic during ETHGlobal Lisbon 2026.
 ```
 
-- New `CredentialClaim` table (not forced into `UserProofs`).
-- World **Selfie Check** client flow + **server-side** verification.
-- Uniqueness via `uniquenessKey` + `verificationProvider` (exact World field confirmed against beta API before migration lock-in).
-- Constraints: one user per credential; one uniqueness key per credential; **no** wallet uniqueness constraint until ownership is proven.
-- Honest naming: does **not** claim ETHGlobal attendance without organizer evidence.
+- New `CredentialClaim` table (after World spike; not forced into `UserProofs`).
+- World RP signing (`POST /world/request`) + IDKit client + server verify + claim.
+- Uniqueness: same verified World identity cannot create a second claim for the same credential action; one Nomadic user per credential key.
+- Constraints: `userId+credentialKey`, `uniquenessKey+credentialKey`; no wallet unique until ownership proven.
+- Honest naming: does **not** claim ETHGlobal attendance or absolute global unique-personhood beyond World’s verified action model.
 
 ### Public profile
 
-- Unauthenticated public Passport read API + page.
+- Unauthenticated public Passport read by **wallet address**.
 - Public fields only (no email); credentials list; optional secondary legacy proofs.
+- Not discoverable by email.
 
 ### Documentation and process
 
 - `PROJECT_CONTEXT.md`, `FRONTEND_AUDIT.md`.
 - `LISBON_MVP.md`, `LISBON_ARCHITECTURE.md`, `LISBON_ROUTES.md`, `LISBON_IMPLEMENTATION_PLAN.md`, this file.
-- Testing / demo script documentation for the Passport flow.
+- ENS readiness tests and Magic/World spikes in the implementation plan.
 - Continuity-aware PR/branch practice (`lisboa2026`).
 
-### Explicitly not Lisbon (yet)
+### Explicitly not Lisbon (yet) / deferred
 
-- Walrus / Sui (optional only after P0).
+- Walrus / Sui (after P0 only).
+- Direct experimental ENSv2 contract integration (P2 / deferred).
 - Organizer-issued credentials such as `ETHGLOBAL_LISBON_2026_PARTICIPANT`.
 - Journey history on the public Passport.
 - Social graph, reviews, reputation scores.
@@ -124,14 +130,15 @@ A unique-human credential claimed through Nomadic during ETHGlobal Lisbon 2026.
 | Area | Pre-existing | Lisbon |
 | --- | --- | --- |
 | Login | Magic email DID | Keep; do not replace |
-| User key | Email | Email + additive `publicAddress` |
-| Human-readable ID | Mostly raw address / email | ENS alias on top of wallet |
-| Passport | None | Aggregated `/passport` + `/p/[identifier]` |
-| Credential uniqueness | None (`UserProofs` duplicates possible) | `CredentialClaim` + World uniqueness |
-| World | Icon / `WORLD_ID_POH` legacy naming | Selfie Check verify + claim |
+| User key | Email | Email + proposed `publicAddress` after Magic spike |
+| Human-readable ID | Mostly raw address / email | Verified ENS alias via Universal Resolver |
+| Passport | None | `/passport` + `/p/[identifier]` |
+| ENS in backend | None | Still none in P0 (FE only) |
+| Credential uniqueness | None (`UserProofs` duplicates possible) | `CredentialClaim` + World action-scoped uniqueness |
+| World | Icon / `WORLD_ID_POH` legacy naming | RP sign + Selfie Check verify + claim |
 | Journeys | Full-ish product surface | Hidden from demo path; not public P0 |
 | Houses / NACC / single-use | Present / mock | Hidden from demo path |
-| Walrus | None | Deferred post-P0 |
+| Walrus / direct ENSv2 contracts | None | Deferred post-P0 |
 | Docs | Boilerplate README | Lisbon MVP + audit + continuity docs |
 
 ---
@@ -144,7 +151,7 @@ A unique-human credential claimed through Nomadic during ETHGlobal Lisbon 2026.
 - Existing visual shell, menus, and branding system (Lisbon **reuses** them).
 - Prior hackathon scaffolding that this continuity project inherits.
 
-Judges **should** credit Lisbon for: Passport productization, ENS identity layer, public share route, World Selfie Check unique-human claim for **Nomadic Lisbon 2026**, uniqueness persistence, and honest continuity documentation.
+Judges **should** credit Lisbon for: Passport productization; ENSv2-ready resolution/identity aliasing; public share route; World Selfie Check claim flow for **Nomadic Lisbon 2026** with server RP signing and uniqueness persistence; and honest continuity documentation.
 
 ---
 
@@ -153,7 +160,7 @@ Judges **should** credit Lisbon for: Passport productization, ENS identity layer
 **Demo path (Lisbon):**
 
 ```text
-Landing → Magic login → /passport → claim Nomadic Lisbon 2026 → share /p/[identifier]
+Landing → Magic login → /passport → disclose public fields → claim Nomadic Lisbon 2026 → share /p/[identifier]
 ```
 
 **Legacy path (pre-existing, still in repo):**
