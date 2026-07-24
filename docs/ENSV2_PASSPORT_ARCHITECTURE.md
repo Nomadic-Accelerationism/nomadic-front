@@ -1,7 +1,8 @@
 # ENSv2 Passport architecture spike (Track B)
 
-> Conceptual / architecture only. **Do not** mint production names or make Passport depend on experimental ENSv2 registry writes.  
-> Based on official ENSv2 overview + PermissionedRegistry / PermissionedResolver docs; Sepolia/devnet deployments exist and **addresses rotate** — treat write-path prototypes as isolated.
+> **Lisbon issuance locked to Sepolia ENSv2** — see [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).  
+> Do **not** mint mainnet production Passports for Lisbon. Always label Sepolia in UI.  
+> Based on official ENSv2 overview + PermissionedRegistry / PermissionedResolver docs; Sepolia deployments **rotate** — pin addresses in env.
 
 ## Desired product model
 
@@ -10,11 +11,12 @@ Passport identity
 └── Journey credential subname
 ```
 
-Example:
+Lisbon parent namespace (Sepolia):
 
 ```text
-victor.<nomadic-namespace>
-└── lisbon-house.victor.<nomadic-namespace>
+nomadic-passport.eth
+└── victor.nomadic-passport.eth
+    └── lisbon-house.victor.nomadic-passport.eth
 ```
 
 - Passport owner retains control of the **parent** identity.  
@@ -141,10 +143,11 @@ Standard `PermissionedRegistry` + factory + `PermissionedResolver` roles appear 
 
 Any such controller would be an **isolated prototype**, never a Passport runtime dependency for Lisbon P0.
 
-## Isolation rule
+## Isolation rule (revised)
 
 ```text
-Track A (stable resolve)     → may feed Passport display
-Track B (ENSv2 hierarchy)    → docs + optional future /spikes/ensv2 only
-Main demo Passport           → must not import Track B writes
+Track A (Mainnet UR readiness)     → CI + library hygiene
+Sepolia ENSv2 issuance             → Lisbon demo mint / roles / revoke
+Express backend                    → wallet keys only; no ENS resolve required
+UI                                 → always show Sepolia / testnet badge on ENS surfaces
 ```

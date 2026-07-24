@@ -94,30 +94,34 @@ Selfie allowlisted action (example): `apply_lisbon_house_v1`.
 
 Nomadic does **not** store legal name, document numbers, selfies, or full World payloads.
 
-### ENS
+### ENS (Sepolia ENSv2 — locked)
 
 | Stage | Lisbon |
 | --- | --- |
-| Resolve / display primary name + avatar (ENSv2-ready ENSjs + Universal Resolver) | **P0** |
-| Credential subnames / hierarchy | **P1/P2** |
-| Scoped issuer delegation | **P2 / deferred** |
+| Programmatic Passport mint `*.nomadic-passport.eth` | **P0** (Sepolia) |
+| Primary name + forward/reverse verify | **P0** |
+| Active text records driving UI | **P0** |
+| Credential child after World success | **P0** |
+| Scoped issuer permission + revoke demo | **P0** |
+| Mainnet UR readiness (`ur.integration-tests.eth`) | **P0** (CI / library) |
+| contenthash / IPFS manifest | **P1** |
+| CCIP-Read dynamic reputation | **P2** |
 
-Wallet remains the canonical backend key. Express never resolves ENS in P0.
+Wallet remains the canonical **backend** key. **Product identity** is the Passport ENS name. Express stays address-keyed; FE/BFF resolve Sepolia ENS. Always show a **Sepolia / testnet** badge. Details: [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).
 
 ---
 
 ## 4. Exact user flow (demo script)
 
 ```text
-1. Magic login → /passport (existing shell).
-2. Discover Nomadic Lisbon House Journey.
-3. Open Journey detail: dates, capacity, description, policy summary, Apply.
-4. Policy disclosure: what will be proven; what Nomadic will NOT receive.
-5. World Identity Check → backend verifies → policy attestation stored minimally.
-6. World Selfie Check → continuity / uniqueness for apply_lisbon_house_v1.
-7. Submit application linked to Journey + user + policyVersion + attestations.
-8. Receive / attach NOMADIC_LISBON_HOUSE_ELIGIBLE on Passport.
-9. Share /p/<ens-or-wallet>; visitor sees public credential (no email).
+1. Magic login → Create Nomadic Passport → mint victor.nomadic-passport.eth (Sepolia).
+2. Set / verify primary name (forward + reverse).
+3. Discover Nomadic Lisbon House Journey + policy disclosure.
+4. World Identity Check + Selfie Check → backend: lisbon_house_policy_v1 satisfied.
+5. Submit application; mint lisbon-house.victor.nomadic-passport.eth + records.
+6. Reload Passport — credential discovered from ENS records (not hardcoded only).
+7. Public /p/victor.nomadic-passport.eth reconstructs identity + credential.
+8. Grant scoped issuer permission → user revokes → issuer update reverts.
 ```
 
 ```mermaid
@@ -125,58 +129,61 @@ sequenceDiagram
   participant User
   participant App as Nomadic
   participant World as World
-  participant ENS as ENS_resolve
+  participant ENS as Sepolia_ENSv2
 
-  User->>App: Magic login and open Passport
-  User->>App: Discover Nomadic Lisbon House Journey
-  App->>App: Show Journey plus Eligibility Policy v1
-  App->>User: Transparent disclosure
-  User->>World: Identity Check
-  World-->>App: Policy satisfied booleans only
-  User->>World: Selfie Check continuity
-  World-->>App: Action-scoped uniqueness
-  User->>App: Submit Journey application
-  App->>App: Attach Lisbon House Eligible credential
-  App->>ENS: Resolve display alias when available
-  User->>App: Public Passport share
+  User->>App: Magic login
+  App->>ENS: Mint Passport subname
+  ENS-->>App: victor.nomadic-passport.eth
+  User->>App: Set primary name
+  User->>App: Open Lisbon House Journey plus policy
+  User->>World: Identity Check plus Selfie Check
+  World-->>App: Policy satisfied
+  User->>App: Submit application
+  App->>ENS: Mint credential child plus records
+  App->>ENS: Grant scoped issuer roles
+  User->>App: Reload Passport from ENS
+  User->>ENS: Revoke issuer
+  Note over ENS: Issuer update reverts
 ```
 
 ---
 
 ## 5. In scope (P0)
 
-- Keep Magic auth; Passport shell (done) + real Passport data APIs.
+- Keep Magic auth; Passport shell + Passport data APIs.
+- **Sepolia ENSv2** Passport mint + credential child + active records + primary name + revoke demo.
 - One seeded Community/Journey + policy presentation UI.
-- World Identity Check + Selfie Check (after readiness spike).
-- Journey application + `CredentialClaim` (additive backend).
-- ENS resolve/display on Passport / public route (ENSv2-ready libraries).
-- Public Passport by wallet; ENS alias resolved in Next.js only.
+- World Identity Check + Selfie Check (after readiness spike); gate credential mint on verify.
+- Journey application + `CredentialClaim` (additive backend; wallet key).
+- Public `/p/[passport.ens]` reconstructing from Sepolia ENS.
+- Mainnet UR readiness retained in CI.
 - Hide house-login/NACC/single-use from demo hierarchy; do not delete.
-- Continuity documentation.
 
 ---
 
 ## 6. Out of scope (P0)
 
+- Mainnet Passport/credential minting for Lisbon.
 - Full multi-community CMS / arbitrary policy engine UI for every house.
-- Primary CTA “Mint ENS subname” or “Verify age with World” landing.
-- Connect → verify → mint → done as the main story.
-- Direct draft ENSv2 registry/registrar dependencies.
-- Express-side ENS resolution; ENS columns in DB.
+- Landing whose only CTA is “Mint ENS” or “Verify age with World” (Journey stays primary).
+- Connect → mint random subname → done (no Journey/World).
+- Express-side ENS resolution; ENS as sole DB identity.
+- contenthash/IPFS, CCIP reputation, Walrus, stipends (P1/P2).
 - Claiming ETHGlobal attendance without organizer evidence.
-- Walrus; deployable World bypasses; storing document/biometric PII.
-- Redesigning or deleting legacy Journey/UserProofs tables wholesale.
+- Deployable World bypasses; storing document/biometric PII on ENS or in DB.
 
 ---
 
 ## 7. Demo success criteria
 
-1. Login → Passport shell loads.  
-2. User opens seeded Lisbon House Journey and sees policy disclosure.  
-3. Identity Check + Selfie Check complete (or honest unavailable + recorded demo).  
-4. Application submits; credential **Nomadic Lisbon House — Eligible** appears on Passport.  
-5. Same verified World identity cannot double-apply for the same Journey action (idempotent or conflict).  
-6. Public `/p/[identifier]` shows credential without email.  
+1. Login → mint Sepolia Passport ENS; UI uses that name (testnet badge).  
+2. Primary name forward+reverse verified (else wallet fallback).  
+3. User opens seeded Lisbon House Journey and sees policy disclosure.  
+4. Identity Check + Selfie Check complete (or honest unavailable — no fake credential mint).  
+5. Application succeeds → credential child ENS minted; Passport reload reads records from ENS.  
+6. Same verified World identity cannot double-apply for the same Journey action.  
+7. Public `/p/<passport.ens>` reconstructs credential without email.  
+8. Scoped issuer grant + user revoke; issuer update reverts.  
 7. UI copy does not claim absolute global uniqueness beyond World’s model, nor ETHGlobal attendance.  
 8. Judges can separate pre-existing Journeys from Lisbon policy-gated apply (`PREEXISTING_VS_LISBON.md`).
 

@@ -108,11 +108,9 @@ User input (ENS or 0x…)
 
 Express (`nomadic-back`) still **must not** resolve ENS in P0.
 
-## Out of scope / deferred
+## Out of scope for *this* Track A spike
 
-- Minting / registering names  
-- ENSv1 NameWrapper issuer hacks as primary architecture  
-- Direct Dependency on Sepolia/devnet **PermissionedRegistry** writes for Passport  
+- Minting (moved to Sepolia ENSv2 cycle — not Mainnet)  
 - Storing ENS columns in Prisma  
 
-See Track B docs for hierarchical Passport + credential subname design.
+**Follow-on (locked):** Lisbon **issues** Passports/credentials on **Sepolia ENSv2**. See [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md). Track A remains the Mainnet readiness + resolve-pattern foundation.

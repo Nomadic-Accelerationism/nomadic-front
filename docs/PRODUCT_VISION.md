@@ -223,39 +223,30 @@ Selfie Check:    Am I continuing the same Nomadic identity?
 
 ## 5. How ENS fits without becoming decoration
 
-### 1. Portable identity
+### 1. Portable identity (Lisbon: Sepolia ENSv2)
 
 ```text
-victor.nomadic.eth
+victor.nomadic-passport.eth
 → wallet
 → Nomadic Passport
-→ public credentials
+→ public credentials (ENS records + children)
 ```
 
-Public entry to the Passport. Wallet remains the canonical backend key; ENS is the human alias (may change owner).
+Backend identity key remains the wallet. **Product identity** after onboarding is the Passport ENS name. Lisbon mints on **Sepolia** (clearly labeled testnet).
 
-### 2. Credential hierarchy (later)
-
-Conceptual:
+### 2. Credential hierarchy (Lisbon P0)
 
 ```text
-victor.nomadic.eth
-├── lisbon-house.victor.nomadic.eth
-├── ethglobal.victor.nomadic.eth
-└── builder.victor.nomadic.eth
+nomadic-passport.eth
+└── victor.nomadic-passport.eth
+    └── lisbon-house.victor.nomadic-passport.eth
 ```
 
-Users need not type those names; the UI shows cards. Hierarchy exists underneath for ownership, resolution, portability, provenance, and organization.
+World verifies policy; Nomadic mints the credential child; the app **reloads identity from ENS records**.
 
-**Lisbon P0:** application-level resolve/display via ENSjs + Universal Resolver (ENSv2-ready).  
-**Subname minting as primary UX:** not P0.
+### 3. Delegated issuance (Lisbon P0 demo)
 
-### 3. Delegated issuance (later)
-
-Passport owner controls identity and sharing; delegates **limited** issuance (e.g. Lisbon House may create only `lisbon-house.*` credentials). No rewrite of primary identity, no deleting other credentials, no wallet control, no private data access.
-
-**Lisbon P0:** document intent only.  
-**Implementation:** P2 / deferred until permission surfaces are stable.
+Passport owner controls identity; Lisbon House gets **scoped** permission only on the credential child’s public records; user can **revoke** and issuer updates must revert. See [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).
 
 ---
 
@@ -295,14 +286,15 @@ Nomadic Passport
 
 ## 7. Ideal demo narrative (product story)
 
-1. **Passport** — open portable identity (ENS alias when available).  
+1. **Passport ENS** — mint `victor.nomadic-passport.eth` on Sepolia; set primary name.  
 2. **Journey** — open Nomadic Lisbon House (dates, capacity, description, policy, apply).  
 3. **Transparent policy** — explain what will be proven; state what Nomadic will **not** receive.  
 4. **Identity Check** — private eligibility; Nomadic gets policy satisfied.  
 5. **Selfie Check** — continuity / one application per verified identity.  
 6. **Application** — linked to Journey, user, policy version, attestations, timestamp.  
-7. **Issuance** — community accepts / system attaches **Nomadic Lisbon House — Eligible** (ENS subname later).  
-8. **Portability** — another community can read prior eligibility signals without re-collecting documents.
+7. **Credential ENS** — mint `lisbon-house.victor.nomadic-passport.eth` + public records; UI rediscovers from ENS.  
+8. **Permissions** — scoped issuer grant + user revoke (issuer update reverts).  
+9. **Portability** — `/p/victor.nomadic-passport.eth` reconstructs Passport from ENS across sessions.
 
 ---
 

@@ -9,12 +9,13 @@
 ## 1. Conventions
 
 - Auth: `Authorization: Bearer <Magic DID>`.
-- Wallet = canonical public key; ENS resolved only in Next.js (page/BFF).
-- Express public Passport: **normalized wallet address only**.
-- Primary credential: `NOMADIC_LISBON_HOUSE_ELIGIBLE`.
+- Wallet = canonical **backend** key; **product identity** = Sepolia Passport ENS (`*.nomadic-passport.eth`).
+- ENS mint/resolve for demo: **Sepolia**; always badge testnet in UI ([ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md)).
+- Express public Passport: **normalized wallet address only** (FE resolves ENS → wallet).
+- Primary credential: `NOMADIC_LISBON_HOUSE_ELIGIBLE` (+ ENS child `lisbon-house.<passport>`).
 - Policy: `lisbon_house_policy_v1`.
 - Selfie continuity action (example): `apply_lisbon_house_v1`.
-- Identity Check action IDs: **TBD in World spike** (do not invent final names here).
+- Identity Check action IDs: from World spike.
 - Errors: `{ "error": string, "code"?: string }`.
 - Never return email publicly; never return raw World proofs, selfies, or RP secrets.
 - HTTP methods below are **locked**.

@@ -125,31 +125,35 @@ Attribute feasibility is **confirmed in the World spike**; UI must not fake unco
 
 ---
 
-## 7. ENS strategy (unchanged stance, staged ambition)
+## 7. ENS strategy (Sepolia ENSv2 issuance — locked)
 
 ```text
-Nomadic uses an ENSv2-compatible resolution library and the canonical
-Universal Resolver.
-
-Nomadic does not depend directly on draft ENSv2 registry contracts for P0.
+Issuance + hierarchical roles: Sepolia ENSv2 UserRegistry / PermissionedRegistry
+Read path in demo: Sepolia public client + Universal Resolver
+Library readiness CI: Mainnet ur.integration-tests.eth (Track A)
+Backend key: wallet   Product identity: Passport ENS name
 ```
 
 | Capability | Phase |
 | --- | --- |
-| Name/avatar resolve + bidirectional verify; public `/p/[identifier]` → wallet | **P0** (FE) |
-| Credential subnames / hierarchy | **P1/P2** |
-| Scoped issuer delegation | **P2 / deferred** |
+| Mint `victor.nomadic-passport.eth` on onboarding | **P0** (Sepolia) |
+| Primary name + bidirectional verify; records drive UI | **P0** |
+| Mint `lisbon-house.victor…` after World; public discovery | **P0** |
+| Scoped issuer permission + revoke revert demo | **P0** |
+| Mainnet UR readiness probes | **P0** (CI) |
+| contenthash / IPFS manifest | **P1** |
+| CCIP-Read dynamic reputation | **P2** |
 
 **Ownership:**
 
 ```text
-Next.js: ENS normalize, resolve, reverse+verify, avatar, readiness tests
-Express: normalized wallet addresses only; Passport JSON by address
+Next.js: Sepolia mint adapters + resolve/records/primary name + public /p/[name]
+Express: wallet addresses only; CredentialClaim / VerificationSession
+UI: Sepolia / testnet badge on every ENS surface
 ```
 
-ENS data is network-derived — **not** persisted in Nomadic DB for P0.
-
-**Libraries (install in implementation task, not this docs pass):** `@ensdomains/ensjs` ≥ 4.2.3; `viem` ≥ 2.35.0; Mainnet public client; no Wagmi solely for ENS. Current lockfile still has transitive `viem@2.23.2` via Privy — resolve compatibility at install time.
+Canonical cycle: [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).  
+Packages: `@ensdomains/ensjs` ≥ 4.2.3; `viem` ≥ 2.35 (installed 4.3.1 / 2.43.0). Pin Sepolia v2 factory addresses in env (they rotate).
 
 ---
 

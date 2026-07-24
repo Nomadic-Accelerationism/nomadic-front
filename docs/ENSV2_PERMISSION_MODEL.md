@@ -1,7 +1,8 @@
 # ENSv2 permission model spike — Nomadic Passport
 
 > Maps Nomadic roles onto **documented** ENSv2 `PermissionedRegistry` / `PermissionedResolver` roles.  
-> Not a deployment runbook. Addresses on Sepolia rotate — confirm with ENS team before any prototype mint.
+> **Lisbon:** execute this model on **Sepolia** as a P0 demo (four visible txs + revoke revert).  
+> Addresses rotate — pin deployment in env; see [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).
 
 ## Actors
 

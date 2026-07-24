@@ -1,88 +1,59 @@
 # ENSv2 implementation options — Nomadic Lisbon
 
-> Compare paths for ENS in Nomadic. Spike recommendation at the bottom.  
-> Track A readiness tests already **PASS** (`npm run spike:ens`).
+> Track A readiness tests still **PASS** (`npm run spike:ens` on Mainnet).  
+> **Lisbon issuance decision (locked):** Sepolia ENSv2 UserRegistry / PermissionedRegistry — see [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).
 
-## Options
+## Options (historical)
 
 ### Option A — Stable ENS resolution only
 
-**What:** Mainnet Universal Resolver via `@ensdomains/ensjs` ≥ 4.2.3 + `viem` ≥ 2.35. Display primary name, avatar, bidirectional verify, DNS+CCIP. Wallet remains canonical backend key.
+Resolve/display via Universal Resolver. No mint. Highest reliability, lowest ENS bounty depth.
 
-| Dimension | Assessment |
-| --- | --- |
-| Demo reliability | **Highest** — already green |
-| Bounty technical depth | Low–medium (correct readiness, not novel hierarchy) |
-| User ownership | Alias display only; no Passport/credential names |
-| Time | Small |
-| Unfinished-contract risk | **None** |
+### Option B — ENSv1-compatible subnames (stable contracts)
 
-### Option B — ENSv1-compatible subnames with stable contracts
-
-**What:** Issue subnames under a Nomadic `.eth` (or DNS) using ENSv1 NameWrapper / classic registrar patterns; resolvers on PublicResolver; still resolve via new Universal Resolver.
-
-| Dimension | Assessment |
-| --- | --- |
-| Demo reliability | High if name inventory exists |
-| Bounty depth | Medium — real subnames, weaker scoped issuer story |
-| User ownership | Possible with wrapper fuses/emancipation |
-| Time | Medium (ops + gas + UX) |
-| Unfinished-contract risk | Low (mature v1) |
-| Fit to “Passport → credential child” | Awkward: flat-ish wrapper model vs true hierarchy |
+NameWrapper / classic subnames under owned parent. Reliable, weaker hierarchical ACL story.
 
 ### Option C — Direct ENSv2 hierarchical registry prototype
 
-**What:** Deploy/use Sepolia (or confirmed) `PermissionedRegistry` factories to mint `victor.<ns>` + `lisbon-house.victor.<ns>` with issuer roles.
-
-| Dimension | Assessment |
-| --- | --- |
-| Demo reliability | **Lowest** for main path — Sepolia address churn (e.g. 20260630 bumps); not mainnet-stable for Lisbon visitors |
-| Bounty depth | **Highest** |
-| User ownership | Best conceptual match |
-| Time | High (factory wiring, roles, UX, UR checks on testnet) |
-| Unfinished-contract risk | **High** |
+UserRegistry / PermissionedRegistry mint + roles. Highest depth; deployment churn risk.
 
 ### Option D — Stable core + isolated ENSv2 advanced prototype
 
-**What:**
-
-1. **Production/demo Passport** uses Track A only (Option A).  
-2. **Isolated** `/spikes/ensv2` (future) or docs-only Track B models hierarchy + permissions — **not** imported by Passport runtime.  
-3. Optional later: Sepolia mint demo behind explicit spike flag.
-
-| Dimension | Assessment |
-| --- | --- |
-| Demo reliability | **High** (core path = A) |
-| Bounty depth | **High** if Track B architecture + permission experiment are presented; optional live Sepolia add-on |
-| User ownership | Documented ENSv2 path preserves user parent control |
-| Time | Fits hackathon: ship resolve now; architecture spike done |
-| Unfinished-contract risk | Contained — experimental code cannot break Passport |
+Main demo resolve-only; hierarchy docs/spike isolated. Previous spike default.
 
 ---
 
-## Recommendation
+## Locked Lisbon choice
 
-### **Option D**
+### **Sepolia ENSv2 issuance in the main demo cycle** (Option C on **testnet**, with Option A library readiness retained)
 
-Matches ENS team guidance (“update libraries / Universal Resolver”) for app readiness, while reserving hierarchical Passport+credential design for an **isolated** advanced track until deployments and interfaces are confirmed stable enough for a live mint demo.
+| Dimension | Choice |
+| --- | --- |
+| Demo reliability | Accept Sepolia + explicit **testnet** labeling; pin deployment addresses |
+| Bounty technical depth | Hierarchical Passport → credential child + scoped revoke |
+| User ownership | User owns Passport registry; issuer limited to credential records |
+| Time | Large — mint + World + records UI + revoke in one narrative |
+| Unfinished-contract risk | Contained to Sepolia; Mainnet Passport product claims deferred |
 
-**Do not** choose Option C as the main Nomadic demo dependency.  
-**Do not** skip Option A’s readiness vectors.
+**Not chosen for Lisbon issuance:** pure Option A/D (resolve-only main demo), mainnet ENSv1-only mint without hierarchical roles.
 
-### Lisbon sequencing
+### What still comes from Option A / Track A
 
-1. Wire Track A helpers into Passport display / public `/p/[identifier]` (implementation task — not this spike’s production merge of experimental code).  
-2. Keep Express address-only.  
-3. Present Track B architecture + permission model for bounty judges / ENS conversations.  
-4. Only after ENS team confirms current Sepolia/mainnet factory stability: optional gated mint prototype under `/spikes/ensv2`.
+- `@ensdomains/ensjs` ≥ 4.2.3 + `viem` ≥ 2.35  
+- Mainnet CI probe: `ur.integration-tests.eth` → `0x2222…2222`  
+- Bidirectional primary-name verification patterns  
+- Never `endsWith('.eth')` alone for name detection  
 
-### Explicit non-goals (this spike)
+### What ships in the 90s demo (Sepolia)
 
-- Minting production names  
-- Deploying unreviewed custom registries  
-- Making Passport import experimental ENSv2 write SDKs  
+```text
+Mint Passport → World → mint credential child → records drive UI
+→ primary name → /p/<passport.ens> → revoke issuer → revert
+```
 
-## Package freeze (Track A)
+Details: [ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md).
+
+## Package freeze (read path)
 
 | Package | Version |
 | --- | --- |
@@ -90,4 +61,4 @@ Matches ENS team guidance (“update libraries / Universal Resolver”) for app 
 | `viem` | **2.43.0** |
 | Universal Resolver | `0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe` |
 
-Privy remains `2.4.4`; transitive viem deduped to 2.43.0. Re-test wallet flows if upgrading Privy to 3.x.
+Issuance ABIs/addresses: pin Sepolia ENSv2 deployment separately (may be ahead of ensjs `consts` until upstream bumps).

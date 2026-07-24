@@ -84,9 +84,10 @@ Judges must **not** treat legacy Journey CRUD as the Lisbon eligibility story.
 
 ### ENS
 
-- ENSv2-ready application resolution (ENSjs + Universal Resolver).
-- Wallet-canonical; Express address-only.
-- Subnames / issuer delegation documented as later stages — not P0 mint CTAs.
+- **Sepolia ENSv2** Passport + credential child mint in P0 demo cycle ([ENS_SEPOLIA_V2_CYCLE.md](./ENS_SEPOLIA_V2_CYCLE.md)).
+- Active text records + primary name + scoped issuer revoke.
+- Mainnet Universal Resolver readiness retained in CI.
+- Wallet-canonical backend; Express address-only; product identity = Passport ENS.
 
 ### Data
 
@@ -111,7 +112,7 @@ Judges must **not** treat legacy Journey CRUD as the Lisbon eligibility story.
 | Passport | None | Shell done; APIs/public/ENS planned |
 | Policy | Flat `requiredProofs` | Versioned eligibility policy (seeded) |
 | World | Icon / legacy enum | Identity Check + Selfie Check roles |
-| ENS | None | Resolve/display P0; subnames later |
+| ENS | None | Sepolia ENSv2 Passport+credential P0; Mainnet UR CI |
 | Credentials | UserProofs duplicates possible | CredentialClaim uniqueness |
 | Demo nav | Proofs/Journeys primary | Passport + Lisbon House Journey primary |
 
