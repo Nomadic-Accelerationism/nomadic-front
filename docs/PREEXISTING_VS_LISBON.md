@@ -1,172 +1,148 @@
 # Pre-existing vs Lisbon work — Continuity statement
 
-> For ETHGlobal Lisbon 2026 judging and internal honesty.  
-> Nomadic is a **continuity project**: substantial work existed before Lisbon.  
-> This document separates what was already built from what Lisbon adds.
+> ETHGlobal Lisbon 2026 continuity honesty.  
+> North star: [`PRODUCT_VISION.md`](./PRODUCT_VISION.md) · Slice: [`LISBON_MVP.md`](./LISBON_MVP.md)
 
-Related: [`PROJECT_CONTEXT.md`](./PROJECT_CONTEXT.md), [`FRONTEND_AUDIT.md`](./FRONTEND_AUDIT.md), [`LISBON_MVP.md`](./LISBON_MVP.md).
+Nomadic is a **continuity project**. Substantial work existed before Lisbon. This file separates inheritance from Lisbon-built work.
 
 ---
 
-## 1. How to read this
+## 1. Labels
 
 | Label | Meaning |
 | --- | --- |
-| **Pre-existing** | Built before Lisbon; may be reused, hidden, or left untouched |
-| **Lisbon** | New work on branch `lisboa2026` (and matching backend commits) for this hackathon |
+| **Pre-existing** | Before Lisbon; reused, hidden, or left untouched |
+| **Lisbon** | `lisboa2026` (+ matching backend) for this hackathon |
 | **Out of Lisbon credit** | Must not be presented as built during Lisbon |
 
-Do not delete pre-existing features to “look cleaner.” Hide them from the demo path instead.
+Do not delete pre-existing features to look cleaner — hide them from the demo path.
 
 ---
 
 ## 2. Pre-existing
 
-### Authentication and users
+### Auth and users
 
-- Magic email OTP login (frontend `LoginUser`, Magic SDK).
-- Magic DID Bearer validation on the backend.
-- Users persisted by **email**.
-- Session storage pattern (`didToken`, `userMetadata`, `publicAddress` in frontend context/localStorage).
-- Existing OTP BFF proxy (`/api/auth/validate-otp` → `/validaOTP`).
-- Wallet not yet a confirmed first-class persisted `User` field (Lisbon proposes this only after a Magic metadata spike).
+- Magic email OTP; DID Bearer validation; users by email.
+- Frontend session (`didToken`, `userMetadata`, `publicAddress` in context/localStorage).
+- OTP BFF → `/validaOTP`.
 
-### Journeys
+### Journeys (legacy product surface)
 
-- Journey domain model and statuses.
-- Create / edit / preview / list / cancel flows and related BFF proxies.
-- Budget, capacity, required proofs on journeys.
+- Journey model, statuses, create/edit/preview/list/cancel, budgets, `requiredProofs`.
+- Existing journey/house UI scaffolding.
+
+Judges must **not** treat legacy Journey CRUD as the Lisbon eligibility story.
 
 ### Proofs (legacy)
 
-- `Proof` / `ProofNameEnum` terminology in frontend.
-- `UserProofs` storage and list/verify UX (`/user-proofs`).
-- Legacy wallet checks (POAP, Nouns, Ape, Talent, builder/ETHGlobal signals, etc.).
-- Privy usage for ephemeral wallet connect during legacy proof verification.
-- Historical `WORLD_ID_POH` naming/assets (not a working Selfie Check claim pipeline).
+- `Proof` / `UserProofs`, NFT/social verify UI, Privy-for-wallet-verify, historical `WORLD_ID_POH` naming.
 
 ### Frontend shell
 
-- Next.js 14 App Router app (`nomadic-front`).
-- Landing, home-user, menus, Satoshi branding, shadcn/Radix UI kit.
-- Axios + React Query patterns; `app/api/auth/*` BFF proxies.
-- Transitive `viem` via Privy (currently lockfile `2.23.2`); no ENSjs yet.
+- Next.js 14 app, branding, menus, Axios/React Query, `app/api/auth/*` proxies.
+- Transitive `viem` via Privy; no ENSjs yet (until P0.6).
 
-### Other pre-existing surfaces (often incomplete or mock)
+### Backend platform
 
-- Hacker house login/list/detail (largely mock / incomplete).
-- `$NACC` tokens UI (mock).
-- Generate single-use ID UI (mock).
-- Journey apply paths that do not fully persist.
+- Express + TS + Prisma + PostgreSQL.
+- No Passport entity; no public Passport; no ENS; no working World Identity/Selfie claim pipeline; no uniqueness store; `UserProofs` allows duplicates; wallet not confirmed first-class on User.
 
-### Backend platform (pre-Lisbon)
+### Other
 
-- Express + TypeScript + Prisma + PostgreSQL.
-- Existing proof and journey endpoints/tables.
-- No Passport entity; no public Passport endpoint; no ENS resolution; no working World verification / RP signing; no uniqueness store; `UserProofs` allows duplicates.
+- House login/list mocks, `$NACC`, single-use ID mocks, incomplete apply paths.
 
 ---
 
 ## 3. Lisbon work
 
-### Product / UX
+### Product / docs
 
-- Nomadic **Passport** as an aggregated product view (not a new Passport table).
-- Private route `/passport`.
-- Public route `/p/[identifier]` (frontend ENS alias → wallet; Express by address only).
-- Demo navigation that promotes Passport and demotes legacy CTAs (without deleting routes).
-- User-facing **Credential** language for Lisbon UI while keeping internal `Proof` names.
-- Public-disclosure requirement before claim completion.
+- [`PRODUCT_VISION.md`](./PRODUCT_VISION.md) — five entities; World/ENS roles; anti-patterns.
+- Journey-centered Lisbon MVP/architecture/routes/plan (this revision).
+- Continuity docs and demo scripting.
 
-### Identity (ENS)
+### Passport UX
 
-- **ENSv2-ready application integration** using ENSjs + viem + canonical Universal Resolver.
-- No direct dependency on draft ENSv2 registry/registrar contracts in P0.
-- Wallet-canonical identity; ENS as alias with reverse+forward verification and avatar.
-- ENS data not persisted in Nomadic DB for P0.
-- Express never resolves ENS in P0.
+- Private `/passport` shell + demo nav (**P0.1 implemented**).
+- Public `/p/[identifier]` (planned).
+- Passport as aggregated view (no Passport table).
 
-### Credentials and uniqueness
+### Journey-centered eligibility demo
 
-- Primary credential:
+- Seeded **Nomadic Lisbon House** Journey + **lisbon_house_policy_v1** presentation.
+- Transparent disclosure (what is proven / not received).
+- Application lifecycle linked to policy version.
 
-```text
-NOMADIC_LISBON_2026
-Nomadic Lisbon 2026
-A World Selfie Check–verified credential claimed through Nomadic during ETHGlobal Lisbon 2026.
-```
+### World
 
-- New `CredentialClaim` table (after World spike; not forced into `UserProofs`).
-- World RP signing (`POST /world/request`) + IDKit client + server verify + claim.
-- Uniqueness: same verified World identity cannot create a second claim for the same credential action; one Nomadic user per credential key.
-- Constraints: `userId+credentialKey`, `uniquenessKey+credentialKey`; no wallet unique until ownership proven.
-- Honest naming: does **not** claim ETHGlobal attendance or absolute global unique-personhood beyond World’s verified action model.
+- **Identity Check** = private policy eligibility.
+- **Selfie Check** = continuity / one apply per verified identity for Journey action.
+- Server RP signing + verify; minimal attestations; no document PII storage.
+- Credential: `NOMADIC_LISBON_HOUSE_ELIGIBLE` / **Nomadic Lisbon House — Eligible**  
+  (supersedes earlier standalone `NOMADIC_LISBON_2026` as primary P0 story).
 
-### Public profile
+### ENS
 
-- Unauthenticated public Passport read by **wallet address**.
-- Public fields only (no email); credentials list; optional secondary legacy proofs.
-- Not discoverable by email.
+- ENSv2-ready application resolution (ENSjs + Universal Resolver).
+- Wallet-canonical; Express address-only.
+- Subnames / issuer delegation documented as later stages — not P0 mint CTAs.
 
-### Documentation and process
+### Data
 
-- `PROJECT_CONTEXT.md`, `FRONTEND_AUDIT.md`.
-- `LISBON_MVP.md`, `LISBON_ARCHITECTURE.md`, `LISBON_ROUTES.md`, `LISBON_IMPLEMENTATION_PLAN.md`, this file.
-- ENS readiness tests and Magic/World spikes in the implementation plan.
-- Continuity-aware PR/branch practice (`lisboa2026`).
+- Additive `CredentialClaim`, `JourneyApplication` (planned).
+- Proposed `User.publicAddress` after Magic spike.
 
-### Explicitly not Lisbon (yet) / deferred
+### Explicitly not Lisbon-built / deferred
 
-- Walrus / Sui (after P0 only).
-- Direct experimental ENSv2 contract integration (P2 / deferred).
-- Organizer-issued credentials such as `ETHGLOBAL_LISBON_2026_PARTICIPANT`.
-- Journey history on the public Passport.
-- Social graph, reviews, reputation scores.
+- Legacy Journey CRUD itself.
+- Walrus; direct ENSv2 registry experiments.
+- Full multi-community CMS.
+- Organizer-issued “ETHGlobal Participant” without evidence.
 
 ---
 
-## 4. Side-by-side summary
+## 4. Side-by-side
 
 | Area | Pre-existing | Lisbon |
 | --- | --- | --- |
-| Login | Magic email DID | Keep; do not replace |
-| User key | Email | Email + proposed `publicAddress` after Magic spike |
-| Human-readable ID | Mostly raw address / email | Verified ENS alias via Universal Resolver |
-| Passport | None | `/passport` + `/p/[identifier]` |
-| ENS in backend | None | Still none in P0 (FE only) |
-| Credential uniqueness | None (`UserProofs` duplicates possible) | `CredentialClaim` + World action-scoped uniqueness |
-| World | Icon / `WORLD_ID_POH` legacy naming | RP sign + Selfie Check verify + claim |
-| Journeys | Full-ish product surface | Hidden from demo path; not public P0 |
-| Houses / NACC / single-use | Present / mock | Hidden from demo path |
-| Walrus / direct ENSv2 contracts | None | Deferred post-P0 |
-| Docs | Boilerplate README | Lisbon MVP + audit + continuity docs |
+| Product story | Proofs + journeys scaffolding | Journey → policy → private verify → credential → Passport |
+| Login | Magic | Keep |
+| Passport | None | Shell done; APIs/public/ENS planned |
+| Policy | Flat `requiredProofs` | Versioned eligibility policy (seeded) |
+| World | Icon / legacy enum | Identity Check + Selfie Check roles |
+| ENS | None | Resolve/display P0; subnames later |
+| Credentials | UserProofs duplicates possible | CredentialClaim uniqueness |
+| Demo nav | Proofs/Journeys primary | Passport + Lisbon House Journey primary |
 
 ---
 
 ## 5. What judges should not credit as Lisbon-built
 
-- Magic authentication itself.
-- Journey creation and management.
-- Legacy NFT/social proof verification UI and endpoints.
-- Existing visual shell, menus, and branding system (Lisbon **reuses** them).
-- Prior hackathon scaffolding that this continuity project inherits.
+- Magic authentication.
+- Pre-existing Journey create/list/edit machinery.
+- Legacy NFT/social proof verification.
+- Existing shell/branding (Lisbon **reuses** them).
+- Prior hackathon scaffolding.
 
-Judges **should** credit Lisbon for: Passport productization; ENSv2-ready resolution/identity aliasing; public share route; World Selfie Check claim flow for **Nomadic Lisbon 2026** with server RP signing and uniqueness persistence; and honest continuity documentation.
+**Credit Lisbon for:** product vision clarity; Journey-centered eligibility demo; World Identity vs Selfie roles with data minimization; portable Lisbon House credential; ENSv2-ready Passport identity aliasing; public share; continuity documentation; Passport shell already on branch.
 
 ---
 
 ## 6. Demo path vs legacy path
 
-**Demo path (Lisbon):**
+**Lisbon demo path:**
 
 ```text
-Landing → Magic login → /passport → disclose public fields → claim Nomadic Lisbon 2026 → share /p/[identifier]
+Login → Passport → Nomadic Lisbon House Journey → policy disclosure
+→ Identity Check → Selfie Check → application → credential on Passport
+→ share /p/[identifier]
 ```
 
-**Legacy path (pre-existing, still in repo):**
+**Legacy path (still in repo):**
 
 ```text
-/home-user → /user-proofs | /hacker-journeys → journey/house flows
+/home-user → /user-proofs | legacy /hacker-journeys CRUD → house mocks
 ```
 
-Legacy remains reachable for continuity and future work; it is not the primary Lisbon narrative.
+Legacy remains for continuity; it is not the Lisbon narrative.

@@ -1,23 +1,23 @@
 # Lisbon Routes & Contracts — ETHGlobal Lisbon 2026
 
-> Proposed routes and API shapes for the Passport MVP.  
-> **Not implemented** in this documentation pass.  
-> Companion: [`LISBON_MVP.md`](./LISBON_MVP.md), [`LISBON_ARCHITECTURE.md`](./LISBON_ARCHITECTURE.md).
+> Journey-centered contracts for the Lisbon slice.  
+> **Not implemented** by this documentation revision.  
+> [`LISBON_MVP.md`](./LISBON_MVP.md) · [`LISBON_ARCHITECTURE.md`](./LISBON_ARCHITECTURE.md) · [`PRODUCT_VISION.md`](./PRODUCT_VISION.md)
 
 ---
 
 ## 1. Conventions
 
-- Auth header for protected routes: `Authorization: Bearer <Magic DID token>`.
-- Wallet is the canonical public key.
-- ENS is resolved **only** in Next.js (page and/or BFF) before calling Express.
-- Express public Passport accepts **normalized wallet addresses only**.
-- Credential key for P0: `NOMADIC_LISBON_2026`.
-- World allowlisted action: `claim_nomadic_lisbon_2026`.
-- Error bodies use `{ "error": string, "code"?: string }`.
-- Never return email on public endpoints.
-- Never return raw World proofs, selfies, biometrics, or RP secrets.
-- HTTP methods below are **locked** (no GET-or-POST ambiguity).
+- Auth: `Authorization: Bearer <Magic DID>`.
+- Wallet = canonical public key; ENS resolved only in Next.js (page/BFF).
+- Express public Passport: **normalized wallet address only**.
+- Primary credential: `NOMADIC_LISBON_HOUSE_ELIGIBLE`.
+- Policy: `lisbon_house_policy_v1`.
+- Selfie continuity action (example): `apply_lisbon_house_v1`.
+- Identity Check action IDs: **TBD in World spike** (do not invent final names here).
+- Errors: `{ "error": string, "code"?: string }`.
+- Never return email publicly; never return raw World proofs, selfies, or RP secrets.
+- HTTP methods below are **locked**.
 
 ---
 
@@ -25,287 +25,209 @@
 
 ### Frontend pages
 
-| Method | Path | Auth | Purpose |
+| Path | Auth | Purpose | Demo |
 | --- | --- | --- | --- |
-| page | `/` | public | Landing (existing) |
-| page | `/login-user` | public | Magic email login (existing) |
-| page | `/passport` | required | Private Passport |
-| page | `/credentials/lisbon-2026` | required | Claim + disclosure + Selfie Check |
-| page | `/p/[identifier]` | public | Public Passport (ENS name or wallet) |
+| `/` | public | Landing (existing) — not “verify with World” | Entry |
+| `/login-user` | public | Magic login | Yes |
+| `/passport` | required | Private Passport (**P0.1 exists**) | Yes |
+| `/journeys` or reuse `/hacker-journeys` | required | Discover Journeys (seed Lisbon House prominent) | Yes |
+| `/journeys/[id]` or adapt house/journey detail | required/public read as needed | Journey detail + policy + Apply | Yes |
+| `/journeys/[id]/apply` | required | Disclosure + Identity Check + Selfie + submit | Yes |
+| `/p/[identifier]` | public | Public Passport | Yes |
+| `/credentials/lisbon-2026` | required | Legacy placeholder — reframe or redirect to Journey apply later | Secondary |
 
-Legacy pages remain in the repo but are demoted from the demo path (`/home-user`, `/user-proofs`, journeys, houses, NACC, single-use ID).
+Legacy `/user-proofs`, house login, NACC, single-use: remain but demoted.
 
-### Frontend BFF (Next.js)
+### Frontend BFF
 
-| Method | Path | Backend target | Auth |
+| Method | Path | Backend | Auth |
 | --- | --- | --- | --- |
-| `GET` | `/api/passport/me` | `GET /passport/me` | Bearer DID |
-| `GET` | `/api/passport/public/[identifier]` | `GET /passport/public/:address` after ENS→wallet | none |
-| `POST` | `/api/world/request` | `POST /world/request` | Bearer DID |
-| `POST` | `/api/credentials/claim` | `POST /credentials/claim` | Bearer DID |
+| `GET` | `/api/passport/me` | `GET /passport/me` | Bearer |
+| `GET` | `/api/passport/public/[identifier]` | ENS→wallet then `GET /passport/public/:address` | none |
+| `GET` | `/api/journeys/lisbon-house` | Seeded journey + policy | none or Bearer |
+| `POST` | `/api/world/request` | `POST /world/request` | Bearer |
+| `POST` | `/api/journeys/applications` | `POST /journeys/applications` | Bearer |
+| `POST` | `/api/credentials/claim` | `POST /credentials/claim` | Bearer |
 
-### Express backend
+Claim may be invoked internally by application submit; both routes may exist if claim is reusable.
+
+### Express
 
 | Method | Path | Auth | Notes |
 | --- | --- | --- | --- |
-| `GET` | `/passport/me` | Bearer DID | Private aggregate |
-| `GET` | `/passport/public/:address` | none | **Wallet address only** — never ENS names |
-| `POST` | `/world/request` | Bearer DID | RP request signing |
-| `POST` | `/credentials/claim` | Bearer DID | Verify + claim |
+| `GET` | `/passport/me` | Bearer | Private aggregate |
+| `GET` | `/passport/public/:address` | none | Wallet only |
+| `GET` | `/journeys/lisbon-house` | none/Bearer | Seeded Journey + policy JSON |
+| `POST` | `/world/request` | Bearer | RP sign for allowlisted action |
+| `POST` | `/journeys/applications` | Bearer | Verify World results + create application (+ credential) |
+| `POST` | `/credentials/claim` | Bearer | Allowlisted credential mint after verify |
 
-There is **no** Express ENS resolve route in P0.  
-There is **no** optional `GET /api/ens/resolve` requirement; ENS runs in the frontend resolution module (ENSjs + viem). The public BFF may call that module internally when translating `[identifier]` → `:address`.
+No Express ENS routes.
 
 ---
 
-## 3. Frontend page behaviours
+## 3. Page behaviours
 
-### `/passport`
+### `/passport` (exists)
 
-- Unauthenticated → `/login-user`.
-- `GET /api/passport/me`.
-- Resolve verified primary ENS name + avatar from trusted wallet (frontend).
-- Show **Nomadic Lisbon 2026** claimed state or CTA.
-- Optional collapsed legacy proofs.
-- Share link to `/p/<ens-or-wallet>`.
+Session gate; identity (wallet / unavailable); credentials including Lisbon House Eligible when claimed; private email only in secondary section.
 
-### `/credentials/lisbon-2026`
+### Journey detail
 
-- Honest credential copy (World Selfie Check–verified Nomadic Lisbon credential).
-- **Public disclosure** before claim completion: claim appears on a public Passport tied to the wallet; list public fields; never email.
-- `POST /api/world/request` → IDKit Selfie Check → `POST /api/credentials/claim`.
-- Handle 200 / 409 / 503 honestly.
+Show community name, dates, capacity, description, policy summary, Apply CTA.  
+Reuse existing visual patterns from journey/house detail where possible.
+
+### Apply flow
+
+1. Transparent disclosure (what is proven / what is not received).  
+2. Request Identity Check RP context → IDKit → send result.  
+3. Request Selfie RP context (`apply_lisbon_house_v1`) → IDKit → send result.  
+4. `POST` application.  
+5. Success → Passport shows credential; never fake success if World down.
 
 ### `/p/[identifier]`
 
-- No login.
-- Normalize identifier.
-- Domain-like → ENS resolve to wallet (`.eth`, subnames, ENS-imported DNS names; not every dotted string).
-- Wallet → use normalized address.
-- `GET /api/passport/public/[identifier]` (BFF resolves then calls Express by address).
-- 404 UI if not found.
+Normalize → ENS or wallet → Express by address → public credentials; ENS display on FE.
 
 ---
 
-## 4. BFF contract details
+## 4. Backend contracts (shapes)
 
-### `GET /api/passport/me`
-
-Forward Bearer DID to Express `GET /passport/me`. Map statuses. Do not accept client `userId`.
-
-### `GET /api/passport/public/[identifier]`
-
-1. Normalize `identifier`.
-2. If wallet → `address = normalized`.
-3. If domain-like → ENS name→address via ENSjs/Universal Resolver path.
-4. If unresolved/malformed → `400`/`404` without calling Express when appropriate.
-5. Call Express `GET /passport/public/:address` with normalized wallet only.
-6. Optionally attach client-resolved ENS display fields in the page layer (not required from Express).
-
-### `POST /api/world/request`
-
-Forward Bearer DID to Express. Never log RP secrets. Return request context to client.
-
-### `POST /api/credentials/claim`
-
-Forward Bearer DID + complete IDKit result. Backend decides wallet binding. Map statuses.
-
----
-
-## 5. Backend endpoint contracts
-
-### 5.1 `GET /passport/me`
+### `GET /passport/me`
 
 **Auth:** required.
 
-**Response `200`:**
-
 ```json
 {
-  "user": {
-    "id": "uuid",
-    "publicAddress": "0xabc...def"
-  },
+  "user": { "id": "uuid", "publicAddress": "0xabc...def" },
   "credentials": [
     {
-      "credentialKey": "NOMADIC_LISBON_2026",
-      "displayName": "Nomadic Lisbon 2026",
-      "description": "A World Selfie Check–verified credential claimed through Nomadic during ETHGlobal Lisbon 2026.",
+      "credentialKey": "NOMADIC_LISBON_HOUSE_ELIGIBLE",
+      "displayName": "Nomadic Lisbon House — Eligible",
+      "description": "Eligibility credential for Nomadic Lisbon House after privately satisfying Lisbon House Policy v1 during ETHGlobal Lisbon 2026.",
       "claimedAt": "2026-07-24T12:00:00.000Z",
-      "verificationProvider": "WORLD_SELFIE_CHECK"
+      "verificationProvider": "WORLD_IDENTITY_AND_SELFIE",
+      "metadata": { "policyVersion": "lisbon_house_policy_v1", "journeyId": "..." }
     }
   ],
-  "legacyProofs": [
+  "applications": [
     {
-      "proof": "ETHGLOBAL_HACKER",
-      "name": "ETHGlobal Hacker",
-      "isActive": true
-    }
-  ]
-}
-```
-
-- `publicAddress` may be `null` until Magic spike binds a wallet.
-- ENS fields are **not** returned by Express.
-- Never include email in payloads intended for public reuse.
-
-**Errors:** `401`, `500`.
-
----
-
-### 5.2 `GET /passport/public/:address`
-
-**Auth:** none.
-
-**Params:** `:address` — normalized Ethereum wallet address **only**.
-
-**Response `200`:**
-
-```json
-{
-  "walletAddress": "0xabc...def",
-  "credentials": [
-    {
-      "credentialKey": "NOMADIC_LISBON_2026",
-      "displayName": "Nomadic Lisbon 2026",
-      "description": "A World Selfie Check–verified credential claimed through Nomadic during ETHGlobal Lisbon 2026.",
-      "claimedAt": "2026-07-24T12:00:00.000Z",
-      "verificationProvider": "WORLD_SELFIE_CHECK"
+      "journeyId": "...",
+      "status": "SUBMITTED",
+      "policyVersion": "lisbon_house_policy_v1"
     }
   ],
   "legacyProofs": []
 }
 ```
 
-**Errors:**
+Errors: `401`, `500`.
 
-| Status | When |
-| --- | --- |
-| `400` | Not a wallet address / malformed |
-| `404` | No publicable Passport for address |
-| `500` | Unexpected |
+### `GET /passport/public/:address`
 
-Express does **not** resolve ENS and does **not** return ENS dependency errors.
+**Auth:** none. Wallet only.
 
----
+Public credentials only — **no email**, no private applications list unless explicitly productized later as public (default: omit applications).
 
-### 5.3 `POST /world/request`
+Errors: `400` malformed, `404` not found, `500`.
 
-**Auth:** required (Magic DID → User).
+### `GET /journeys/lisbon-house`
 
-**Behaviour:**
-
-1. Authenticate DID; derive User.
-2. Use fixed allowlisted action: `claim_nomadic_lisbon_2026`.
-3. Use server-derived stable signal, preferably `User.id`.
-4. Generate RP request signature server-side.
-5. Return expected request context for the current IDKit Selfie Check flow.
-6. Never expose or log the RP signing secret.
-
-**Request body:** empty or minimal `{}` (no client-chosen action overrides).
-
-**Response `200`:** opaque request-context object shaped per current World beta SDK (exact fields TBD in World spike).
-
-**Errors:** `401`, `503` if signing/config unavailable, `500`.
-
----
-
-### 5.4 `POST /credentials/claim`
-
-**Auth:** required (Magic DID → `userId`).
-
-**Request body:**
+Returns seeded journey + policy for demo:
 
 ```json
 {
-  "credentialKey": "NOMADIC_LISBON_2026",
-  "idKitResult": {
-    "/* complete IDKit result shape TBD pending World beta SDK */": true
+  "journey": {
+    "id": "...",
+    "title": "Lisbon Hacker House",
+    "communityName": "Nomadic Lisbon House",
+    "location": "Lisbon",
+    "startDate": "...",
+    "endDate": "...",
+    "guestCapacity": 20,
+    "description": "..."
+  },
+  "policy": {
+    "policyKey": "lisbon_house_policy_v1",
+    "version": "1",
+    "required": [
+      { "id": "age_18_plus", "label": "You are over 18", "status": "pending_world_spike" },
+      { "id": "jurisdiction", "label": "You meet its jurisdiction policy", "status": "pending_world_spike" },
+      { "id": "unique_document", "label": "You have a unique verified document", "status": "pending_world_spike" }
+    ],
+    "optional": [],
+    "disclosure": {
+      "willNotReceive": [
+        "legal name",
+        "passport number",
+        "date of birth",
+        "document photograph"
+      ]
+    }
   }
 }
 ```
 
-**Rules:**
+`status: pending_world_spike` until Identity Check capabilities are confirmed.
 
-- Allowlist `credentialKey = NOMADIC_LISBON_2026` only in P0.
-- Do not accept client `walletAddress` as authoritative; use trusted `User.publicAddress` when bound.
-- If wallet unbound → `400 WALLET_NOT_BOUND` (until a reliable bind exists).
-- Verify `idKitResult` with World; extract verified action-scoped uniqueness value into `uniquenessKey`.
-- Set `verificationProvider = "WORLD_SELFIE_CHECK"`.
-- Persist minimal metadata only.
+### `POST /world/request`
 
-**Response `200`:**
+**Auth:** required.
+
+Body: `{ "action": "<allowlisted_action>" }` — server rejects unknown actions.  
+Stable signal: preferably `User.id`.  
+Returns IDKit/RP context. Never returns signing secret.
+
+Errors: `401`, `400` invalid action, `503`, `500`.
+
+### `POST /journeys/applications`
+
+**Auth:** required.
 
 ```json
 {
-  "claim": {
-    "id": "uuid",
-    "credentialKey": "NOMADIC_LISBON_2026",
-    "displayName": "Nomadic Lisbon 2026",
-    "walletAddress": "0xabc...def",
-    "verificationProvider": "WORLD_SELFIE_CHECK",
-    "claimedAt": "2026-07-24T12:00:00.000Z",
-    "idempotent": false
-  }
+  "journeyId": "...",
+  "policyVersion": "lisbon_house_policy_v1",
+  "identityCheckResult": { },
+  "selfieCheckResult": { }
 }
 ```
 
-**Errors:**
+Exact World result field shapes TBD in spike.
 
-| Status | `code` | When |
-| --- | --- | --- |
-| `401` | `UNAUTHENTICATED` | Missing/invalid DID |
-| `400` | `INVALID_PROOF` | World verification failed |
-| `400` | `INVALID_CREDENTIAL` | Non-allowlisted key |
-| `400` | `WALLET_NOT_BOUND` | No trusted wallet on user |
-| `409` | `ALREADY_CLAIMED_BY_OTHER` | uniquenessKey collision with another user |
-| `409` | `UNIQUENESS_CONFLICT` | Other uniqueness violation |
-| `503` | `WORLD_UNAVAILABLE` | Verify API down |
-| `500` | `INTERNAL` | Unexpected |
+Server: verify both; enforce selfie uniqueness for `apply_lisbon_house_v1`; create application; attach `NOMADIC_LISBON_HOUSE_ELIGIBLE` when policy satisfied; bind wallet from trusted `User.publicAddress`.
 
-Same user re-claim → **200** with `idempotent: true`, not 409.
+**200** created or idempotent existing.  
+Errors: `401`, `400 INVALID_PROOF`, `400 WALLET_NOT_BOUND`, `400 POLICY_NOT_SATISFIED`, `409` uniqueness, `503 WORLD_UNAVAILABLE`, `500`.
+
+### `POST /credentials/claim`
+
+Allowlisted keys only (`NOMADIC_LISBON_HOUSE_ELIGIBLE`). Prefer application endpoint as primary path; claim remains for explicit credential attach if split.
+
+Same trust/uniqueness rules as architecture doc. Prior standalone `NOMADIC_LISBON_2026` is **not** the P0 primary allowlist key.
 
 ---
 
-## 6. Credential catalog (P0 allowlist)
+## 5. Error UX mapping
 
-| credentialKey | displayName | Requires |
-| --- | --- | --- |
-| `NOMADIC_LISBON_2026` | Nomadic Lisbon 2026 | World Selfie Check action `claim_nomadic_lisbon_2026` + uniqueness |
-
-Future keys (not claimable in P0 without evidence pipelines):
-
-```text
-ETHGLOBAL_LISBON_2026_PARTICIPANT
-HACKER_HOUSE_RESIDENT
-EVENT_VOLUNTEER
-COMMUNITY_CONTRIBUTOR
-```
-
----
-
-## 7. Error UX mapping (frontend)
-
-| Backend | UI |
+| Code | UI |
 | --- | --- |
-| `401` | Redirect `/login-user` |
-| `WALLET_NOT_BOUND` | Explain bind requirement; do not invent a wallet client-side |
-| `INVALID_PROOF` | Retry Selfie Check |
-| `ALREADY_CLAIMED_BY_OTHER` | Honest conflict: this verified World identity already claimed the action |
-| Idempotent `200` | “Already on your Passport” |
-| `WORLD_UNAVAILABLE` | Honest unavailable; no fake success |
-| Public `404` | “Passport not found” |
-| ENS resolve failure on public page | Fall back to wallet identifier / 404 if neither works |
+| `401` | `/login-user` |
+| `WALLET_NOT_BOUND` | Honest bind required |
+| `POLICY_NOT_SATISFIED` | Explain which policy bits failed without exposing PII |
+| `INVALID_PROOF` | Retry World check |
+| Uniqueness `409` | Already applied / identity already used for this Journey |
+| Idempotent `200` | Already on Passport / application exists |
+| `WORLD_UNAVAILABLE` | Honest unavailable |
+| Public `404` | Passport not found |
 
 ---
 
-## 8. Out of contract for P0
+## 6. Out of contract for P0
 
-- Express ENS resolution.
-- `GET /passport/public/:identifier` accepting ENS names on Express.
-- Public journey history endpoints.
-- Minting `ETHGLOBAL_LISBON_2026_PARTICIPANT`.
-- Wallet uniqueness API guarantees.
-- `DEMO_WORLD_BYPASS`.
-- Passport entity CRUD.
-- Persisted ENS name/avatar fields from these endpoints.
+- Express ENS resolution.  
+- Primary mint-ENS or verify-age landings.  
+- Full community CRUD APIs.  
+- `DEMO_WORLD_BYPASS`.  
+- Storing World full payloads / biometrics.  
+- Public email discovery.
