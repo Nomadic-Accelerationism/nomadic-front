@@ -141,12 +141,13 @@ test("400/503 never marks UI verified", () => {
 });
 
 test("successful backend response refreshes Passport before verified UI", () => {
+  // Observed production shape: ok:false even after WORLD_PROOF_PERSISTED.
   const body = {
-    ok: true,
+    ok: false,
     verified: true,
     category: "WORLD_VERIFIED",
   };
-  assert.equal(isBackendWorldVerified(body), true);
+  assert.equal(isBackendWorldVerified(body, 200), true);
   assert.equal(
     canMarkWorldUiVerified({
       httpStatus: 200,
@@ -165,21 +166,37 @@ test("successful backend response refreshes Passport before verified UI", () => 
   );
 });
 
+test("production WORLD_VERIFIED with ok:false is success, not Failed WORLD_VERIFIED", () => {
+  const body = {
+    ok: false,
+    verified: true,
+    category: "WORLD_VERIFIED",
+  };
+  assert.equal(isBackendWorldVerified(body, 200), true);
+  assert.equal(/WORLD_VERIFIED/.test(formatWorldVerifyError(body, 200)), false);
+});
+
 test("partial success without WORLD_VERIFIED does not mark verified", () => {
   assert.equal(
-    isBackendWorldVerified({
-      ok: true,
-      verified: true,
-      category: "SOMETHING_ELSE",
-    }),
+    isBackendWorldVerified(
+      {
+        ok: true,
+        verified: true,
+        category: "SOMETHING_ELSE",
+      },
+      200,
+    ),
     false,
   );
   assert.equal(
-    isBackendWorldVerified({
-      ok: true,
-      verified: false,
-      category: "WORLD_VERIFIED",
-    }),
+    isBackendWorldVerified(
+      {
+        ok: true,
+        verified: false,
+        category: "WORLD_VERIFIED",
+      },
+      200,
+    ),
     false,
   );
 });

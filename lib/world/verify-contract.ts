@@ -83,25 +83,38 @@ export function buildWorldVerifyForwardBody(input: {
 }
 
 /**
- * True only when backend confirms World verification for Nomadic UI.
+ * True when Nomadic backend confirms World verification.
+ *
+ * Production backend returns (observed):
+ *   { verified: true, category: "WORLD_VERIFIED", ok: false } with HTTP 200
+ * after WORLD_PROOF_PERSISTED — so do NOT require `ok === true`.
  */
 export function isBackendWorldVerified(
-  body: WorldBackendVerifyJson | null | undefined
+  body: WorldBackendVerifyJson | null | undefined,
+  httpStatus?: number
 ): boolean {
+  if (httpStatus !== undefined && (httpStatus < 200 || httpStatus >= 300)) {
+    return false;
+  }
+  if (!body) return false;
+  if (body.verified === false) return false;
   return (
-    body?.ok === true &&
-    body?.verified === true &&
-    body?.category === "WORLD_VERIFIED"
+    body.verified === true && body.category === "WORLD_VERIFIED"
   );
 }
 
 /**
  * User-facing error from backend (prefer category + detail).
+ * Never surface a bare WORLD_VERIFIED success category as a failure label.
  */
 export function formatWorldVerifyError(
   body: WorldBackendVerifyJson | null | undefined,
   status: number
 ): string {
+  if (isBackendWorldVerified(body, status)) {
+    return "World verified, but the Passport UI could not confirm the proof yet.";
+  }
+
   const category =
     (typeof body?.category === "string" && body.category) ||
     (typeof body?.code === "string" && body.code) ||
@@ -111,6 +124,11 @@ export function formatWorldVerifyError(
     (typeof body?.message === "string" && body.message) ||
     (typeof body?.error === "string" && body.error) ||
     null;
+
+  // Success category alone without verified:true is incomplete, not a user error code.
+  if (category === "WORLD_VERIFIED" && !detail) {
+    return `World verify response incomplete (${status})`;
+  }
 
   if (category && detail) return `${category}: ${detail}`;
   if (detail) return detail;
@@ -128,5 +146,8 @@ export function canMarkWorldUiVerified(input: {
 }): boolean {
   if (input.httpStatus === 400 || input.httpStatus === 503) return false;
   if (!input.httpStatus || input.httpStatus >= 400) return false;
-  return isBackendWorldVerified(input.body) && input.passportHasProof;
+  return (
+    isBackendWorldVerified(input.body, input.httpStatus) &&
+    input.passportHasProof
+  );
 }

@@ -366,8 +366,9 @@ export function WorldVerificationPanel({
       });
       const data = (await res.json()) as WorldBackendVerifyJson;
 
-      // Trust only backend verified:true + WORLD_VERIFIED. Never mark from IDKit alone.
-      if (!res.ok || !isBackendWorldVerified(data)) {
+      // Backend success observed as HTTP 200 + verified:true + WORLD_VERIFIED
+      // (ok may be false — do not require ok === true).
+      if (!isBackendWorldVerified(data, res.status)) {
         const message = formatWorldVerifyError(data, res.status);
         lastVerifyErrorRef.current = message;
         setter({

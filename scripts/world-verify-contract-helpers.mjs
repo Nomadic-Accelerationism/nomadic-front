@@ -51,17 +51,24 @@ export function buildWorldVerifyForwardBody({ action, idkitResult }) {
   };
 }
 
-export function isBackendWorldVerified(body) {
-  return (
-    body?.ok === true &&
-    body?.verified === true &&
-    body?.category === "WORLD_VERIFIED"
-  );
+export function isBackendWorldVerified(body, httpStatus) {
+  if (httpStatus !== undefined && (httpStatus < 200 || httpStatus >= 300)) {
+    return false;
+  }
+  if (!body) return false;
+  if (body.verified === false) return false;
+  return body.verified === true && body.category === "WORLD_VERIFIED";
 }
 
 export function formatWorldVerifyError(body, status) {
+  if (isBackendWorldVerified(body, status)) {
+    return "World verified, but the Passport UI could not confirm the proof yet.";
+  }
   const category = body?.category || body?.code || null;
   const detail = body?.detail || body?.message || body?.error || null;
+  if (category === "WORLD_VERIFIED" && !detail) {
+    return `World verify response incomplete (${status})`;
+  }
   if (category && detail) return `${category}: ${detail}`;
   if (detail) return detail;
   if (category) return category;
@@ -75,7 +82,9 @@ export function canMarkWorldUiVerified({
 }) {
   if (httpStatus === 400 || httpStatus === 503) return false;
   if (!httpStatus || httpStatus >= 400) return false;
-  return isBackendWorldVerified(body) && passportHasProof === true;
+  return (
+    isBackendWorldVerified(body, httpStatus) && passportHasProof === true
+  );
 }
 
 /** Simulate BFF forward JSON — must keep idkitResult reference equality via deep clone check. */
