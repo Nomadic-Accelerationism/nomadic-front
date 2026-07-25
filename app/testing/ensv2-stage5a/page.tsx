@@ -31,7 +31,7 @@ function formatMagicError(err: unknown): string {
   const extra =
     data !== undefined ? ` details=${JSON.stringify(data)}` : "";
   if (/failed to fetch/i.test(msg)) {
-    return `${msg}${extra} — Magic iframe RPC failed. Hard-refresh this tab (or open a new one), sign in only on this Stage 5A page, then confirm the Magic modal.`;
+    return `${msg}${extra} — Magic→proxy→dRPC path failed. Hard-refresh a fresh tab, sign in only on Stage 5A, confirm the Magic modal. dRPC key stays server-only.`;
   }
   return `${msg}${extra}`;
 }
@@ -51,7 +51,7 @@ type UiPhase =
  * Does not run Stage 5B.
  */
 export default function EnsV2Stage5APage() {
-  // Reads: publicnode. Magic iframe: publicnode. Page probes/receipts: same-origin proxy.
+  // Reads: publicnode. Magic + probes: same-origin proxy → ENS_SEPOLIA_RPC_URL (dRPC).
   const readRpcUrl = useMemo(() => getPublicSepoliaRpcUrl(), []);
   const magicRpcUrl = useMemo(() => getMagicSepoliaRpcUrl(), []);
   const proxyRpcUrl = useMemo(() => getEnsSepoliaProxyUrl(), []);
@@ -177,23 +177,24 @@ export default function EnsV2Stage5APage() {
         );
       }
 
-      pushLog(`Probing keyed proxy…`);
+      pushLog(`Probing keyed proxy→dRPC…`);
       const probe = await probeSepoliaRpcProxy(proxyRpcUrl);
       setProxyKeyed(probe.keyed);
       pushLog(
         `Proxy OK chainId=${probe.chainIdHex} keyed=${String(probe.keyed)}`,
       );
-
-      const loggedIn = await magic.user.isLoggedIn();
-      if (!loggedIn) {
-        throw new Error("Magic session expired — sign in again on this page.");
+      if (!probe.keyed) {
+        throw new Error(
+          "ENS_SEPOLIA_RPC_URL unset on Vercel — cannot use dRPC upstream.",
+        );
       }
-      // Ensure iframe is awake before eth_sendTransaction.
-      await magic.user.getInfo();
 
+      // Do NOT call magic.user.getInfo/isLoggedIn here — they have been observed
+      // to throw Magic RPC Error Failed to fetch right before send, even when
+      // boot already proved the session is alive.
       const txParams = getStage5AMagicTxParams(address as `0x${string}`);
       pushLog(
-        `Sending eth_sendTransaction to=${txParams.to} chainId=${txParams.chainId}`,
+        `Sending eth_sendTransaction via Magic→proxy→dRPC to=${txParams.to}`,
       );
 
       const provider = magic.rpcProvider as {
@@ -205,7 +206,14 @@ export default function EnsV2Stage5APage() {
 
       const hash = (await provider.request({
         method: "eth_sendTransaction",
-        params: [txParams],
+        params: [
+          {
+            from: txParams.from,
+            to: txParams.to,
+            data: txParams.data,
+            value: txParams.value,
+          },
+        ],
       })) as string;
 
       setTxHash(hash);
@@ -284,20 +292,18 @@ export default function EnsV2Stage5APage() {
           <dd>Sepolia {STAGE5A_CHAIN_ID}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-gray-500">Magic RPC (iframe)</dt>
+          <dt className="font-semibold text-gray-500">
+            Magic RPC (proxy→dRPC)
+          </dt>
           <dd className="break-all">{magicRpcUrl}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-gray-500">Keyed proxy (page)</dt>
-          <dd className="break-all">{proxyRpcUrl}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-gray-500">Proxy keyed dRPC</dt>
+          <dt className="font-semibold text-gray-500">dRPC via proxy</dt>
           <dd>
             {proxyKeyed === null
               ? "— (checked on revoke)"
               : proxyKeyed
-                ? "yes"
+                ? "yes (ENS_SEPOLIA_RPC_URL)"
                 : "no — set ENS_SEPOLIA_RPC_URL on Vercel"}
           </dd>
         </div>
