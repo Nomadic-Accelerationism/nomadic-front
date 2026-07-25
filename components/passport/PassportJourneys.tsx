@@ -5,6 +5,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LISBON_HOUSE_JOURNEY } from "@/lib/journeys/lisbon-house";
 
+/**
+ * Journey discovery for the Passport.
+ *
+ * DATA BOUNDARY:
+ * - Uses the frontend Lisbon House fixture for discoverable Journey marketing copy.
+ * - Does NOT read backend `passport.journeys` (user-associated applications).
+ * - An empty backend journeys array does not mean there are no discoverable Journeys.
+ * - Never claims apply / eligible / accepted / World complete / credential issued.
+ */
 export function PassportJourneys() {
   const fixture = LISBON_HOUSE_JOURNEY;
 
@@ -42,7 +51,11 @@ export function PassportJourneys() {
               {fixture.journey.location} · {fixture.journey.datesLabel}
             </p>
             <p className="mt-2 text-xs text-gray-500">
-              Policy: {fixture.policy.displayName}
+              Capacity {fixture.journey.capacity} · Policy:{" "}
+              {fixture.policy.displayName}
+            </p>
+            <p className="mt-2 text-xs text-gray-500">
+              {fixture.journey.availabilityLabel}
             </p>
           </div>
         </div>
@@ -54,7 +67,8 @@ export function PassportJourneys() {
             <Link href={fixture.routes.detail}>View Journey</Link>
           </Button>
           <p className="mt-2 text-center text-[11px] text-gray-400">
-            Frontend seed · replace with Journey API later
+            Discovery source: frontend fixture ({fixture.source}) — not backend
+            Passport journeys
           </p>
         </div>
       </article>

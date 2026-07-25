@@ -5,6 +5,12 @@
  * Replace with Journey API (`GET /api/journeys/lisbon-house` → Express) when available.
  *
  * Do not treat these values as authoritative DB rows or issued credentials.
+ *
+ * DATA BOUNDARY vs GET /passport/me:
+ * - This fixture owns Journey discovery marketing copy (community, title, dates, policy UI).
+ * - Backend `passport.journeys` (when present) is a user-associated reference list — different concept.
+ * - Empty backend journeys ≠ no discoverable Journeys.
+ * - Never invent apply / eligible / credential state here.
  */
 
 export const LISBON_HOUSE_JOURNEY_SOURCE = "frontend-fixture" as const;

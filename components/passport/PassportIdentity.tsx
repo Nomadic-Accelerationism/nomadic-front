@@ -1,23 +1,33 @@
 "use client";
 
 import { truncateAddress } from "@/lib/wallet";
+import type {
+  PassportEnsStatus,
+  PassportIdentityStatus,
+} from "@/lib/passport/types";
 
-interface PassportIdentityProps {
-  publicAddress: string;
-  /** Display name when available (e.g. future Passport ENS). Never invent one. */
-  displayIdentity?: string | null;
-}
+export type PassportIdentityProps = {
+  publicAddress: `0x${string}` | null;
+  identityStatus: PassportIdentityStatus;
+  ensName: string | null;
+  ensStatus: PassportEnsStatus;
+};
 
 export function PassportIdentity({
   publicAddress,
-  displayIdentity = null,
+  identityStatus,
+  ensName,
+  ensStatus,
 }: PassportIdentityProps) {
-  const truncated = truncateAddress(publicAddress);
+  const truncated =
+    publicAddress && identityStatus === "READY"
+      ? truncateAddress(publicAddress)
+      : null;
   const hasWallet = Boolean(truncated);
-  const hasEnsPassport =
-    typeof displayIdentity === "string" &&
-    displayIdentity.trim().length > 0 &&
-    displayIdentity.includes(".");
+  const hasEnsIssued =
+    ensStatus === "ISSUED" &&
+    typeof ensName === "string" &&
+    ensName.trim().length > 0;
 
   return (
     <section className="w-full text-left" aria-labelledby="passport-identity-heading">
@@ -31,46 +41,55 @@ export function PassportIdentity({
       <div className="mt-3 space-y-3 rounded-2xl border border-black/10 bg-white/80 px-4 py-4">
         <div>
           <p className="text-xs font-medium text-gray-500">Display identity</p>
-          {hasEnsPassport ? (
+          {hasEnsIssued ? (
             <p className="mt-1 break-all text-base font-semibold text-black">
-              {displayIdentity!.trim()}
+              {ensName!.trim()}
+            </p>
+          ) : hasWallet ? (
+            <p className="mt-1 font-mono text-base font-semibold text-black">
+              {truncated}
             </p>
           ) : (
             <p className="mt-1 text-base font-semibold text-black">
-              {hasWallet ? truncated : "Session active"}
+              Passport account active
             </p>
           )}
         </div>
 
         <div>
           <p className="text-xs font-medium text-gray-500">Wallet</p>
-          {hasWallet ? (
+          {hasWallet && publicAddress ? (
             <p
               className="mt-1 break-all font-mono text-sm text-gray-800"
-              title={publicAddress.trim()}
+              title={publicAddress}
             >
               {truncated}
             </p>
           ) : (
-            <p className="mt-1 text-sm text-gray-600">
-              No wallet address is bound to this session yet.
+            <p className="mt-1 text-sm leading-relaxed text-gray-700">
+              Your Nomadic account is active, but a Passport wallet could not be
+              resolved.
             </p>
           )}
         </div>
 
         <div>
           <p className="text-xs font-medium text-gray-500">ENS Passport</p>
-          {hasEnsPassport ? (
+          {hasEnsIssued ? (
             <p className="mt-1 break-all text-sm font-medium text-black">
-              {displayIdentity!.trim()}
+              {ensName!.trim()}
             </p>
           ) : (
-            <p className="mt-1 text-sm text-gray-700">ENS Passport not issued yet</p>
+            <>
+              <p className="mt-1 text-sm font-medium text-gray-800">
+                Not issued yet
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                Your Passport will receive an ENS identity during the issuance
+                step.
+              </p>
+            </>
           )}
-          <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            Product identity will use a Sepolia Passport name when issuance is
-            available. Nomadic will not show a name as owned until it is issued.
-          </p>
         </div>
       </div>
     </section>
