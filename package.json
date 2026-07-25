@@ -8,9 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test:passport": "node --test scripts/passport-me.test.mjs",
-    "test:world": "node --test scripts/world.test.mjs",
+    "test:world": "node --test scripts/world.test.mjs scripts/world-verify-contract.test.mjs",
     "test:lisbon": "node --test scripts/lisbon-apply.test.mjs",
-    "test:all": "node --test scripts/passport-me.test.mjs scripts/world.test.mjs scripts/lisbon-apply.test.mjs",
+    "test:all": "node --test scripts/passport-me.test.mjs scripts/world.test.mjs scripts/world-verify-contract.test.mjs scripts/lisbon-apply.test.mjs",
     "spike:ens": "node scripts/ens-spike-test.mjs"
   },
   "dependencies": {

@@ -33,6 +33,11 @@ import type {
   WorldPreset,
   WorldVerifySummary,
 } from "@/lib/world/types";
+import {
+  formatWorldVerifyError,
+  isBackendWorldVerified,
+  type WorldBackendVerifyJson,
+} from "@/lib/world/verify-contract";
 
 type CheckKind = "identity" | "selfie";
 
@@ -131,6 +136,7 @@ export function WorldVerificationPanel({
   const [session, setSession] = useState<SessionPayload | null>(null);
   const activeKindRef = useRef<CheckKind | null>(null);
   const successKindsRef = useRef<Set<CheckKind>>(new Set());
+  const lastVerifyErrorRef = useRef<string | null>(null);
   const bothNotifiedRef = useRef(false);
 
   const configured = isWorldPublicConfigured();
@@ -330,7 +336,7 @@ export function WorldVerificationPanel({
   );
 
   const handleVerify = useCallback(
-    async (idkitResponse: IDKitResult) => {
+    async (completionResult: IDKitResult) => {
       const kind = activeKindRef.current;
       if (!kind) {
         throw new Error("No active World check");
@@ -347,70 +353,66 @@ export function WorldVerificationPanel({
       const proofId =
         kind === "identity" ? "WORLD_IDENTITY_CHECK" : "WORLD_SELFIE_CHECK";
 
+      lastVerifyErrorRef.current = null;
+
+      // Preserve complete IDKit completion object unchanged under idkitResult.
       const res = await fetch("/api/world/verify", {
         method: "POST",
         headers,
-        body: JSON.stringify({ action, idkitResponse }),
+        body: JSON.stringify({
+          action,
+          idkitResult: completionResult,
+        }),
       });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        code?: string;
-        detail?: string;
-        summary?: WorldVerifySummary;
-        note?: string;
-        persisted?: boolean;
-        verifiedAt?: string;
-      };
+      const data = (await res.json()) as WorldBackendVerifyJson;
 
-      if (!res.ok || !data.ok || !data.summary) {
-        const message =
-          data.detail || data.code || `Verify failed (${res.status})`;
+      // Trust only backend verified:true + WORLD_VERIFIED. Never mark from IDKit alone.
+      if (!res.ok || !isBackendWorldVerified(data)) {
+        const message = formatWorldVerifyError(data, res.status);
+        lastVerifyErrorRef.current = message;
         setter({
           status: "error",
           message,
           verifiedAt: null,
-          summary: data.summary ?? null,
+          summary: null,
         });
         throw new Error(message);
       }
 
-      const verifiedAt =
-        data.verifiedAt ||
-        data.summary.verifiedAt ||
-        new Date().toISOString();
-
-      setter({
-        status: "success",
-        message: null,
-        verifiedAt,
-        summary: data.summary,
-      });
-      successKindsRef.current.add(kind);
-
       await refetchPassport();
 
-      let inPassport = false;
+      let proofs: PassportProof[] | undefined;
       try {
         const token = await resolveSessionDidToken(didToken);
         if (token) {
           const fresh = await fetchPrivatePassport(token);
-          inPassport = isPassportProofVerified(
-            fresh.passport.proofs,
-            proofId,
-          );
+          proofs = fresh.passport.proofs;
         }
       } catch {
-        inPassport = false;
+        proofs = undefined;
       }
 
-      if (!data.persisted || !inPassport) {
+      const inPassport = isPassportProofVerified(proofs, proofId);
+      if (!inPassport) {
         setSyncError(
           "World verified this check, but your Passport has not synced the proof yet. Tap Retry sync or refresh Passport.",
         );
-      } else {
-        setSyncError(null);
+        // Do not set local success — permanent Verified comes from passport.proofs.
+        onProofSynced?.(kind);
+        return;
       }
 
+      setSyncError(null);
+      const verifiedAt =
+        (typeof data.verifiedAt === "string" && data.verifiedAt) ||
+        new Date().toISOString();
+      setter({
+        status: "success",
+        message: null,
+        verifiedAt,
+        summary: null,
+      });
+      successKindsRef.current.add(kind);
       onProofSynced?.(kind);
     },
     [authHeaders, didToken, onProofSynced, refetchPassport],
@@ -426,11 +428,26 @@ export function WorldVerificationPanel({
     const kind = activeKindRef.current;
     if (!kind) return;
     const setter = kind === "identity" ? setIdentity : setSelfie;
-    setter({
-      status: "error",
-      message: `IDKit error: ${errorCode}`,
-      verifiedAt: null,
-      summary: null,
+    // Prefer backend category/detail from handleVerify over generic IDKit host errors.
+    const backendMessage = lastVerifyErrorRef.current;
+    setter((prev) => {
+      if (backendMessage) {
+        return {
+          status: "error",
+          message: backendMessage,
+          verifiedAt: null,
+          summary: null,
+        };
+      }
+      if (prev.status === "error" && prev.message) {
+        return prev;
+      }
+      return {
+        status: "error",
+        message: `IDKit error: ${errorCode}`,
+        verifiedAt: null,
+        summary: null,
+      };
     });
     setOpen(false);
     setSession(null);
