@@ -9,7 +9,8 @@
   "credentialNode": "0x6ad2126ebdb620e0dedc9df67cbb3256d7d948d91f24db92ab3ede1a419e7142",
   "credentialDns": "0x0c6c6973626f6e2d686f75736506766963746f72106e6f6d616469632d70617373706f72740365746800",
   "sourceGrantTx": "0xb8fc4cbdfbdc8cb6eef5b6350611d9c9ddd19fdf63bc52aec94d76f4f43c35d8",
-  "note": "DNS bytes reused from Stage 3 Group 5 grant tx — do not recompute namehash independently",
+  "completionTx": "0x9bb61d2b31b38a28573dfd4cf970a661c38befe0002482f4b4d9a8504f69e801",
+  "note": "DNS bytes reused from Stage 3 Group 5 grant tx — do not recompute namehash independently. Stage 5A completed; do not re-broadcast revoke.",
   "transaction": {
     "index": 1,
     "label": "Revoke issuer scoped text permissions",

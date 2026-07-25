@@ -22,7 +22,13 @@ export const STAGE5A_EXPECTED_SIGNER =
   "0xd114FA765bA4811219AAe364c93CE8A81Ad39B17" as Address;
 export const STAGE5A_CREDENTIAL_NODE =
   "0x6ad2126ebdb620e0dedc9df67cbb3256d7d948d91f24db92ab3ede1a419e7142" as Hex;
+/** Historical broken frontend node — never use for reads or writes. */
+export const STAGE5A_WRONG_CREDENTIAL_NODE =
+  "0x86ee08d08dc976a172e361396955cc752bd4328e943d606781a832ea0cc0b2fb" as Hex;
 export const STAGE5A_METADATA_VALUE = "issuer-demo-stage4-verified";
+/** Successful Stage 5A revoke multicall (Magic eth_sendTransaction). */
+export const STAGE5A_COMPLETION_TX =
+  "0x9bb61d2b31b38a28573dfd4cf970a661c38befe0002482f4b4d9a8504f69e801" as Hex;
 
 export const STAGE5A_KEYS = [
   "com.nomadic.status",

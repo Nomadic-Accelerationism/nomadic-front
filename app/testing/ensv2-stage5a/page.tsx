@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   STAGE5A_CHAIN_ID,
+  STAGE5A_COMPLETION_TX,
   STAGE5A_EXPECTED_SIGNER,
   STAGE5A_ISSUER,
   STAGE5A_KEYS,
@@ -24,16 +25,10 @@ import {
 function formatMagicError(err: unknown): string {
   if (!(err instanceof Error)) return "Revoke failed";
   const msg = err.message || "Revoke failed";
-  const data =
-    err && typeof err === "object" && "data" in err
-      ? (err as { data?: unknown }).data
-      : undefined;
-  const extra =
-    data !== undefined ? ` details=${JSON.stringify(data)}` : "";
   if (/failed to fetch/i.test(msg)) {
-    return `${msg}${extra} — Magic→proxy→dRPC path failed. Hard-refresh a fresh tab, sign in only on Stage 5A, confirm the Magic modal. dRPC key stays server-only.`;
+    return `${msg} — Check Magic Dashboard CSP/connect-src allowlist for this origin (Allowed Origins alone is not enough), then hard-refresh.`;
   }
-  return `${msg}${extra}`;
+  return msg;
 }
 
 type UiPhase =
@@ -49,6 +44,9 @@ type UiPhase =
  * Stage 5A runner — one Magic eth_sendTransaction multicall that revokes
  * the issuer's four scoped ROLE_SET_TEXT permissions. Does not alter records.
  * Does not run Stage 5B.
+ *
+ * Hidden from normal navigation (/testing/...). When issuer roles are already
+ * zero, the page marks Stage 5A completed and hides the revoke control.
  */
 export default function EnsV2Stage5APage() {
   // Reads: publicnode. Magic + probes: same-origin proxy → ENS_SEPOLIA_RPC_URL (dRPC).
@@ -59,11 +57,14 @@ export default function EnsV2Stage5APage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState<string | null>(null);
   const [preflight, setPreflight] = useState<Stage5APreflight | null>(null);
-  const [txHash, setTxHash] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(STAGE5A_COMPLETION_TX);
   const [postflight, setPostflight] = useState<Stage5APreflight | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [proxyKeyed, setProxyKeyed] = useState<boolean | null>(null);
+
+  const completed =
+    phase === "done" || Boolean(preflight?.alreadyRevoked) || Boolean(postflight?.alreadyRevoked);
 
   const pushLog = useCallback((line: string) => {
     setLog((prev) => [...prev, line]);
@@ -72,6 +73,10 @@ export default function EnsV2Stage5APage() {
   const refreshPreflight = useCallback(async () => {
     const result = await runStage5APreflight(readRpcUrl);
     setPreflight(result);
+    if (result.alreadyRevoked) {
+      setPostflight(result);
+      setTxHash((prev) => prev ?? STAGE5A_COMPLETION_TX);
+    }
     return result;
   }, [readRpcUrl]);
 
@@ -79,10 +84,22 @@ export default function EnsV2Stage5APage() {
     let cancelled = false;
     (async () => {
       try {
+        // Always read chain state first — Stage 5A may already be complete.
+        const pf = await refreshPreflight();
+        if (cancelled) return;
+        if (pf.alreadyRevoked) {
+          setPhase("done");
+          pushLog(
+            "Stage 5A already complete — issuer ROLE_SET_TEXT is 0 on all four keys. Revoke disabled.",
+          );
+        }
+
         const magic = getSepoliaMagic();
         if (!magic) {
-          setError("NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY is not configured.");
-          setPhase("error");
+          if (!pf.alreadyRevoked) {
+            setError("NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY is not configured.");
+            setPhase("error");
+          }
           return;
         }
         const loggedIn = await magic.user.isLoggedIn();
@@ -93,18 +110,15 @@ export default function EnsV2Stage5APage() {
               ? info.publicAddress
               : null;
           setAddress(addr);
-          const pf = await refreshPreflight();
-          if (!cancelled) {
+          if (!pf.alreadyRevoked) {
             setPhase("preflight");
             pushLog(
-              pf.alreadyRevoked
-                ? "Preflight: issuer roles already 0 (Stage 5A may already be done)."
-                : `Preflight: issuer ROLE_SET_TEXT present on ${STAGE5A_KEYS.length} keys.`,
+              `Preflight: issuer ROLE_SET_TEXT present on ${STAGE5A_KEYS.length} keys.`,
             );
           }
           return;
         }
-        if (!cancelled) setPhase("need_login");
+        if (!cancelled && !pf.alreadyRevoked) setPhase("need_login");
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Boot failed");
@@ -119,6 +133,10 @@ export default function EnsV2Stage5APage() {
 
   const handleLogin = useCallback(async () => {
     setError(null);
+    if (preflight?.alreadyRevoked) {
+      setPhase("done");
+      return;
+    }
     const magic = getSepoliaMagic();
     if (!magic) {
       setError("Magic not configured");
@@ -130,13 +148,18 @@ export default function EnsV2Stage5APage() {
       const addr =
         typeof info.publicAddress === "string" ? info.publicAddress : null;
       setAddress(addr);
-      await refreshPreflight();
+      const pf = await refreshPreflight();
+      if (pf.alreadyRevoked) {
+        setPhase("done");
+        pushLog("Stage 5A already complete — revoke disabled.");
+        return;
+      }
       setPhase("preflight");
       pushLog(`Logged in as ${addr}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
-  }, [email, pushLog, refreshPreflight]);
+  }, [email, preflight?.alreadyRevoked, pushLog, refreshPreflight]);
 
   const handleRevoke = useCallback(async () => {
     setError(null);
@@ -154,8 +177,11 @@ export default function EnsV2Stage5APage() {
       );
       return;
     }
+    // Stage 3 / Stage 5 resume protection: never re-broadcast revoke.
     if (preflight?.alreadyRevoked) {
-      setError("Issuer roles already zero — refusing to re-send revoke.");
+      setPhase("done");
+      setError(null);
+      pushLog("Resume protection: issuer roles already zero — revoke not offered.");
       return;
     }
     if (!preflight?.readyToRevoke) {
@@ -189,9 +215,8 @@ export default function EnsV2Stage5APage() {
         );
       }
 
-      // Do NOT call magic.user.getInfo/isLoggedIn here — they have been observed
-      // to throw Magic RPC Error Failed to fetch right before send, even when
-      // boot already proved the session is alive.
+      // Do NOT call magic.user.getInfo/isLoggedIn here — can throw Failed to fetch
+      // even when boot already proved the session is alive.
       const txParams = getStage5AMagicTxParams(address as `0x${string}`);
       pushLog(
         `Sending eth_sendTransaction via Magic→proxy→dRPC to=${txParams.to}`,
@@ -220,7 +245,6 @@ export default function EnsV2Stage5APage() {
       pushLog(`Tx submitted: ${hash}`);
       setPhase("waiting_receipt");
 
-      // Poll receipt via same-origin proxy (not Magic) to avoid extra Magic RPC.
       for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
         const receiptRes = await fetch(proxyRpcUrl, {
@@ -276,9 +300,19 @@ export default function EnsV2Stage5APage() {
     }
   }, [address, magicRpcUrl, preflight, proxyRpcUrl, pushLog, readRpcUrl]);
 
+  const showRevokeButton =
+    !completed &&
+    (phase === "preflight" || phase === "error") &&
+    Boolean(preflight?.readyToRevoke);
+
+  const rolesView = postflight ?? preflight;
+
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-10 text-left">
-      <h1 className="text-2xl font-bold text-black">ENSv2 Stage 5A</h1>
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        Internal testing route — not linked in product navigation
+      </p>
+      <h1 className="mt-2 text-2xl font-bold text-black">ENSv2 Stage 5A</h1>
       <p className="mt-2 text-sm text-gray-700">
         One Magic-signed atomic resolver <code>multicall</code> that revokes the
         Lisbon House issuer&apos;s four scoped <code>ROLE_SET_TEXT</code>{" "}
@@ -286,7 +320,32 @@ export default function EnsV2Stage5APage() {
         Stage 5B.
       </p>
 
+      {completed ? (
+        <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-950">
+          <p className="font-semibold">Stage 5A completed</p>
+          <p className="mt-1 text-xs">
+            Issuer scoped text roles are zero. Revocation is disabled (resume
+            protection). Stage 5B is not available in this frontend.
+          </p>
+          <p className="mt-3 break-all text-xs">
+            Tx:{" "}
+            <a
+              className="font-mono text-[#ff671e] underline"
+              href={`https://sepolia.etherscan.io/tx/${txHash ?? STAGE5A_COMPLETION_TX}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {txHash ?? STAGE5A_COMPLETION_TX}
+            </a>
+          </p>
+        </section>
+      ) : null}
+
       <dl className="mt-6 space-y-1 rounded-2xl border border-black/10 bg-white/80 px-4 py-3 text-xs text-gray-700">
+        <div>
+          <dt className="font-semibold text-gray-500">Status</dt>
+          <dd>{completed ? "COMPLETED" : phase}</dd>
+        </div>
         <div>
           <dt className="font-semibold text-gray-500">Chain</dt>
           <dd>Sepolia {STAGE5A_CHAIN_ID}</dd>
@@ -329,7 +388,7 @@ export default function EnsV2Stage5APage() {
         </div>
       </dl>
 
-      {phase === "need_login" ? (
+      {phase === "need_login" && !completed ? (
         <section className="mt-6 space-y-3">
           <label className="block text-sm font-medium text-gray-800">
             Magic email (Passport owner)
@@ -351,41 +410,47 @@ export default function EnsV2Stage5APage() {
         </section>
       ) : null}
 
-      {preflight ? (
+      {rolesView ? (
         <section className="mt-6 rounded-2xl border border-black/10 bg-white/80 px-4 py-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
-            Preflight
+            {completed ? "On-chain state" : "Preflight"}
           </h2>
           <ul className="mt-3 space-y-1 font-mono text-xs text-gray-800">
             {STAGE5A_KEYS.map((key) => (
               <li key={key}>
-                {key}: {preflight.roles[key]}
+                {key}: {rolesView.roles[key]}
               </li>
             ))}
           </ul>
           <p className="mt-3 text-sm text-gray-700">
             metadata:{" "}
             <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
-              {preflight.metadata || "(empty)"}
+              {rolesView.metadata || "(empty)"}
             </code>
           </p>
           <p className="mt-2 text-xs text-gray-500">
-            Ready: {String(preflight.readyToRevoke)} · Already revoked:{" "}
-            {String(preflight.alreadyRevoked)} · Metadata intact:{" "}
-            {String(preflight.metadataIntact)}
+            Ready: {String(rolesView.readyToRevoke)} · Already revoked:{" "}
+            {String(rolesView.alreadyRevoked)} · Metadata intact:{" "}
+            {String(rolesView.metadataIntact)}
           </p>
         </section>
       ) : null}
 
-      {phase === "preflight" || phase === "error" ? (
+      {showRevokeButton ? (
         <button
           type="button"
-          disabled={!preflight?.readyToRevoke}
           onClick={() => void handleRevoke()}
-          className="mt-6 h-12 w-full rounded-xl bg-[#ff671e] text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+          className="mt-6 h-12 w-full rounded-xl bg-[#ff671e] text-sm font-bold text-white"
         >
           Revoke issuer permissions (1 Magic tx)
         </button>
+      ) : null}
+
+      {completed && !showRevokeButton ? (
+        <p className="mt-6 rounded-xl border border-black/10 bg-gray-50 px-3 py-3 text-sm text-gray-700">
+          Revoke control hidden — Stage 5A is complete. No further revocation
+          transactions from this page.
+        </p>
       ) : null}
 
       {phase === "sending" || phase === "waiting_receipt" ? (
@@ -396,41 +461,7 @@ export default function EnsV2Stage5APage() {
         </p>
       ) : null}
 
-      {txHash ? (
-        <p className="mt-4 break-all text-sm text-gray-800">
-          Tx:{" "}
-          <a
-            className="font-mono text-[#ff671e] underline"
-            href={`https://sepolia.etherscan.io/tx/${txHash}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {txHash}
-          </a>
-        </p>
-      ) : null}
-
-      {phase === "done" && postflight ? (
-        <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-950">
-          <p className="font-semibold">Stage 5A complete</p>
-          <ul className="mt-2 space-y-1 font-mono text-xs">
-            {STAGE5A_KEYS.map((key) => (
-              <li key={key}>
-                {key}: {postflight.roles[key]}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2">
-            metadata still{" "}
-            <code>{postflight.metadata}</code>
-          </p>
-          <p className="mt-2 text-xs">
-            Stage 5B (issuer write failure) is intentionally not run here.
-          </p>
-        </section>
-      ) : null}
-
-      {error ? (
+      {error && !completed ? (
         <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {error}
         </p>

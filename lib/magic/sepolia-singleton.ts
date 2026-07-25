@@ -10,6 +10,10 @@
  * Never put ENS_SEPOLIA_RPC_URL / dRPC keys in NEXT_PUBLIC_* or the browser.
  * Preserves the mainnet-mapped Magic address used for Passport ownership.
  *
+ * Magic Dashboard: Allowed Origins is not enough — also add this production
+ * origin / custom RPC path to Magic CSP `connect-src`, or eth_sendTransaction
+ * fails with [-32603] Failed to fetch while page fetch to the proxy works.
+ *
  * Do not create a second Magic instance alongside this module in the same page.
  * Hard-refresh if a stale .magic-iframe from another rpcUrl exists.
  */
