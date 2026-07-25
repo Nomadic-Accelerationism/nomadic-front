@@ -17,30 +17,37 @@ do not recompute namehash).
 Server-only (never NEXT_PUBLIC_*):
 ENS_SEPOLIA_RPC_URL=<keyed dRPC Sepolia URL>
 
-Browser + Magic → same-origin proxy:
-POST {origin}/api/ens/sepolia-rpc
+Magic iframe (auth.magic.link) → public Sepolia RPC (no key):
+https://ethereum-sepolia-rpc.publicnode.com
 
 Magic custom network:
-{ rpcUrl: "{origin}/api/ens/sepolia-rpc", chainId: 11155111 }
+{ rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com", chainId: 11155111 }
+
+Page-side proxy (probes / receipt poll; keyed dRPC stays server-only):
+POST {origin}/api/ens/sepolia-rpc
 
 Do NOT use Magic network: "sepolia" (changes the address set).
-
-Public fallback (reads only / proxy fallback when env unset):
-https://ethereum-sepolia-rpc.publicnode.com
+Do NOT put ENS_SEPOLIA_RPC_URL in NEXT_PUBLIC_*.
 ```
 
 Also requires:
 
 - `NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY`
 
+### Why Magic does not use the Vercel proxy
+
+Prod logs showed page `fetch` to `/api/ens/sepolia-rpc` succeeding while
+Magic `eth_sendTransaction` / `eth_chainId` failed with
+`[-32603] Failed to fetch` **without any Magic→proxy request**. Magic's
+iframe needs a CORS-friendly public RPC; publicnode is keyless and works
+cross-origin from `auth.magic.link`.
+
 ### Magic `[-32603] Failed to fetch`
 
 1. Test on **production** `https://nomadic-front-rosy.vercel.app/testing/ensv2-stage5a`
-   (Vercel-auth preview URLs return 401 to Magic’s iframe).
-2. Set `ENS_SEPOLIA_RPC_URL` on Vercel **Production** (server-only).
-3. Sign in **on the Stage 5A page** (do not create a second default Magic
-   instance via `/login-user` in the same tab first).
-4. The runner probes the proxy and prefills nonce/gas as hex before
-   `eth_sendTransaction`.
+2. **Hard-refresh** (or open a fresh tab) so a stale Magic iframe from an
+   older rpcUrl is not reused
+3. Sign in **on the Stage 5A page** only (not `/login-user` first)
+4. Confirm the Magic transaction modal
 
 See contracts doc: `nomadic-contracts/docs/ENSV2_STAGE5A.md`.

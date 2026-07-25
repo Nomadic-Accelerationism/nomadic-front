@@ -14,6 +14,8 @@ import {
   type Stage5APreflight,
 } from "@/lib/ensv2/stage5a";
 import {
+  countMagicIframes,
+  getEnsSepoliaProxyUrl,
   getMagicSepoliaRpcUrl,
   getPublicSepoliaRpcUrl,
   getSepoliaMagic,
@@ -29,7 +31,7 @@ function formatMagicError(err: unknown): string {
   const extra =
     data !== undefined ? ` details=${JSON.stringify(data)}` : "";
   if (/failed to fetch/i.test(msg)) {
-    return `${msg}${extra} — Magic sign/broadcast failed after proxy preflight OK. Soft-refresh this page, sign in here (not /login-user), confirm the Magic modal, then retry.`;
+    return `${msg}${extra} — Magic iframe RPC failed. Hard-refresh this tab (or open a new one), sign in only on this Stage 5A page, then confirm the Magic modal.`;
   }
   return `${msg}${extra}`;
 }
@@ -49,9 +51,10 @@ type UiPhase =
  * Does not run Stage 5B.
  */
 export default function EnsV2Stage5APage() {
-  // Reads use public RPC; Magic txs use same-origin proxy (no keyed URL in browser).
+  // Reads: publicnode. Magic iframe: publicnode. Page probes/receipts: same-origin proxy.
   const readRpcUrl = useMemo(() => getPublicSepoliaRpcUrl(), []);
   const magicRpcUrl = useMemo(() => getMagicSepoliaRpcUrl(), []);
+  const proxyRpcUrl = useMemo(() => getEnsSepoliaProxyUrl(), []);
   const [phase, setPhase] = useState<UiPhase>("boot");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState<string | null>(null);
@@ -164,29 +167,34 @@ export default function EnsV2Stage5APage() {
 
     try {
       setPhase("sending");
-      pushLog(`Probing Magic RPC proxy ${magicRpcUrl}…`);
-      const probe = await probeSepoliaRpcProxy(magicRpcUrl);
-      setProxyKeyed(probe.keyed);
+      const iframes = countMagicIframes();
       pushLog(
-        `Proxy OK chainId=${probe.chainIdHex} keyed=${String(probe.keyed)}`,
+        `Magic rpcUrl=${magicRpcUrl} iframes=${iframes} proxy=${proxyRpcUrl}`,
       );
-      if (!probe.keyed) {
-        pushLog(
-          "WARN: ENS_SEPOLIA_RPC_URL unset — proxy using public fallback.",
+      if (iframes > 1) {
+        throw new Error(
+          `Found ${iframes} Magic iframes — hard-refresh this tab so only one Magic network config is active.`,
         );
       }
 
-      // Let Magic estimate EIP-1559 gas itself. Prefilling legacy gasPrice
-      // previously failed before eth_sendRawTransaction.
-      const txParams = getStage5AMagicTxParams(address as `0x${string}`);
+      pushLog(`Probing keyed proxy…`);
+      const probe = await probeSepoliaRpcProxy(proxyRpcUrl);
+      setProxyKeyed(probe.keyed);
       pushLog(
-        `Sending eth_sendTransaction to=${txParams.to} chainId=${txParams.chainId}`,
+        `Proxy OK chainId=${probe.chainIdHex} keyed=${String(probe.keyed)}`,
       );
 
       const loggedIn = await magic.user.isLoggedIn();
       if (!loggedIn) {
         throw new Error("Magic session expired — sign in again on this page.");
       }
+      // Ensure iframe is awake before eth_sendTransaction.
+      await magic.user.getInfo();
+
+      const txParams = getStage5AMagicTxParams(address as `0x${string}`);
+      pushLog(
+        `Sending eth_sendTransaction to=${txParams.to} chainId=${txParams.chainId}`,
+      );
 
       const provider = magic.rpcProvider as {
         request: (args: {
@@ -194,15 +202,6 @@ export default function EnsV2Stage5APage() {
           params?: unknown[];
         }) => Promise<unknown>;
       };
-
-      // Warm the provider through Magic (not window.fetch) before send.
-      const magicChain = await provider.request({ method: "eth_chainId" });
-      pushLog(`Magic provider chainId=${String(magicChain)}`);
-      if (String(magicChain).toLowerCase() !== "0xaa36a7") {
-        throw new Error(
-          `Magic provider on chain ${String(magicChain)}, expected Sepolia 0xaa36a7`,
-        );
-      }
 
       const hash = (await provider.request({
         method: "eth_sendTransaction",
@@ -216,7 +215,7 @@ export default function EnsV2Stage5APage() {
       // Poll receipt via same-origin proxy (not Magic) to avoid extra Magic RPC.
       for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
-        const receiptRes = await fetch(magicRpcUrl, {
+        const receiptRes = await fetch(proxyRpcUrl, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -267,7 +266,7 @@ export default function EnsV2Stage5APage() {
       setError(formatMagicError(err));
       setPhase("error");
     }
-  }, [address, magicRpcUrl, preflight, pushLog, readRpcUrl]);
+  }, [address, magicRpcUrl, preflight, proxyRpcUrl, pushLog, readRpcUrl]);
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-10 text-left">
@@ -285,8 +284,12 @@ export default function EnsV2Stage5APage() {
           <dd>Sepolia {STAGE5A_CHAIN_ID}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-gray-500">Magic RPC (proxy)</dt>
+          <dt className="font-semibold text-gray-500">Magic RPC (iframe)</dt>
           <dd className="break-all">{magicRpcUrl}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold text-gray-500">Keyed proxy (page)</dt>
+          <dd className="break-all">{proxyRpcUrl}</dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-500">Proxy keyed dRPC</dt>

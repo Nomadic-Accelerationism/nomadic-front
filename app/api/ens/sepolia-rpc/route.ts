@@ -22,14 +22,19 @@ function upstreamUrl(): string {
 
 function corsHeaders(request?: Request): HeadersInit {
   const requested = request?.headers.get("access-control-request-headers");
+  // Reflect Origin — Access-Control-Allow-Origin: * breaks credentialed
+  // fetches from Magic's auth.magic.link iframe (Failed to fetch).
+  const origin = request?.headers.get("origin")?.trim() || "*";
   return {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Credentials": origin === "*" ? "false" : "true",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers":
       requested?.trim() ||
       "Content-Type, Authorization, X-Requested-With, Accept",
     "Access-Control-Max-Age": "86400",
     "Cache-Control": "no-store",
+    Vary: "Origin, Access-Control-Request-Headers",
   };
 }
 
