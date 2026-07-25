@@ -7,6 +7,9 @@
  *
  * Never use Magic built-in `network: "sepolia"` (changes the address set).
  * Never put ENS_SEPOLIA_RPC_URL / dRPC keys in NEXT_PUBLIC_* or the browser.
+ * Preserves the mainnet-mapped Magic address used for Passport ownership.
+ *
+ * Do not create a second Magic instance alongside this module in the same page.
  */
 
 "use client";
