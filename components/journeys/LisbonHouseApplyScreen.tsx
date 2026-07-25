@@ -1,27 +1,55 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WorldVerificationPanel } from "@/components/world/WorldVerificationPanel";
 import { useUser } from "@/contexts/UserContext";
+import { usePrivatePassport } from "@/hooks/usePrivatePassport";
 import {
-  LISBON_HOUSE_JOURNEY,
-  proofStatusLabel,
-} from "@/lib/journeys/lisbon-house";
+  findLisbonApplicationRef,
+  findLisbonEligibleCredential,
+  getLisbonApplyReadiness,
+  isSubmittedApplicationStatus,
+  LisbonApplicationClientError,
+  lisbonApplicationStatusLabel,
+  submitLisbonHouseApplication,
+  type LisbonApplyUiState,
+} from "@/lib/journeys/lisbon-applications";
+import { LISBON_HOUSE_JOURNEY } from "@/lib/journeys/lisbon-house";
+import {
+  formatProofVerifiedAt,
+  mergePassportProofs,
+  passportProofStatusLabel,
+} from "@/lib/passport/merge-proofs";
+import { resolveSessionDidToken } from "@/lib/passport/session-did";
+import { isWorldPublicConfigured } from "@/lib/world/client";
 
 /**
- * Apply shell before live World credentials.
- * Boundary for future IDKit: replace the unavailable verification panel only.
- * Do not create applications, credentials, or fake proof completion here.
+ * Lisbon House apply — World checks + backend-authoritative application submit.
  */
 export function LisbonHouseApplyScreen() {
   const router = useRouter();
-  const { isAuthenticated, isInitialized } = useUser();
+  const { isAuthenticated, isInitialized, publicAddress, didToken, logout } =
+    useUser();
+  const {
+    passport,
+    isLoading,
+    isAuthError,
+    refetch,
+  } = usePrivatePassport();
   const fixture = LISBON_HOUSE_JOURNEY;
-  const { identityCheck, selfieCheck } = fixture.proofs;
   const { dataMinimization } = fixture.policy;
+  const worldConfigured = isWorldPublicConfigured();
+
+  const [uiState, setUiState] = useState<LisbonApplyUiState>("ready");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(
+    null,
+  );
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -29,6 +57,103 @@ export function LisbonHouseApplyScreen() {
       router.replace("/login-user");
     }
   }, [isAuthenticated, isInitialized, router]);
+
+  const readiness = useMemo(
+    () => getLisbonApplyReadiness(passport?.proofs),
+    [passport?.proofs],
+  );
+
+  const mergedProofs = useMemo(
+    () => mergePassportProofs(passport?.proofs),
+    [passport?.proofs],
+  );
+
+  const existingApplication = useMemo(
+    () => findLisbonApplicationRef(passport?.journeys),
+    [passport?.journeys],
+  );
+
+  const existingCredential = useMemo(
+    () => findLisbonEligibleCredential(passport?.credentials),
+    [passport?.credentials],
+  );
+
+  useEffect(() => {
+    if (
+      existingApplication &&
+      isSubmittedApplicationStatus(existingApplication.status)
+    ) {
+      setApplicationStatus(existingApplication.status || "SUBMITTED");
+      setUiState("submitted");
+    } else if (existingCredential) {
+      setUiState("submitted");
+      setApplicationStatus((prev) => prev || "SUBMITTED");
+    } else if (!readiness.canSubmit) {
+      setUiState((prev) => (prev === "submitting" ? prev : "ready"));
+    }
+  }, [existingApplication, existingCredential, readiness.canSubmit]);
+
+  const handleSubmit = useCallback(async () => {
+    if (submittingRef.current) return;
+    if (uiState === "submitted") return;
+    if (!readiness.canSubmit) {
+      setUiState("requirements_unsatisfied");
+      setSubmitError(
+        "Complete both World Identity Check and Selfie Check before applying.",
+      );
+      return;
+    }
+
+    submittingRef.current = true;
+    setUiState("submitting");
+    setSubmitError(null);
+
+    try {
+      const token = await resolveSessionDidToken(didToken);
+      if (!token) {
+        setUiState("session_expired");
+        setSubmitError("Your session expired. Please sign in again.");
+        return;
+      }
+
+      const result = await submitLisbonHouseApplication(token);
+      setApplicationStatus(result.application.status);
+      setUiState("submitted");
+      refetch();
+    } catch (error) {
+      if (error instanceof LisbonApplicationClientError) {
+        if (
+          error.code === "MISSING_SESSION" ||
+          error.code === "INVALID_SESSION"
+        ) {
+          setUiState("session_expired");
+          setSubmitError("Your session expired. Please sign in again.");
+        } else if (error.code === "POLICY_NOT_SATISFIED") {
+          setUiState("requirements_unsatisfied");
+          setSubmitError(
+            "Requirements are no longer satisfied. Re-check Identity and Selfie proofs.",
+          );
+          refetch();
+        } else if (error.code === "ALREADY_APPLIED") {
+          setUiState("submitted");
+          setApplicationStatus("SUBMITTED");
+          setSubmitError(null);
+          refetch();
+        } else if (error.code === "BACKEND_UNAVAILABLE") {
+          setUiState("backend_unavailable");
+          setSubmitError("Backend unavailable. Please try again shortly.");
+        } else {
+          setUiState("unexpected_error");
+          setSubmitError("Unexpected error submitting your application.");
+        }
+      } else {
+        setUiState("unexpected_error");
+        setSubmitError("Unexpected error submitting your application.");
+      }
+    } finally {
+      submittingRef.current = false;
+    }
+  }, [didToken, readiness.canSubmit, refetch, uiState]);
 
   if (!isInitialized || !isAuthenticated) {
     return (
@@ -38,6 +163,28 @@ export function LisbonHouseApplyScreen() {
       </div>
     );
   }
+
+  if (isAuthError) {
+    return (
+      <div className="flex min-h-[50vh] w-full flex-col items-center justify-center gap-3 px-6">
+        <p className="text-center text-sm text-red-900">
+          Your session expired. Please sign in again.
+        </p>
+        <Button
+          type="button"
+          onClick={() => {
+            logout();
+            router.replace("/login-user");
+          }}
+          className="h-11 rounded-xl bg-[#ff671e] font-bold text-black"
+        >
+          Sign in again
+        </Button>
+      </div>
+    );
+  }
+
+  const submitted = uiState === "submitted";
 
   return (
     <div
@@ -69,28 +216,46 @@ export function LisbonHouseApplyScreen() {
           {fixture.community.name} · {fixture.journey.title}
         </p>
 
-        <section className="mt-8 space-y-3" aria-labelledby="apply-proofs-heading">
+        <section
+          className="mt-8 space-y-3"
+          aria-labelledby="apply-proofs-heading"
+        >
           <h2
             id="apply-proofs-heading"
             className="text-sm font-semibold uppercase tracking-wide text-gray-700"
           >
             Required proofs
           </h2>
-
-          {[identityCheck, selfieCheck].map((proof) => (
-            <div
-              key={proof.title}
-              className="rounded-2xl border border-black/10 bg-white/90 px-4 py-4"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="font-semibold text-black">{proof.title}</h3>
-                <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
-                  {proofStatusLabel(proof.status)}
-                </span>
+          {isLoading && !passport ? (
+            <p className="text-sm text-gray-600">Loading Passport proofs…</p>
+          ) : (
+            mergedProofs.map((proof) => (
+              <div
+                key={proof.id}
+                className="rounded-2xl border border-black/10 bg-white/90 px-4 py-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-semibold text-black">{proof.title}</h3>
+                  <span
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                      proof.status === "completed"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-amber-100 text-amber-900"
+                    }`}
+                  >
+                    {passportProofStatusLabel(proof.status)}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">{proof.description}</p>
+                {proof.status === "completed" &&
+                formatProofVerifiedAt(proof.verifiedAt) ? (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Verified at: {formatProofVerifiedAt(proof.verifiedAt)}
+                  </p>
+                ) : null}
               </div>
-              <p className="mt-2 text-sm text-gray-600">{proof.description}</p>
-            </div>
-          ))}
+            ))
+          )}
         </section>
 
         <section
@@ -116,37 +281,112 @@ export function LisbonHouseApplyScreen() {
           </ul>
         </section>
 
-        {/*
-          WORLD_INTEGRATION_BOUNDARY
-          Replace this panel with IDKit / World verify UI when partner credentials exist.
-          Do not mark proofs completed or create applications from a demo bypass.
-        */}
+        {!submitted ? (
+          <div className="mt-8">
+            {worldConfigured ? (
+              <WorldVerificationPanel
+                signal={publicAddress || undefined}
+                backendProofs={passport?.proofs}
+                onProofSynced={() => refetch()}
+              />
+            ) : (
+              <section
+                className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
+                data-world-integration-boundary="unavailable"
+              >
+                <h2 className="text-base font-semibold text-amber-950">
+                  Verification
+                </h2>
+                <p className="mt-2 text-sm text-amber-950">
+                  World verification is not available yet.
+                </p>
+              </section>
+            )}
+          </div>
+        ) : null}
+
         <section
-          className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
-          aria-labelledby="world-unavailable-heading"
-          data-world-integration-boundary="unavailable"
+          className="mt-8 rounded-2xl border border-black/10 bg-white/90 px-4 py-5"
+          aria-labelledby="apply-submit-heading"
+          data-lisbon-apply-state={uiState}
         >
           <h2
-            id="world-unavailable-heading"
-            className="text-base font-semibold text-amber-950"
+            id="apply-submit-heading"
+            className="text-base font-semibold text-black"
           >
-            Verification
+            {submitted ? "Application submitted" : "Submit application"}
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-amber-950">
-            World verification is not available yet.
-          </p>
-          <p className="mt-2 text-xs text-amber-900/80">
-            Your email sign-in is not enough to submit this application. When
-            Identity Check and Selfie Check are enabled, you will complete them
-            here before applying.
-          </p>
-          <Button
-            type="button"
-            disabled
-            className="mt-4 h-12 w-full rounded-xl bg-gray-200 text-base font-bold text-gray-500"
-          >
-            Start World verification
-          </Button>
+
+          {submitted ? (
+            <>
+              <p className="mt-2 text-sm leading-relaxed text-gray-700">
+                Your Passport satisfied lisbon_house_policy_v1 and your
+                application has been submitted to Nomadic Lisbon House.
+              </p>
+              <p className="mt-2 text-xs text-gray-500">
+                Status:{" "}
+                {lisbonApplicationStatusLabel(
+                  applicationStatus || existingApplication?.status || "SUBMITTED",
+                )}
+              </p>
+              {existingCredential ? (
+                <p className="mt-2 text-sm text-emerald-800">
+                  Lisbon House Eligibility credential is on your Passport.
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-gray-700">
+                {readiness.canSubmit
+                  ? "Ready to apply — both Passport proofs are verified."
+                  : "Apply stays disabled until both proofs are verified on your Passport."}
+              </p>
+              {!readiness.canSubmit ? (
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-amber-900">
+                  {!readiness.identityVerified ? (
+                    <li>World Identity Check still required</li>
+                  ) : null}
+                  {!readiness.selfieVerified ? (
+                    <li>World Selfie Check still required</li>
+                  ) : null}
+                </ul>
+              ) : null}
+
+              {submitError ? (
+                <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+                  {submitError}
+                </p>
+              ) : null}
+
+              <Button
+                type="button"
+                disabled={!readiness.canSubmit || uiState === "submitting"}
+                onClick={() => void handleSubmit()}
+                className="mt-4 h-12 w-full rounded-xl bg-[#ff671e] text-base font-bold text-black hover:bg-orange-500 disabled:bg-gray-200 disabled:text-gray-500"
+              >
+                {uiState === "submitting"
+                  ? "Submitting application…"
+                  : readiness.canSubmit
+                    ? "Submit application"
+                    : "Complete proofs to apply"}
+              </Button>
+
+              {uiState === "session_expired" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 h-11 w-full rounded-xl"
+                  onClick={() => {
+                    logout();
+                    router.replace("/login-user");
+                  }}
+                >
+                  Sign in again
+                </Button>
+              ) : null}
+            </>
+          )}
         </section>
 
         <Button

@@ -79,9 +79,14 @@ function parseProof(value: unknown): PassportProof | null {
   if (typeof value.type === "string") proof.type = value.type;
   if (typeof value.key === "string") proof.key = value.key;
   if (typeof value.proofType === "string") proof.proofType = value.proofType;
+  if (typeof value.action === "string") proof.action = value.action;
   if (typeof value.status === "string") proof.status = value.status;
   if (value.completedAt === null || typeof value.completedAt === "string") {
     proof.completedAt = value.completedAt;
+  }
+  const verifiedAt = firstDefined(value, ["verifiedAt", "verified_at"]);
+  if (verifiedAt === null || typeof verifiedAt === "string") {
+    proof.verifiedAt = verifiedAt as string | null;
   }
   if (value.failedAt === null || typeof value.failedAt === "string") {
     proof.failedAt = value.failedAt;

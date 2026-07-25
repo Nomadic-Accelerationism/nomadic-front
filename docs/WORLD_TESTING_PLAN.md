@@ -145,6 +145,21 @@ Recruit: 5–8 people spanning World App installed vs not; iOS + Android; deskto
 - “Would you use this for another house Journey?”  
 - Open feedback on scary / unclear copy.
 
+### Lightweight capture surface
+
+Optional tester form (does not interrupt the normal apply path):
+
+- `/testing/lisbon-feedback` — stores notes in the browser only; does not invent results.
+
+Suggested prompts on that page:
+
+- completion time;
+- where the user hesitated;
+- whether they understood the 18+ requirement;
+- whether they understood what data Nomadic received;
+- whether Identity Check and Selfie Check felt distinct;
+- whether they would continue in a real application.
+
 ---
 
 ## Exit criteria for freezing policy / schema

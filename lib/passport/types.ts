@@ -13,8 +13,10 @@ export type PassportProof = {
   type?: string;
   key?: string;
   proofType?: string;
+  action?: string;
   status?: string;
   completedAt?: string | null;
+  verifiedAt?: string | null;
   failedAt?: string | null;
   expiredAt?: string | null;
 };

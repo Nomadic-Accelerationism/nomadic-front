@@ -207,7 +207,11 @@ export function PassportScreen() {
           >
             Credentials
           </h2>
-          <PassportCredentials credentials={passport.credentials} />
+          <PassportCredentials
+            credentials={passport.credentials}
+            ensName={passport.ensName}
+            ensStatus={passport.ensStatus}
+          />
         </section>
 
         <PassportJourneys />

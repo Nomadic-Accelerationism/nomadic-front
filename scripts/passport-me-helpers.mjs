@@ -192,17 +192,25 @@ const SUPPORTED = [
   {
     id: "WORLD_IDENTITY_CHECK",
     title: "World Identity Check",
-    matchKeys: ["WORLD_IDENTITY_CHECK", "IDENTITY_CHECK"],
+    matchKeys: [
+      "WORLD_IDENTITY_CHECK",
+      "IDENTITY_CHECK",
+      "lisbon_identity_v1",
+    ],
   },
   {
     id: "WORLD_SELFIE_CHECK",
     title: "World Selfie Check",
-    matchKeys: ["WORLD_SELFIE_CHECK", "SELFIE_CHECK"],
+    matchKeys: [
+      "WORLD_SELFIE_CHECK",
+      "SELFIE_CHECK",
+      "apply_lisbon_house_v1",
+    ],
   },
 ];
 
 function proofRecordKey(record) {
-  const raw = record.type || record.key || record.proofType;
+  const raw = record.type || record.key || record.proofType || record.action;
   return typeof raw === "string" && raw.trim() ? raw.trim() : null;
 }
 
@@ -213,7 +221,7 @@ function statusFromRecord(record) {
   }
   if (["FAILED", "FAILURE", "REJECTED"].includes(value)) return "failed";
   if (value === "EXPIRED") return "expired";
-  if (record.completedAt) return "completed";
+  if (record.completedAt || record.verifiedAt) return "completed";
   return "completed";
 }
 
@@ -230,7 +238,61 @@ export function mergePassportProofs(backendProofs) {
       id: definition.id,
       title: definition.title,
       status: backendRecord ? statusFromRecord(backendRecord) : "not_completed",
+      verifiedAt: backendRecord?.verifiedAt || backendRecord?.completedAt || null,
       backendRecord,
     };
   });
+}
+
+export function passportProofStatusLabel(status) {
+  if (status === "completed") return "Verified";
+  if (status === "failed") return "Failed";
+  if (status === "expired") return "Expired";
+  if (status === "unavailable") return "Unavailable";
+  return "Not completed";
+}
+
+export function getLisbonApplyReadiness(proofs) {
+  const merged = mergePassportProofs(proofs);
+  const identityVerified =
+    merged.find((p) => p.id === "WORLD_IDENTITY_CHECK")?.status === "completed";
+  const selfieVerified =
+    merged.find((p) => p.id === "WORLD_SELFIE_CHECK")?.status === "completed";
+  return {
+    identityVerified,
+    selfieVerified,
+    canSubmit: identityVerified && selfieVerified,
+  };
+}
+
+export function lisbonApplicationStatusLabel(status) {
+  if (!status) return "Unknown";
+  const value = String(status).trim().toUpperCase();
+  if (value === "SUBMITTED") return "Application submitted";
+  return status;
+}
+
+export function lisbonCredentialDisplay(credential) {
+  const key = String(credential?.credentialKey || "").toUpperCase();
+  if (key !== "NOMADIC_LISBON_HOUSE_ELIGIBLE") {
+    return {
+      title: credential?.displayName || credential?.credentialKey || "Credential",
+    };
+  }
+  return {
+    title: "Lisbon House Eligibility",
+    description:
+      "Confirms that this Passport satisfied the eligibility policy for Nomadic Lisbon House.",
+    policyKey: "lisbon_house_policy_v1",
+  };
+}
+
+/** Fixture must never invent proof/application/credential authority. */
+export function fixtureCannotInventBackendState(fixture) {
+  return (
+    fixture?.source === "frontend-fixture" &&
+    fixture?.application?.state === "not_started" &&
+    !fixture?.application?.credentialIssued &&
+    !fixture?.proofs?.identityCheck?.backendVerified
+  );
 }

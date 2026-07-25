@@ -34,6 +34,8 @@ export const SUPPORTED_PASSPORT_PROOFS: SupportedPassportProofDefinition[] = [
       "IDENTITY_CHECK",
       "world_identity_check",
       "identity_check",
+      "lisbon_identity_v1",
+      "WORLD_IDENTITY",
     ],
   },
   {
@@ -46,6 +48,8 @@ export const SUPPORTED_PASSPORT_PROOFS: SupportedPassportProofDefinition[] = [
       "SELFIE_CHECK",
       "world_selfie_check",
       "selfie_check",
+      "apply_lisbon_house_v1",
+      "WORLD_SELFIE",
     ],
   },
 ];
@@ -55,12 +59,13 @@ export type MergedPassportProof = {
   title: string;
   description: string;
   status: PassportProofUiStatus;
+  verifiedAt: string | null;
   /** Present only when a backend record matched this product. */
   backendRecord: PassportProof | null;
 };
 
 function proofRecordKey(record: PassportProof): string | null {
-  const raw = record.type || record.key || record.proofType;
+  const raw = record.type || record.key || record.proofType || record.action;
   if (typeof raw !== "string") return null;
   const trimmed = raw.trim();
   return trimmed || null;
@@ -105,14 +110,24 @@ function statusFromRecord(record: PassportProof): PassportProofUiStatus {
   if (fromStatus) return fromStatus;
   if (record.expiredAt) return "expired";
   if (record.failedAt) return "failed";
-  if (record.completedAt) return "completed";
+  if (record.completedAt || record.verifiedAt) return "completed";
   // A bare matching record without status is treated as completed evidence.
   return "completed";
 }
 
+function verifiedAtFromRecord(record: PassportProof): string | null {
+  if (typeof record.verifiedAt === "string" && record.verifiedAt.trim()) {
+    return record.verifiedAt.trim();
+  }
+  if (typeof record.completedAt === "string" && record.completedAt.trim()) {
+    return record.completedAt.trim();
+  }
+  return null;
+}
+
 /**
  * Merge supported proof product definitions with backend completion records.
- * Showing a proof card is not completion — only a matching backend record can be Completed.
+ * Showing a proof card is not completion — only a matching backend record can be Verified.
  */
 export function mergePassportProofs(
   backendProofs: PassportProof[] | undefined | null
@@ -134,9 +149,18 @@ export function mergePassportProofs(
       title: definition.title,
       description: definition.description,
       status: backendRecord ? statusFromRecord(backendRecord) : "not_completed",
+      verifiedAt: backendRecord ? verifiedAtFromRecord(backendRecord) : null,
       backendRecord,
     };
   });
+}
+
+export function isPassportProofVerified(
+  proofs: PassportProof[] | undefined | null,
+  id: SupportedPassportProofId
+): boolean {
+  const item = mergePassportProofs(proofs).find((row) => row.id === id);
+  return item?.status === "completed";
 }
 
 export function passportProofStatusLabel(status: PassportProofUiStatus): string {
@@ -146,7 +170,7 @@ export function passportProofStatusLabel(status: PassportProofUiStatus): string 
     case "unavailable":
       return "Unavailable";
     case "completed":
-      return "Completed";
+      return "Verified";
     case "failed":
       return "Failed";
     case "expired":
@@ -154,4 +178,14 @@ export function passportProofStatusLabel(status: PassportProofUiStatus): string 
     default:
       return "Not completed";
   }
+}
+
+export function formatProofVerifiedAt(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
