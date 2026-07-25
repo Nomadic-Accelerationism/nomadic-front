@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { verifyWorldResult } from "@/lib/world/verify";
+import {
+  buildWorldVerifyForwardBody,
+  proxyWorldVerifyToBackend,
+} from "@/lib/world/verify";
 
 function extractBearer(request: Request): string | null {
   const header = request.headers.get("authorization");
@@ -8,55 +11,74 @@ function extractBearer(request: Request): string | null {
   return token || null;
 }
 
+/**
+ * Client → BFF: { action, idkitResult }
+ * BFF → Express: same body + Authorization: Bearer <didToken>
+ * Proxies backend status + JSON unchanged. Does not call World portal.
+ */
 export async function POST(request: Request) {
   const did = extractBearer(request);
   if (!did) {
     return NextResponse.json(
       {
         ok: false,
-        code: "UNAUTHORIZED",
+        verified: false,
+        category: "UNAUTHORIZED",
         detail: "Authorization required",
-        persisted: false,
       },
       { status: 401 }
     );
   }
 
-  let body: { action?: string; idkitResponse?: unknown };
+  let raw: unknown;
   try {
-    body = await request.json();
+    raw = await request.json();
   } catch {
     return NextResponse.json(
       {
         ok: false,
-        code: "INVALID_BODY",
+        verified: false,
+        category: "INVALID_BODY",
         detail: "Invalid JSON body",
-        persisted: false,
       },
       { status: 400 }
     );
   }
 
-  const result = await verifyWorldResult({
-    action: body.action,
-    idkitResponse: body.idkitResponse,
+  const record =
+    raw !== null && typeof raw === "object" && !Array.isArray(raw)
+      ? (raw as Record<string, unknown>)
+      : null;
+
+  if (!record) {
+    return NextResponse.json(
+      {
+        ok: false,
+        verified: false,
+        category: "INVALID_BODY",
+        detail: "Body must be a JSON object",
+      },
+      { status: 400 }
+    );
+  }
+
+  // Contract field is idkitResult. Reject legacy idkitResponse-only bodies so
+  // we never silently forward a missing completion object.
+  const idkitResult = record.idkitResult;
+  const prepared = buildWorldVerifyForwardBody({
+    action: record.action,
+    idkitResult,
+  });
+
+  if (!prepared.ok) {
+    return NextResponse.json(prepared.body, { status: prepared.status });
+  }
+
+  const proxied = await proxyWorldVerifyToBackend({
+    action: prepared.body.action,
+    idkitResult: prepared.body.idkitResult,
     didToken: did,
   });
 
-  if (!result.ok) {
-    const status =
-      result.code === "UNAUTHORIZED"
-        ? 401
-        : result.code === "MISSING_CREDENTIALS" ||
-            result.code === "WORLD_DISABLED"
-          ? 503
-          : result.code === "INVALID_BODY"
-            ? 400
-            : result.code === "VERIFICATION_FAILED"
-              ? 422
-              : 502;
-    return NextResponse.json(result, { status });
-  }
-
-  return NextResponse.json(result);
+  return NextResponse.json(proxied.body, { status: proxied.status });
 }
