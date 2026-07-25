@@ -67,25 +67,103 @@ export function getStage5ARevokeTx(): {
   };
 }
 
-export async function ethCall(
+async function rpcRequest<T>(
   rpcUrl: string,
-  to: Address,
-  data: Hex,
-): Promise<Hex> {
+  method: string,
+  params: unknown[],
+): Promise<T> {
   const res = await fetch(rpcUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: 1,
-      method: "eth_call",
-      params: [{ to, data }, "latest"],
+      method,
+      params,
     }),
   });
-  const json = (await res.json()) as { result?: Hex; error?: { message: string } };
-  if (json.error) throw new Error(json.error.message);
-  if (!json.result) throw new Error("Empty eth_call result");
+  if (!res.ok) {
+    throw new Error(`RPC HTTP ${res.status} for ${method}`);
+  }
+  const json = (await res.json()) as {
+    result?: T;
+    error?: { message?: string };
+  };
+  if (json.error?.message) throw new Error(json.error.message);
+  if (json.result === undefined || json.result === null) {
+    throw new Error(`Empty ${method} result`);
+  }
   return json.result;
+}
+
+export async function ethCall(
+  rpcUrl: string,
+  to: Address,
+  data: Hex,
+): Promise<Hex> {
+  return rpcRequest<Hex>(rpcUrl, "eth_call", [{ to, data }, "latest"]);
+}
+
+/** Probe same-origin Magic proxy before eth_sendTransaction. */
+export async function probeSepoliaRpcProxy(proxyUrl: string): Promise<{
+  ok: boolean;
+  keyed: boolean;
+  chainIdHex: string;
+}> {
+  const health = await fetch(proxyUrl, { method: "GET", cache: "no-store" });
+  if (!health.ok) {
+    throw new Error(
+      `Magic RPC proxy HTTP ${health.status}. Use production (not auth-gated preview).`,
+    );
+  }
+  const meta = (await health.json()) as { ok?: boolean; keyed?: boolean };
+  const chainIdHex = await rpcRequest<string>(proxyUrl, "eth_chainId", []);
+  if (chainIdHex.toLowerCase() !== "0xaa36a7") {
+    throw new Error(`Proxy chainId ${chainIdHex}, expected 0xaa36a7 (Sepolia)`);
+  }
+  return {
+    ok: Boolean(meta.ok),
+    keyed: Boolean(meta.keyed),
+    chainIdHex,
+  };
+}
+
+/**
+ * Prefill nonce/gas so Magic does fewer RPC round-trips before broadcast.
+ * Values are hex strings — Magic cannot JSON-serialize bigint.
+ */
+export async function prepareStage5ATxParams(
+  proxyUrl: string,
+  from: Address,
+): Promise<{
+  from: Address;
+  to: Address;
+  data: Hex;
+  value: Hex;
+  chainId: Hex;
+  nonce: Hex;
+  gas: Hex;
+  gasPrice: Hex;
+}> {
+  const tx = getStage5ARevokeTx();
+  const [nonce, gasPrice, estimated] = await Promise.all([
+    rpcRequest<Hex>(proxyUrl, "eth_getTransactionCount", [from, "latest"]),
+    rpcRequest<Hex>(proxyUrl, "eth_gasPrice", []),
+    rpcRequest<Hex>(proxyUrl, "eth_estimateGas", [
+      { from, to: tx.to, data: tx.data, value: tx.value },
+    ]),
+  ]);
+  const gas = `0x${(BigInt(estimated) + BigInt(estimated) / BigInt(5)).toString(16)}` as Hex;
+  return {
+    from,
+    to: tx.to,
+    data: tx.data,
+    value: tx.value,
+    chainId: "0xaa36a7",
+    nonce,
+    gas,
+    gasPrice,
+  };
 }
 
 export async function readIssuerTextRole(

@@ -10,22 +10,50 @@ const PUBLIC_FALLBACK = "https://ethereum-sepolia-rpc.publicnode.com";
  *
  * Server uses ENS_SEPOLIA_RPC_URL (never NEXT_PUBLIC_*).
  * Browser/Magic must call this route — never the keyed dRPC URL.
+ *
+ * Magic's iframe (auth.magic.link) cross-origin fetches this endpoint, so CORS
+ * must allow arbitrary request headers and we always return HTTP 200 with a
+ * JSON-RPC body (nodes do the same; non-200 can surface as "Failed to fetch").
  */
 function upstreamUrl(): string {
   return process.env.ENS_SEPOLIA_RPC_URL?.trim() || PUBLIC_FALLBACK;
 }
 
-function corsHeaders(): HeadersInit {
+function corsHeaders(request?: Request): HeadersInit {
+  const requested = request?.headers.get("access-control-request-headers");
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers":
+      requested?.trim() ||
+      "Content-Type, Authorization, X-Requested-With, Accept",
     "Access-Control-Max-Age": "86400",
+    "Cache-Control": "no-store",
   };
 }
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders() });
+function jsonRpc(
+  body: unknown,
+  request?: Request,
+  status = 200,
+): NextResponse {
+  return NextResponse.json(body, { status, headers: corsHeaders(request) });
+}
+
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(request) });
+}
+
+/** Cheap reachability check used by the Stage 5A page before Magic send. */
+export async function GET(request: Request) {
+  return jsonRpc(
+    {
+      ok: true,
+      chainId: 11155111,
+      keyed: Boolean(process.env.ENS_SEPOLIA_RPC_URL?.trim()),
+    },
+    request,
+  );
 }
 
 export async function POST(request: Request) {
@@ -33,18 +61,34 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
+    return jsonRpc(
       {
         jsonrpc: "2.0",
         id: null,
         error: { code: -32700, message: "Parse error" },
       },
-      { status: 400, headers: corsHeaders() },
+      request,
     );
   }
 
   const target = upstreamUrl();
   const usingKeyed = Boolean(process.env.ENS_SEPOLIA_RPC_URL?.trim());
+  const method =
+    body &&
+    typeof body === "object" &&
+    !Array.isArray(body) &&
+    typeof (body as { method?: unknown }).method === "string"
+      ? (body as { method: string }).method
+      : Array.isArray(body)
+        ? "batch"
+        : null;
+  const id =
+    body &&
+    typeof body === "object" &&
+    !Array.isArray(body) &&
+    "id" in body
+      ? (body as { id: unknown }).id
+      : null;
 
   try {
     const upstream = await fetch(target, {
@@ -65,17 +109,18 @@ export async function POST(request: Request) {
       console.info("[ens/sepolia-rpc] upstream_non_json", {
         status: upstream.status,
         keyed: usingKeyed,
+        method,
       });
-      return NextResponse.json(
+      return jsonRpc(
         {
           jsonrpc: "2.0",
-          id: null,
+          id,
           error: {
             code: -32603,
             message: "Upstream returned non-JSON",
           },
         },
-        { status: 502, headers: corsHeaders() },
+        request,
       );
     }
 
@@ -83,35 +128,27 @@ export async function POST(request: Request) {
     console.info("[ens/sepolia-rpc] proxied", {
       status: upstream.status,
       keyed: usingKeyed,
-      method:
-        body &&
-        typeof body === "object" &&
-        !Array.isArray(body) &&
-        typeof (body as { method?: unknown }).method === "string"
-          ? (body as { method: string }).method
-          : Array.isArray(body)
-            ? "batch"
-            : null,
+      method,
     });
 
-    return NextResponse.json(json, {
-      status: upstream.ok ? 200 : upstream.status,
-      headers: corsHeaders(),
-    });
+    // Always HTTP 200 for JSON-RPC payloads so Magic's fetch does not treat
+    // upstream 4xx/5xx as a transport failure ("Failed to fetch").
+    return jsonRpc(json ?? { jsonrpc: "2.0", id, result: null }, request);
   } catch {
     console.info("[ens/sepolia-rpc] upstream_network_error", {
       keyed: usingKeyed,
+      method,
     });
-    return NextResponse.json(
+    return jsonRpc(
       {
         jsonrpc: "2.0",
-        id: null,
+        id,
         error: {
           code: -32603,
           message: "Failed to reach Sepolia RPC upstream",
         },
       },
-      { status: 502, headers: corsHeaders() },
+      request,
     );
   }
 }
