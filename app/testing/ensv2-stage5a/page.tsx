@@ -8,7 +8,8 @@ import {
   STAGE5A_KEYS,
   STAGE5A_METADATA_VALUE,
   STAGE5A_RESOLVER,
-  getStage5ARevokeTx,
+  prepareStage5ATxParams,
+  probeSepoliaRpcProxy,
   runStage5APreflight,
   type Stage5APreflight,
 } from "@/lib/ensv2/stage5a";
@@ -17,6 +18,15 @@ import {
   getPublicSepoliaRpcUrl,
   getSepoliaMagic,
 } from "@/lib/magic/sepolia-singleton";
+
+function formatMagicError(err: unknown): string {
+  if (!(err instanceof Error)) return "Revoke failed";
+  const msg = err.message || "Revoke failed";
+  if (/failed to fetch/i.test(msg)) {
+    return `${msg} — Magic could not reach the Sepolia RPC proxy. Confirm you are on https://nomadic-front-rosy.vercel.app (not a Vercel-auth preview), and that ENS_SEPOLIA_RPC_URL is set server-side in Vercel Production.`;
+  }
+  return msg;
+}
 
 type UiPhase =
   | "boot"
@@ -36,7 +46,6 @@ export default function EnsV2Stage5APage() {
   // Reads use public RPC; Magic txs use same-origin proxy (no keyed URL in browser).
   const readRpcUrl = useMemo(() => getPublicSepoliaRpcUrl(), []);
   const magicRpcUrl = useMemo(() => getMagicSepoliaRpcUrl(), []);
-  const revokeTx = useMemo(() => getStage5ARevokeTx(), []);
   const [phase, setPhase] = useState<UiPhase>("boot");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState<string | null>(null);
@@ -45,6 +54,7 @@ export default function EnsV2Stage5APage() {
   const [postflight, setPostflight] = useState<Stage5APreflight | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
+  const [proxyKeyed, setProxyKeyed] = useState<boolean | null>(null);
 
   const pushLog = useCallback((line: string) => {
     setLog((prev) => [...prev, line]);
@@ -148,6 +158,27 @@ export default function EnsV2Stage5APage() {
 
     try {
       setPhase("sending");
+      pushLog(`Probing Magic RPC proxy ${magicRpcUrl}…`);
+      const probe = await probeSepoliaRpcProxy(magicRpcUrl);
+      setProxyKeyed(probe.keyed);
+      pushLog(
+        `Proxy OK chainId=${probe.chainIdHex} keyed=${String(probe.keyed)}`,
+      );
+      if (!probe.keyed) {
+        pushLog(
+          "WARN: ENS_SEPOLIA_RPC_URL unset — proxy using public fallback.",
+        );
+      }
+
+      pushLog("Preparing nonce/gas via proxy (hex strings only)…");
+      const txParams = await prepareStage5ATxParams(
+        magicRpcUrl,
+        address as `0x${string}`,
+      );
+      pushLog(
+        `nonce=${txParams.nonce} gas=${txParams.gas} gasPrice=${txParams.gasPrice}`,
+      );
+
       pushLog("Sending eth_sendTransaction revoke multicall…");
       const provider = magic.rpcProvider as {
         request: (args: {
@@ -156,29 +187,33 @@ export default function EnsV2Stage5APage() {
         }) => Promise<unknown>;
       };
 
+      // Prefill gas fields so Magic only needs to sign + eth_sendRawTransaction.
       const hash = (await provider.request({
         method: "eth_sendTransaction",
-        params: [
-          {
-            from: address,
-            to: revokeTx.to,
-            data: revokeTx.data,
-            value: revokeTx.value,
-          },
-        ],
+        params: [txParams],
       })) as string;
 
       setTxHash(hash);
       pushLog(`Tx submitted: ${hash}`);
       setPhase("waiting_receipt");
 
-      // Poll receipt
+      // Poll receipt via same-origin proxy (not Magic) to avoid extra Magic RPC.
       for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
-        const receipt = (await provider.request({
-          method: "eth_getTransactionReceipt",
-          params: [hash],
-        })) as { status?: string; blockNumber?: string } | null;
+        const receiptRes = await fetch(magicRpcUrl, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "eth_getTransactionReceipt",
+            params: [hash],
+          }),
+        });
+        const receiptJson = (await receiptRes.json()) as {
+          result?: { status?: string; blockNumber?: string } | null;
+        };
+        const receipt = receiptJson.result;
         if (receipt?.status) {
           const ok = receipt.status === "0x1";
           pushLog(
@@ -213,10 +248,10 @@ export default function EnsV2Stage5APage() {
       pushLog("Stage 5A complete — issuer text roles revoked; metadata intact.");
       setPhase("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Revoke failed");
+      setError(formatMagicError(err));
       setPhase("error");
     }
-  }, [address, preflight, pushLog, readRpcUrl, revokeTx]);
+  }, [address, magicRpcUrl, preflight, pushLog, readRpcUrl]);
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-10 text-left">
@@ -236,6 +271,16 @@ export default function EnsV2Stage5APage() {
         <div>
           <dt className="font-semibold text-gray-500">Magic RPC (proxy)</dt>
           <dd className="break-all">{magicRpcUrl}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold text-gray-500">Proxy keyed dRPC</dt>
+          <dd>
+            {proxyKeyed === null
+              ? "— (checked on revoke)"
+              : proxyKeyed
+                ? "yes"
+                : "no — set ENS_SEPOLIA_RPC_URL on Vercel"}
+          </dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-500">Read RPC (public)</dt>
