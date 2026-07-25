@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none",
   {
     variants: {
       variant: {
@@ -18,12 +18,19 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        clayPrimary:
+          "clay-control bg-clay-orange text-clay-ink font-bold hover:bg-[#ff762f] active:bg-[#f45f18] focus-visible:ring-[3px] focus-visible:ring-clay-ink focus-visible:ring-offset-[3px] focus-visible:ring-offset-clay-canvas",
+        claySecondary:
+          "clay-control bg-clay-peach text-clay-ink font-bold hover:bg-[#ffdfcf] active:bg-[#f6c5ad] focus-visible:ring-[3px] focus-visible:ring-clay-ink focus-visible:ring-offset-[3px] focus-visible:ring-offset-clay-canvas",
+        clayIcon:
+          "clay-control h-12 w-12 rounded-[22px] bg-clay-sky p-0 text-clay-ink hover:bg-[#e1eff7] active:bg-[#c5dce9] focus-visible:ring-[3px] focus-visible:ring-clay-ink focus-visible:ring-offset-[3px] focus-visible:ring-offset-clay-canvas",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        clay: "h-14 rounded-[26px] px-7 text-base",
       },
     },
     defaultVariants: {

@@ -2,14 +2,39 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+export type ClayTone =
+  | "peach"
+  | "mint"
+  | "sky"
+  | "lilac"
+  | "butter"
+  | "white"
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  tone?: ClayTone
+  interactive?: boolean
+}
+
+const toneClasses: Record<ClayTone, string> = {
+  peach: "clay-tone-peach",
+  mint: "clay-tone-mint",
+  sky: "clay-tone-sky",
+  lilac: "clay-tone-lilac",
+  butter: "clay-tone-butter",
+  white: "clay-tone-white",
+}
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  CardProps
+>(({ className, tone, interactive = false, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
       "rounded-lg border bg-card text-card-foreground shadow-sm",
+      tone && "clay-surface rounded-[28px] border-transparent shadow-clay",
+      tone && toneClasses[tone],
+      interactive && "clay-interactive",
       className
     )}
     {...props}
