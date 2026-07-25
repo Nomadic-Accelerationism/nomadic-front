@@ -18,6 +18,8 @@ interface UserContextType {
   publicAddress: string;
   setPublicAddress: (address: string) => void;
   isAuthenticated: boolean;
+  /** False until localStorage session has been read on the client. */
+  isInitialized: boolean;
   logout: () => void;
 }
 
@@ -29,6 +31,7 @@ export const UserContext = createContext<UserContextType>({
   publicAddress: '',
   setPublicAddress: () => {},
   isAuthenticated: false,
+  isInitialized: false,
   logout: () => {},
 });
 
@@ -101,6 +104,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       publicAddress,
       setPublicAddress : storagePublicAddress,
       isAuthenticated,
+      isInitialized,
       logout,
     }}>
       {children}
