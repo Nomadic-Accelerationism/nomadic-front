@@ -8,7 +8,7 @@ import {
   STAGE5A_KEYS,
   STAGE5A_METADATA_VALUE,
   STAGE5A_RESOLVER,
-  prepareStage5ATxParams,
+  getStage5AMagicTxParams,
   probeSepoliaRpcProxy,
   runStage5APreflight,
   type Stage5APreflight,
@@ -22,10 +22,16 @@ import {
 function formatMagicError(err: unknown): string {
   if (!(err instanceof Error)) return "Revoke failed";
   const msg = err.message || "Revoke failed";
+  const data =
+    err && typeof err === "object" && "data" in err
+      ? (err as { data?: unknown }).data
+      : undefined;
+  const extra =
+    data !== undefined ? ` details=${JSON.stringify(data)}` : "";
   if (/failed to fetch/i.test(msg)) {
-    return `${msg} — Magic could not reach the Sepolia RPC proxy. Confirm you are on https://nomadic-front-rosy.vercel.app (not a Vercel-auth preview), and that ENS_SEPOLIA_RPC_URL is set server-side in Vercel Production.`;
+    return `${msg}${extra} — Magic sign/broadcast failed after proxy preflight OK. Soft-refresh this page, sign in here (not /login-user), confirm the Magic modal, then retry.`;
   }
-  return msg;
+  return `${msg}${extra}`;
 }
 
 type UiPhase =
@@ -170,16 +176,18 @@ export default function EnsV2Stage5APage() {
         );
       }
 
-      pushLog("Preparing nonce/gas via proxy (hex strings only)…");
-      const txParams = await prepareStage5ATxParams(
-        magicRpcUrl,
-        address as `0x${string}`,
-      );
+      // Let Magic estimate EIP-1559 gas itself. Prefilling legacy gasPrice
+      // previously failed before eth_sendRawTransaction.
+      const txParams = getStage5AMagicTxParams(address as `0x${string}`);
       pushLog(
-        `nonce=${txParams.nonce} gas=${txParams.gas} gasPrice=${txParams.gasPrice}`,
+        `Sending eth_sendTransaction to=${txParams.to} chainId=${txParams.chainId}`,
       );
 
-      pushLog("Sending eth_sendTransaction revoke multicall…");
+      const loggedIn = await magic.user.isLoggedIn();
+      if (!loggedIn) {
+        throw new Error("Magic session expired — sign in again on this page.");
+      }
+
       const provider = magic.rpcProvider as {
         request: (args: {
           method: string;
@@ -187,7 +195,15 @@ export default function EnsV2Stage5APage() {
         }) => Promise<unknown>;
       };
 
-      // Prefill gas fields so Magic only needs to sign + eth_sendRawTransaction.
+      // Warm the provider through Magic (not window.fetch) before send.
+      const magicChain = await provider.request({ method: "eth_chainId" });
+      pushLog(`Magic provider chainId=${String(magicChain)}`);
+      if (String(magicChain).toLowerCase() !== "0xaa36a7") {
+        throw new Error(
+          `Magic provider on chain ${String(magicChain)}, expected Sepolia 0xaa36a7`,
+        );
+      }
+
       const hash = (await provider.request({
         method: "eth_sendTransaction",
         params: [txParams],

@@ -129,40 +129,25 @@ export async function probeSepoliaRpcProxy(proxyUrl: string): Promise<{
 }
 
 /**
- * Prefill nonce/gas so Magic does fewer RPC round-trips before broadcast.
- * Values are hex strings — Magic cannot JSON-serialize bigint.
+ * Minimal eth_sendTransaction params for Magic.
+ * Do not prefill legacy gasPrice — Magic's iframe prefers EIP-1559 estimation
+ * and legacy prefills have been observed to fail before eth_sendRawTransaction.
+ * Hex strings only (Magic cannot JSON-serialize bigint).
  */
-export async function prepareStage5ATxParams(
-  proxyUrl: string,
-  from: Address,
-): Promise<{
+export function getStage5AMagicTxParams(from: Address): {
   from: Address;
   to: Address;
   data: Hex;
   value: Hex;
-  chainId: Hex;
-  nonce: Hex;
-  gas: Hex;
-  gasPrice: Hex;
-}> {
+  chainId: number;
+} {
   const tx = getStage5ARevokeTx();
-  const [nonce, gasPrice, estimated] = await Promise.all([
-    rpcRequest<Hex>(proxyUrl, "eth_getTransactionCount", [from, "latest"]),
-    rpcRequest<Hex>(proxyUrl, "eth_gasPrice", []),
-    rpcRequest<Hex>(proxyUrl, "eth_estimateGas", [
-      { from, to: tx.to, data: tx.data, value: tx.value },
-    ]),
-  ]);
-  const gas = `0x${(BigInt(estimated) + BigInt(estimated) / BigInt(5)).toString(16)}` as Hex;
   return {
     from,
     to: tx.to,
     data: tx.data,
     value: tx.value,
-    chainId: "0xaa36a7",
-    nonce,
-    gas,
-    gasPrice,
+    chainId: STAGE5A_CHAIN_ID,
   };
 }
 

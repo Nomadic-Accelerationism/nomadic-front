@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseTransaction } from "viem";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,6 +41,98 @@ function jsonRpc(
   return NextResponse.json(body, { status, headers: corsHeaders(request) });
 }
 
+function methodOf(body: unknown): string | null {
+  if (Array.isArray(body)) return "batch";
+  if (
+    body &&
+    typeof body === "object" &&
+    typeof (body as { method?: unknown }).method === "string"
+  ) {
+    return (body as { method: string }).method;
+  }
+  return null;
+}
+
+function idOf(body: unknown): unknown {
+  if (body && typeof body === "object" && !Array.isArray(body) && "id" in body) {
+    return (body as { id: unknown }).id;
+  }
+  return null;
+}
+
+/** Safe summary only — never log raw tx bytes / secrets. */
+function summarizeSendRaw(body: unknown): Record<string, unknown> {
+  try {
+    const params =
+      body &&
+      typeof body === "object" &&
+      !Array.isArray(body) &&
+      Array.isArray((body as { params?: unknown }).params)
+        ? (body as { params: unknown[] }).params
+        : null;
+    const raw = params?.[0];
+    if (typeof raw !== "string" || !raw.startsWith("0x")) {
+      return { rawKind: typeof raw };
+    }
+    const tx = parseTransaction(raw as `0x${string}`);
+    return {
+      chainId: tx.chainId ?? null,
+      nonce: tx.nonce ?? null,
+      to: tx.to ?? null,
+      type: tx.type ?? null,
+      hasData: Boolean(tx.data && tx.data !== "0x"),
+      gas: tx.gas?.toString() ?? null,
+    };
+  } catch (err) {
+    return {
+      parseError: err instanceof Error ? err.message : "parse_failed",
+    };
+  }
+}
+
+function logProxyResult(
+  method: string | null,
+  body: unknown,
+  json: unknown,
+  meta: { status: number; keyed: boolean },
+) {
+  const errMsg =
+    json &&
+    typeof json === "object" &&
+    !Array.isArray(json) &&
+    (json as { error?: { message?: unknown } }).error &&
+    typeof (json as { error: { message?: unknown } }).error.message === "string"
+      ? (json as { error: { message: string } }).error.message
+      : null;
+  const hasResult =
+    json &&
+    typeof json === "object" &&
+    !Array.isArray(json) &&
+    "result" in json &&
+    (json as { result: unknown }).result != null;
+
+  if (method === "eth_sendRawTransaction") {
+    console.info("[ens/sepolia-rpc] sendRawTransaction", {
+      ...meta,
+      ...summarizeSendRaw(body),
+      ok: hasResult && !errMsg,
+      error: errMsg,
+      resultPrefix:
+        hasResult &&
+        typeof (json as { result: unknown }).result === "string"
+          ? String((json as { result: string }).result).slice(0, 12)
+          : null,
+    });
+    return;
+  }
+
+  console.info("[ens/sepolia-rpc] proxied", {
+    ...meta,
+    method,
+    error: errMsg,
+  });
+}
+
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(request) });
 }
@@ -57,10 +150,28 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const usingKeyed = Boolean(process.env.ENS_SEPOLIA_RPC_URL?.trim());
+  const target = upstreamUrl();
+
+  // Magic occasionally POSTs empty or text/plain JSON; never 4xx those.
+  const rawText = await request.text();
+  if (!rawText.trim()) {
+    console.info("[ens/sepolia-rpc] empty_body", { keyed: usingKeyed });
+    return jsonRpc(
+      { jsonrpc: "2.0", id: null, result: null },
+      request,
+    );
+  }
+
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(rawText);
   } catch {
+    console.info("[ens/sepolia-rpc] parse_error", {
+      keyed: usingKeyed,
+      len: rawText.length,
+      prefix: rawText.slice(0, 32),
+    });
     return jsonRpc(
       {
         jsonrpc: "2.0",
@@ -71,24 +182,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const target = upstreamUrl();
-  const usingKeyed = Boolean(process.env.ENS_SEPOLIA_RPC_URL?.trim());
-  const method =
-    body &&
-    typeof body === "object" &&
-    !Array.isArray(body) &&
-    typeof (body as { method?: unknown }).method === "string"
-      ? (body as { method: string }).method
-      : Array.isArray(body)
-        ? "batch"
-        : null;
-  const id =
-    body &&
-    typeof body === "object" &&
-    !Array.isArray(body) &&
-    "id" in body
-      ? (body as { id: unknown }).id
-      : null;
+  const method = methodOf(body);
+  const id = idOf(body);
 
   try {
     const upstream = await fetch(target, {
@@ -124,11 +219,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Do not log request body, proofs, or the upstream URL (may contain key).
-    console.info("[ens/sepolia-rpc] proxied", {
+    logProxyResult(method, body, json, {
       status: upstream.status,
       keyed: usingKeyed,
-      method,
     });
 
     // Always HTTP 200 for JSON-RPC payloads so Magic's fetch does not treat
