@@ -344,10 +344,10 @@ export function LisbonHouseApplyScreen() {
               </p>
               {!readiness.canSubmit ? (
                 <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-amber-900">
-                  {!readiness.identityVerified ? (
+                  {!readiness.identityProofOnPassport ? (
                     <li>World Identity Check still required</li>
                   ) : null}
-                  {!readiness.selfieVerified ? (
+                  {!readiness.selfieProofOnPassport ? (
                     <li>World Selfie Check still required</li>
                   ) : null}
                 </ul>

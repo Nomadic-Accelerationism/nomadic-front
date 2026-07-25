@@ -28,18 +28,23 @@ import {
   readPublicWorldAppId,
   readPublicWorldEnvironment,
 } from "@/lib/world/client";
+import {
+  WORLD_FLOW_COPY,
+  actionForKind,
+  proofIdForKind,
+  resolveVerifyOutcome,
+  userFacingPhaseMessage,
+  type WorldCheckKind,
+  type WorldFlowPhase,
+} from "@/lib/world/flow-state";
 import type {
   WorldEnvironment,
   WorldPreset,
   WorldVerifySummary,
 } from "@/lib/world/types";
 
-type CheckKind = "identity" | "selfie";
-
-type CheckStatus = "idle" | "running" | "success" | "cancelled" | "error";
-
 type StepState = {
-  status: CheckStatus;
+  phase: WorldFlowPhase;
   message: string | null;
   verifiedAt: string | null;
   summary: WorldVerifySummary | null;
@@ -57,57 +62,69 @@ type SessionPayload = {
 type Props = {
   /** Optional signal for Selfie Check (wallet preferred). */
   signal?: string;
-  /** Backend Passport proofs — source of truth for Verified state after refresh. */
+  /** Backend Passport proofs — permanent source of truth for Verified. */
   backendProofs?: PassportProof[];
   /** Fired after a check verifies and Passport refetch is attempted. */
-  onProofSynced?: (kind: CheckKind) => void;
+  onProofSynced?: (kind: WorldCheckKind) => void;
   onBothVerified?: () => void;
 };
 
-const INITIAL: StepState = {
-  status: "idle",
+const IDLE: StepState = {
+  phase: "IDLE",
   message: null,
   verifiedAt: null,
   summary: null,
 };
 
-function statusLabel(status: CheckStatus): string {
-  switch (status) {
-    case "idle":
-      return "Not started";
-    case "running":
-      return "In progress";
-    case "success":
-      return "Verified with World";
-    case "cancelled":
-      return "Cancelled";
-    case "error":
-      return "Failed";
-  }
-}
-
 function stepFromBackend(
   proofs: PassportProof[] | undefined,
-  kind: CheckKind
+  kind: WorldCheckKind,
 ): StepState {
-  const id =
-    kind === "identity" ? "WORLD_IDENTITY_CHECK" : "WORLD_SELFIE_CHECK";
-  if (!isPassportProofVerified(proofs, id)) return INITIAL;
+  const id = proofIdForKind(kind);
+  if (!isPassportProofVerified(proofs, id)) return IDLE;
   const record = proofs?.find((p) => {
     const key = (p.type || p.key || p.proofType || p.action || "").toUpperCase();
     if (kind === "identity") {
-      return (
-        key.includes("IDENTITY") || key === "LISBON_IDENTITY_V1"
-      );
+      return key.includes("IDENTITY") || key === "LISBON_IDENTITY_V1";
     }
     return key.includes("SELFIE") || key === "APPLY_LISBON_HOUSE_V1";
   });
   return {
-    status: "success",
+    phase: "VERIFIED",
     message: null,
     verifiedAt: record?.verifiedAt || record?.completedAt || null,
     summary: null,
   };
+}
+
+function phaseLabel(phase: WorldFlowPhase): string {
+  switch (phase) {
+    case "IDLE":
+      return "Not verified";
+    case "CONNECTING":
+    case "AWAITING_USER":
+      return "In progress";
+    case "IDKIT_COMPLETED":
+    case "VERIFYING_WITH_WORLD":
+    case "PERSISTING":
+      return "Verifying…";
+    case "VERIFIED":
+      return WORLD_FLOW_COPY.verifiedWithWorld;
+    case "FAILED":
+      return "Failed";
+    case "CANCELLED":
+      return "Cancelled";
+  }
+}
+
+function isInFlight(phase: WorldFlowPhase): boolean {
+  return (
+    phase === "CONNECTING" ||
+    phase === "AWAITING_USER" ||
+    phase === "IDKIT_COMPLETED" ||
+    phase === "VERIFYING_WITH_WORLD" ||
+    phase === "PERSISTING"
+  );
 }
 
 export function WorldVerificationPanel({
@@ -119,18 +136,17 @@ export function WorldVerificationPanel({
   const queryClient = useQueryClient();
   const { didToken, publicAddress } = useUser();
   const [identity, setIdentity] = useState<StepState>(() =>
-    stepFromBackend(backendProofs, "identity")
+    stepFromBackend(backendProofs, "identity"),
   );
   const [selfie, setSelfie] = useState<StepState>(() =>
-    stepFromBackend(backendProofs, "selfie")
+    stepFromBackend(backendProofs, "selfie"),
   );
   const [panelError, setPanelError] = useState<string | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<SessionPayload | null>(null);
-  const activeKindRef = useRef<CheckKind | null>(null);
-  const successKindsRef = useRef<Set<CheckKind>>(new Set());
+  const activeKindRef = useRef<WorldCheckKind | null>(null);
+  const verifiedKindsRef = useRef<Set<WorldCheckKind>>(new Set());
   const bothNotifiedRef = useRef(false);
 
   const configured = isWorldPublicConfigured();
@@ -139,29 +155,51 @@ export function WorldVerificationPanel({
   const selfieSignal =
     signal?.trim() || publicAddress?.trim() || "lisbon-house-apply";
 
-  // Keep panel aligned with backend proofs after refetch / remount.
-  useEffect(() => {
-    if (isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK")) {
-      setIdentity((prev) =>
-        prev.status === "running"
-          ? prev
-          : stepFromBackend(backendProofs, "identity")
-      );
-      successKindsRef.current.add("identity");
-    }
-    if (isPassportProofVerified(backendProofs, "WORLD_SELFIE_CHECK")) {
-      setSelfie((prev) =>
-        prev.status === "running"
-          ? prev
-          : stepFromBackend(backendProofs, "selfie")
-      );
-      successKindsRef.current.add("selfie");
-    }
-  }, [backendProofs]);
+  const identityFromPassport = isPassportProofVerified(
+    backendProofs,
+    "WORLD_IDENTITY_CHECK",
+  );
+  const selfieFromPassport = isPassportProofVerified(
+    backendProofs,
+    "WORLD_SELFIE_CHECK",
+  );
 
-  const bothDone =
-    isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK") &&
-    isPassportProofVerified(backendProofs, "WORLD_SELFIE_CHECK");
+  // Align UI with backend proofs after refetch / remount. Never invent VERIFIED locally.
+  useEffect(() => {
+    if (identityFromPassport) {
+      setIdentity((prev) =>
+        isInFlight(prev.phase)
+          ? prev
+          : stepFromBackend(backendProofs, "identity"),
+      );
+      verifiedKindsRef.current.add("identity");
+    } else {
+      setIdentity((prev) =>
+        isInFlight(prev.phase) || prev.phase === "FAILED" || prev.phase === "CANCELLED"
+          ? prev
+          : IDLE,
+      );
+      verifiedKindsRef.current.delete("identity");
+    }
+
+    if (selfieFromPassport) {
+      setSelfie((prev) =>
+        isInFlight(prev.phase)
+          ? prev
+          : stepFromBackend(backendProofs, "selfie"),
+      );
+      verifiedKindsRef.current.add("selfie");
+    } else {
+      setSelfie((prev) =>
+        isInFlight(prev.phase) || prev.phase === "FAILED" || prev.phase === "CANCELLED"
+          ? prev
+          : IDLE,
+      );
+      verifiedKindsRef.current.delete("selfie");
+    }
+  }, [backendProofs, identityFromPassport, selfieFromPassport]);
+
+  const bothDone = identityFromPassport && selfieFromPassport;
 
   useEffect(() => {
     if (!bothDone || bothNotifiedRef.current) return;
@@ -178,6 +216,7 @@ export function WorldVerificationPanel({
         ],
       });
     }
+    // Selfie: selfieCheckLegacy + allow_legacy_proofs (from session) + apply_lisbon_house_v1
     return selfieCheckLegacy({ signal: selfieSignal });
   }, [session, selfieSignal]);
 
@@ -199,13 +238,13 @@ export function WorldVerificationPanel({
     });
   }, [queryClient]);
 
-  const markCancelled = useCallback((kind: CheckKind) => {
+  const markCancelled = useCallback((kind: WorldCheckKind) => {
     const setter = kind === "identity" ? setIdentity : setSelfie;
     setter((prev) =>
-      prev.status === "running"
+      isInFlight(prev.phase)
         ? {
-            status: "cancelled",
-            message: "World App closed before verification finished.",
+            phase: "CANCELLED",
+            message: WORLD_FLOW_COPY.cancelled,
             verifiedAt: null,
             summary: null,
           }
@@ -214,21 +253,19 @@ export function WorldVerificationPanel({
   }, []);
 
   const beginCheck = useCallback(
-    async (kind: CheckKind) => {
+    async (kind: WorldCheckKind) => {
       setPanelError(null);
-      setSyncError(null);
       if (!configured) {
         setPanelError(
           "World is not configured (NEXT_PUBLIC_WORLD_APP_ID missing).",
         );
         return;
       }
-      if (
-        kind === "selfie" &&
-        !isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK") &&
-        identity.status !== "success"
-      ) {
-        setPanelError("Complete Identity Check first.");
+      // Selfie unlocks only when Passport has Identity proof — not local IDKit success.
+      if (kind === "selfie" && !identityFromPassport) {
+        setPanelError(
+          "Complete Identity Check first. Selfie unlocks after your Passport shows the Identity proof.",
+        );
         return;
       }
 
@@ -238,8 +275,7 @@ export function WorldVerificationPanel({
         return;
       }
 
-      const action =
-        kind === "identity" ? WORLD_IDENTITY_ACTION : WORLD_SELFIE_ACTION;
+      const action = actionForKind(kind);
       const preset =
         kind === "identity" ? WORLD_IDENTITY_PRESET : WORLD_SELFIE_PRESET;
       const setter = kind === "identity" ? setIdentity : setSelfie;
@@ -247,8 +283,8 @@ export function WorldVerificationPanel({
       setBusy(true);
       activeKindRef.current = kind;
       setter({
-        status: "running",
-        message: null,
+        phase: "CONNECTING",
+        message: WORLD_FLOW_COPY.connecting,
         verifiedAt: null,
         summary: null,
       });
@@ -286,7 +322,7 @@ export function WorldVerificationPanel({
 
         if (!res.ok || !data.ok || !data.rp_context || !data.app_id) {
           setter({
-            status: "error",
+            phase: "FAILED",
             message:
               data.detail ||
               data.code ||
@@ -298,6 +334,7 @@ export function WorldVerificationPanel({
           return;
         }
 
+        // Selfie must receive allow_legacy_proofs from BFF (selfieCheckLegacy).
         setSession({
           appId: data.app_id,
           action,
@@ -306,10 +343,16 @@ export function WorldVerificationPanel({
           environment: data.environment || publicEnv,
           rpContext: data.rp_context,
         });
+        setter({
+          phase: "AWAITING_USER",
+          message: WORLD_FLOW_COPY.awaitingUser,
+          verifiedAt: null,
+          summary: null,
+        });
         setOpen(true);
       } catch (err) {
         setter({
-          status: "error",
+          phase: "FAILED",
           message: err instanceof Error ? err.message : "Request failed",
           verifiedAt: null,
           summary: null,
@@ -321,14 +364,21 @@ export function WorldVerificationPanel({
     },
     [
       authHeaders,
-      backendProofs,
       configured,
-      identity.status,
+      identityFromPassport,
       publicEnv,
       selfieSignal,
     ],
   );
 
+  /**
+   * IDKit handleVerify — gate final Nomadic VERIFIED behind:
+   * 1) /api/world/verify ok
+   * 2) persisted === true
+   * 3) Passport refetch contains matching proof
+   *
+   * Throws on verify/persist failure so onSuccess does not mean Nomadic Verified.
+   */
   const handleVerify = useCallback(
     async (idkitResponse: IDKitResult) => {
       const kind = activeKindRef.current;
@@ -341,15 +391,28 @@ export function WorldVerificationPanel({
         throw new Error("Sign in again to verify with the backend.");
       }
 
-      const action =
-        kind === "identity" ? WORLD_IDENTITY_ACTION : WORLD_SELFIE_ACTION;
+      const action = actionForKind(kind);
       const setter = kind === "identity" ? setIdentity : setSelfie;
-      const proofId =
-        kind === "identity" ? "WORLD_IDENTITY_CHECK" : "WORLD_SELFIE_CHECK";
+      const proofId = proofIdForKind(kind);
+
+      setter({
+        phase: "IDKIT_COMPLETED",
+        message: WORLD_FLOW_COPY.idkitCompleted,
+        verifiedAt: null,
+        summary: null,
+      });
+
+      setter({
+        phase: "VERIFYING_WITH_WORLD",
+        message: WORLD_FLOW_COPY.verifyingWithWorld,
+        verifiedAt: null,
+        summary: null,
+      });
 
       const res = await fetch("/api/world/verify", {
         method: "POST",
         headers,
+        // Pass IDKit completion result through unchanged — do not remap fields.
         body: JSON.stringify({ action, idkitResponse }),
       });
       const data = (await res.json()) as {
@@ -362,11 +425,10 @@ export function WorldVerificationPanel({
         verifiedAt?: string;
       };
 
-      if (!res.ok || !data.ok || !data.summary) {
-        const message =
-          data.detail || data.code || `Verify failed (${res.status})`;
+      if (!res.ok || !data.ok) {
+        const message = WORLD_FLOW_COPY.verificationFailed;
         setter({
-          status: "error",
+          phase: "FAILED",
           message,
           verifiedAt: null,
           summary: data.summary ?? null,
@@ -374,48 +436,65 @@ export function WorldVerificationPanel({
         throw new Error(message);
       }
 
-      const verifiedAt =
-        data.verifiedAt ||
-        data.summary.verifiedAt ||
-        new Date().toISOString();
-
       setter({
-        status: "success",
-        message: null,
-        verifiedAt,
-        summary: data.summary,
+        phase: "PERSISTING",
+        message: WORLD_FLOW_COPY.persisting,
+        verifiedAt: null,
+        summary: data.summary ?? null,
       });
-      successKindsRef.current.add(kind);
 
       await refetchPassport();
 
-      let inPassport = false;
+      let passportHasProof = false;
       try {
         const token = await resolveSessionDidToken(didToken);
         if (token) {
           const fresh = await fetchPrivatePassport(token);
-          inPassport = isPassportProofVerified(
+          passportHasProof = isPassportProofVerified(
             fresh.passport.proofs,
             proofId,
           );
         }
       } catch {
-        inPassport = false;
+        passportHasProof = false;
       }
 
-      if (!data.persisted || !inPassport) {
-        setSyncError(
-          "World verified this check, but your Passport has not synced the proof yet. Tap Retry sync or refresh Passport.",
-        );
-      } else {
-        setSyncError(null);
+      const outcome = resolveVerifyOutcome({
+        httpOk: res.ok,
+        bodyOk: data.ok === true,
+        persisted: data.persisted === true,
+        passportHasProof,
+      });
+
+      if (outcome.phase === "FAILED") {
+        setter({
+          phase: "FAILED",
+          message: outcome.message,
+          verifiedAt: null,
+          summary: data.summary ?? null,
+        });
+        throw new Error(outcome.message);
       }
 
+      const verifiedAt =
+        data.verifiedAt ||
+        data.summary?.verifiedAt ||
+        new Date().toISOString();
+
+      // Permanent VERIFIED only after backend persistence + Passport proof.
+      setter({
+        phase: "VERIFIED",
+        message: null,
+        verifiedAt,
+        summary: data.summary ?? null,
+      });
+      verifiedKindsRef.current.add(kind);
       onProofSynced?.(kind);
     },
     [authHeaders, didToken, onProofSynced, refetchPassport],
   );
 
+  // Runs only after handleVerify resolves — still not permanent truth without Passport.
   const handleSuccess = useCallback((_result: IDKitResult) => {
     setOpen(false);
     setSession(null);
@@ -426,11 +505,23 @@ export function WorldVerificationPanel({
     const kind = activeKindRef.current;
     if (!kind) return;
     const setter = kind === "identity" ? setIdentity : setSelfie;
-    setter({
-      status: "error",
-      message: `IDKit error: ${errorCode}`,
-      verifiedAt: null,
-      summary: null,
+    setter((prev) => {
+      if (
+        errorCode === "failed_by_host_app" &&
+        prev.phase === "FAILED" &&
+        prev.message
+      ) {
+        return prev;
+      }
+      return {
+        phase: "FAILED",
+        message:
+          errorCode === "failed_by_host_app"
+            ? WORLD_FLOW_COPY.verificationFailed
+            : `World connector error: ${errorCode}`,
+        verifiedAt: null,
+        summary: null,
+      };
     });
     setOpen(false);
     setSession(null);
@@ -446,7 +537,14 @@ export function WorldVerificationPanel({
         setSession(null);
         return;
       }
-      if (successKindsRef.current.has(kind)) {
+      if (verifiedKindsRef.current.has(kind)) {
+        setSession(null);
+        activeKindRef.current = null;
+        return;
+      }
+      // If already FAILED from handleVerify throw, keep that message.
+      const current = kind === "identity" ? identity : selfie;
+      if (current.phase === "FAILED") {
         setSession(null);
         activeKindRef.current = null;
         return;
@@ -455,7 +553,7 @@ export function WorldVerificationPanel({
       setSession(null);
       activeKindRef.current = null;
     },
-    [markCancelled],
+    [identity, markCancelled, selfie],
   );
 
   if (!configured) {
@@ -495,8 +593,9 @@ export function WorldVerificationPanel({
             World verification
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-gray-700">
-            Complete Identity Check, then Selfie Check. Verified status comes
-            from your Passport after the backend saves each proof.
+            Complete Identity Check, then Selfie Check. Final Verified status
+            appears only after Nomadic verifies the result and saves it to your
+            Passport.
           </p>
           <p className="mt-2 text-xs text-gray-500">
             IDKit environment:{" "}
@@ -521,29 +620,17 @@ export function WorldVerificationPanel({
         </p>
       ) : null}
 
-      {syncError ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-          <p>{syncError}</p>
-          <button
-            type="button"
-            className="mt-2 text-xs font-semibold underline"
-            onClick={() => void refetchPassport().then(() => setSyncError(null))}
-          >
-            Retry Passport sync
-          </button>
-        </div>
-      ) : null}
-
       <ol className="mt-5 space-y-3">
         <CheckRow
           title="1. Identity Check"
           subtitle={`Action ${WORLD_IDENTITY_ACTION} · age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`}
           state={identity}
-          disabled={busy || identity.status === "running" || bothDone}
+          verifiedFromPassport={identityFromPassport}
+          disabled={busy || isInFlight(identity.phase) || bothDone}
           ctaLabel={
-            identity.status === "success"
+            identityFromPassport
               ? "Verified"
-              : identity.status === "error" || identity.status === "cancelled"
+              : identity.phase === "FAILED" || identity.phase === "CANCELLED"
                 ? "Retry Identity Check"
                 : "Start Identity Check"
           }
@@ -551,19 +638,19 @@ export function WorldVerificationPanel({
         />
         <CheckRow
           title="2. Selfie Check"
-          subtitle={`Action ${WORLD_SELFIE_ACTION} · after Identity`}
+          subtitle={`Action ${WORLD_SELFIE_ACTION} · selfieCheckLegacy · after Identity`}
           state={selfie}
+          verifiedFromPassport={selfieFromPassport}
           disabled={
             busy ||
-            selfie.status === "running" ||
-            (!isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK") &&
-              identity.status !== "success") ||
+            isInFlight(selfie.phase) ||
+            !identityFromPassport ||
             bothDone
           }
           ctaLabel={
-            selfie.status === "success"
+            selfieFromPassport
               ? "Verified"
-              : selfie.status === "error" || selfie.status === "cancelled"
+              : selfie.phase === "FAILED" || selfie.phase === "CANCELLED"
                 ? "Retry Selfie Check"
                 : "Start Selfie Check"
           }
@@ -606,6 +693,7 @@ function CheckRow({
   title,
   subtitle,
   state,
+  verifiedFromPassport,
   disabled,
   ctaLabel,
   onStart,
@@ -613,20 +701,32 @@ function CheckRow({
   title: string;
   subtitle: string;
   state: StepState;
+  verifiedFromPassport: boolean;
   disabled: boolean;
   ctaLabel: string;
   onStart: () => void;
 }) {
-  const tone =
-    state.status === "success"
-      ? "border-emerald-200 bg-emerald-50"
-      : state.status === "error"
-        ? "border-rose-200 bg-rose-50"
-        : state.status === "cancelled"
-          ? "border-amber-200 bg-amber-50"
+  // Show final success only after handleVerify confirmed Passport proof (phase VERIFIED)
+  // or when backendProofs already contain the record (refresh / remount).
+  const verified = verifiedFromPassport || state.phase === "VERIFIED";
+
+  const tone = verified
+    ? "border-emerald-200 bg-emerald-50"
+    : state.phase === "FAILED"
+      ? "border-rose-200 bg-rose-50"
+      : state.phase === "CANCELLED"
+        ? "border-amber-200 bg-amber-50"
+        : isInFlight(state.phase)
+          ? "border-amber-200 bg-amber-50/60"
           : "border-black/10 bg-white";
 
   const verifiedLabel = formatProofVerifiedAt(state.verifiedAt);
+  const progressMessage =
+    !verified && state.message
+      ? state.message
+      : !verified
+        ? userFacingPhaseMessage(state.phase)
+        : null;
 
   return (
     <li className={`rounded-xl border px-4 py-3 ${tone}`}>
@@ -634,23 +734,38 @@ function CheckRow({
         <div>
           <p className="text-sm font-semibold text-black">{title}</p>
           <p className="mt-1 text-xs text-gray-600">{subtitle}</p>
-          <p className="mt-2 text-xs text-gray-700">
-            {state.status === "success"
-              ? "Verified with World"
-              : `Status: ${statusLabel(state.status)}`}
-          </p>
-          {state.status === "success" && verifiedLabel ? (
-            <p className="mt-1 text-xs text-gray-600">
-              Verified at: {verifiedLabel}
+          {verified ? (
+            <div className="mt-2 space-y-1">
+              <p className="text-xs font-medium text-emerald-800">
+                {WORLD_FLOW_COPY.verifiedWithWorld}
+              </p>
+              <p className="text-xs text-emerald-700">
+                {WORLD_FLOW_COPY.savedToPassport}
+              </p>
+              {verifiedLabel ? (
+                <p className="text-xs text-gray-600">
+                  Verified at: {verifiedLabel}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-gray-700">
+              Status: {phaseLabel(state.phase)}
             </p>
-          ) : null}
-          {state.message ? (
-            <p className="mt-1 text-xs text-gray-700">{state.message}</p>
+          )}
+          {!verified && progressMessage ? (
+            <p
+              className={`mt-1 text-xs ${
+                state.phase === "FAILED" ? "text-rose-800" : "text-gray-700"
+              }`}
+            >
+              {progressMessage}
+            </p>
           ) : null}
         </div>
         <button
           type="button"
-          disabled={disabled || state.status === "success"}
+          disabled={disabled || verified}
           onClick={onStart}
           className="h-10 shrink-0 rounded-xl bg-[#ff671e] px-4 text-xs font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
         >

@@ -254,14 +254,14 @@ export function passportProofStatusLabel(status) {
 
 export function getLisbonApplyReadiness(proofs) {
   const merged = mergePassportProofs(proofs);
-  const identityVerified =
+  const identityProofOnPassport =
     merged.find((p) => p.id === "WORLD_IDENTITY_CHECK")?.status === "completed";
-  const selfieVerified =
+  const selfieProofOnPassport =
     merged.find((p) => p.id === "WORLD_SELFIE_CHECK")?.status === "completed";
   return {
-    identityVerified,
-    selfieVerified,
-    canSubmit: identityVerified && selfieVerified,
+    identityProofOnPassport,
+    selfieProofOnPassport,
+    canSubmit: identityProofOnPassport && selfieProofOnPassport,
   };
 }
 

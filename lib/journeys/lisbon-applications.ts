@@ -39,8 +39,10 @@ export type LisbonApplicationPayload = {
 };
 
 export type LisbonApplyReadiness = {
-  identityVerified: boolean;
-  selfieVerified: boolean;
+  /** True only when `passport.proofs` contains WORLD_IDENTITY_CHECK. */
+  identityProofOnPassport: boolean;
+  /** True only when `passport.proofs` contains WORLD_SELFIE_CHECK. */
+  selfieProofOnPassport: boolean;
   canSubmit: boolean;
   missing: Array<"WORLD_IDENTITY_CHECK" | "WORLD_SELFIE_CHECK">;
 };
@@ -48,18 +50,21 @@ export type LisbonApplyReadiness = {
 export function getLisbonApplyReadiness(
   proofs: PassportProof[] | undefined | null
 ): LisbonApplyReadiness {
-  const identityVerified = isPassportProofVerified(
+  const identityProofOnPassport = isPassportProofVerified(
     proofs,
     "WORLD_IDENTITY_CHECK"
   );
-  const selfieVerified = isPassportProofVerified(proofs, "WORLD_SELFIE_CHECK");
+  const selfieProofOnPassport = isPassportProofVerified(
+    proofs,
+    "WORLD_SELFIE_CHECK"
+  );
   const missing: LisbonApplyReadiness["missing"] = [];
-  if (!identityVerified) missing.push("WORLD_IDENTITY_CHECK");
-  if (!selfieVerified) missing.push("WORLD_SELFIE_CHECK");
+  if (!identityProofOnPassport) missing.push("WORLD_IDENTITY_CHECK");
+  if (!selfieProofOnPassport) missing.push("WORLD_SELFIE_CHECK");
   return {
-    identityVerified,
-    selfieVerified,
-    canSubmit: identityVerified && selfieVerified,
+    identityProofOnPassport,
+    selfieProofOnPassport,
+    canSubmit: identityProofOnPassport && selfieProofOnPassport,
     missing,
   };
 }

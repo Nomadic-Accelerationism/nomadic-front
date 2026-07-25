@@ -45,8 +45,8 @@ test("Identity only keeps Apply disabled", () => {
   const readiness = getLisbonApplyReadiness([
     { type: "WORLD_IDENTITY_CHECK", status: "VERIFIED" },
   ]);
-  assert.equal(readiness.identityVerified, true);
-  assert.equal(readiness.selfieVerified, false);
+  assert.equal(readiness.identityProofOnPassport, true);
+  assert.equal(readiness.selfieProofOnPassport, false);
   assert.equal(readiness.canSubmit, false);
 });
 
