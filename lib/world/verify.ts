@@ -1,10 +1,11 @@
 /**
  * Production World verify.
  *
- * 1) Verify with World Developer Portal (source of cryptographic truth — proven working).
- * 2) Best-effort persist via Nomadic backend `/world/verify`.
+ * 1) Verify cryptographically with World Developer Portal.
+ * 2) Persist via Nomadic backend `/world/verify`.
  *
- * Persist failures must not fail IDKit (`failed_by_host_app`). UI handles sync separately.
+ * `persisted: true` only when Nomadic accepts the proof.
+ * Callers (IDKit handleVerify) must treat !persisted as failure for final VERIFIED UI.
  */
 
 import {
@@ -112,10 +113,6 @@ async function verifyViaWorldPortal(input: {
   };
 }
 
-/**
- * Ask Nomadic backend to persist a proof already verified with World.
- * Never throws into the IDKit path — returns persisted boolean only.
- */
 async function persistViaNomadicBackend(input: {
   action?: string;
   idkitResponse: unknown;
@@ -149,7 +146,6 @@ async function persistViaNomadicBackend(input: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      // Forward IDKit payload as-is; include action for allowlist routing.
       body: JSON.stringify({
         action: input.action,
         idkitResponse: input.idkitResponse,
@@ -182,9 +178,14 @@ async function persistViaNomadicBackend(input: {
       (typeof body?.verified_at === "string" && body.verified_at) ||
       input.summary.verifiedAt;
 
-    // Treat 2xx as persisted unless backend explicitly says otherwise.
-    const persisted = body?.persisted !== false;
-    return { persisted, verifiedAt };
+    // Only treat as persisted when Nomadic explicitly accepts the proof.
+    // Loose 2xx without ok/persisted must not unlock final VERIFIED UI.
+    const persisted =
+      body?.persisted === true ||
+      ((body?.ok === true || body?.success === true) &&
+        body?.persisted !== false);
+
+    return { persisted: Boolean(persisted), verifiedAt };
   } catch (error) {
     const aborted = error instanceof Error && error.name === "AbortError";
     worldLogMeta("backend_persist_network_error", {
@@ -198,7 +199,7 @@ async function persistViaNomadicBackend(input: {
 }
 
 /**
- * Verify IDKit result with World, then best-effort persist on Nomadic.
+ * Verify IDKit result with World, then persist on Nomadic.
  * Does not log DID or raw World payloads.
  */
 export async function verifyWorldResult(input: {
@@ -241,6 +242,6 @@ export async function verifyWorldResult(input: {
     verifiedAt,
     note: persist.persisted
       ? "Verified with World and saved to your Passport proofs."
-      : "Verified with World, but Nomadic could not persist the proof yet. Retry Passport sync or refresh.",
+      : "World verification succeeded, but Nomadic persistence failed.",
   };
 }

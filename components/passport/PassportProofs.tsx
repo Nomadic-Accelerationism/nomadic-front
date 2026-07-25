@@ -76,12 +76,13 @@ export function PassportProofs({ backendProofs }: PassportProofsProps) {
               {item.description}
             </p>
             {item.status === "completed" ? (
-              <p className="mt-2 text-xs text-gray-500">
-                Verified with World
-                {formatProofVerifiedAt(item.verifiedAt)
-                  ? ` · Verified at: ${formatProofVerifiedAt(item.verifiedAt)}`
-                  : ""}
-              </p>
+              <div className="mt-2 space-y-0.5 text-xs text-gray-500">
+                <p>Verified with World</p>
+                <p>Saved to your Passport</p>
+                {formatProofVerifiedAt(item.verifiedAt) ? (
+                  <p>Verified at: {formatProofVerifiedAt(item.verifiedAt)}</p>
+                ) : null}
+              </div>
             ) : null}
             {item.status !== "completed" && worldConfigured ? (
               <Link
