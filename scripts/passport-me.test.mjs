@@ -176,3 +176,45 @@ test("fixture boundary: empty backend journeys must not invent credentials", () 
   assert.deepEqual(parsed.passport.credentials, []);
   assert.deepEqual(parsed.passport.journeys, []);
 });
+
+test("parse: accepts legacy user/credentials aggregate without passport wrapper", () => {
+  const parsed = parsePrivatePassportResponse({
+    user: { id: "u1", publicAddress: SYNTHETIC_WALLET },
+    credentials: [],
+    applications: [],
+    legacyProofs: [],
+  });
+  assert.ok(parsed);
+  assert.equal(parsed.passport.publicAddress, SYNTHETIC_WALLET);
+  assert.equal(parsed.passport.identityStatus, "READY");
+  assert.equal(parsed.passport.ensStatus, "NOT_ISSUED");
+});
+
+test("parse: derives statuses when backend omits identityStatus/ensStatus", () => {
+  const parsed = parsePrivatePassportResponse({
+    passport: {
+      publicAddress: SYNTHETIC_WALLET,
+      ensName: null,
+      proofs: [],
+      credentials: [],
+    },
+  });
+  assert.ok(parsed);
+  assert.equal(parsed.passport.identityStatus, "READY");
+  assert.equal(parsed.passport.ensStatus, "NOT_ISSUED");
+});
+
+test("parse: accepts lowercase status aliases", () => {
+  const parsed = parsePrivatePassportResponse({
+    passport: {
+      wallet: SYNTHETIC_WALLET,
+      identityStatus: "wallet_available",
+      ensStatus: "not_issued",
+      proofs: [],
+      credentials: [],
+    },
+  });
+  assert.ok(parsed);
+  assert.equal(parsed.passport.identityStatus, "READY");
+  assert.equal(parsed.passport.ensStatus, "NOT_ISSUED");
+});

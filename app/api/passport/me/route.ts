@@ -11,14 +11,25 @@ import {
   PASSPORT_ME_TIMEOUT_MS,
   statusForPassportError,
 } from "@/lib/passport/errors";
-import { parsePrivatePassportResponse } from "@/lib/passport/validate";
+import {
+  describePassportPayloadShape,
+  parsePrivatePassportResponse,
+} from "@/lib/passport/validate";
 import type { PassportMeErrorCode } from "@/lib/passport/types";
 
 function errorJson(
   code: PassportMeErrorCode,
-  options?: { requestId?: string; message?: string }
+  options?: {
+    requestId?: string;
+    message?: string;
+    shape?: ReturnType<typeof describePassportPayloadShape>;
+  }
 ) {
-  return NextResponse.json(passportMeError(code, options), {
+  const body = {
+    ...passportMeError(code, options),
+    ...(options?.shape ? { shape: options.shape } : {}),
+  };
+  return NextResponse.json(body, {
     status: statusForPassportError(code),
   });
 }
@@ -82,15 +93,16 @@ export async function GET(request: Request) {
 
     const parsed = parsePrivatePassportResponse(data);
     if (!parsed) {
-      console.error("passport/me: unexpected backend response shape");
-      return errorJson("UNEXPECTED_ERROR", { requestId });
+      const shape = describePassportPayloadShape(data);
+      // Keys/types only — never log wallet, email, DID, or payload values.
+      console.error("passport/me: unexpected backend response shape", shape);
+      return errorJson("UNEXPECTED_ERROR", { requestId, shape });
     }
 
     // Never echo Authorization / DID. Return only the validated Passport model.
     return NextResponse.json(parsed, { status: 200 });
   } catch (error) {
-    const aborted =
-      error instanceof Error && error.name === "AbortError";
+    const aborted = error instanceof Error && error.name === "AbortError";
     console.error(
       "passport/me: backend request failed",
       aborted ? "timeout" : "network"

@@ -9,6 +9,7 @@ import {
 import { resolveSessionDidToken } from "@/lib/passport/session-did";
 import type {
   PassportMeErrorCode,
+  PassportPayloadShapeHint,
   PrivatePassport,
 } from "@/lib/passport/types";
 
@@ -21,6 +22,7 @@ export type UsePrivatePassportResult = {
   isError: boolean;
   errorCode: PassportMeErrorCode | null;
   requestId: string | null;
+  shape: PassportPayloadShapeHint | null;
   refetch: () => void;
   /** True when the failure is an auth problem (clear session / re-login). */
   isAuthError: boolean;
@@ -83,6 +85,7 @@ export function usePrivatePassport(): UsePrivatePassportResult {
     isError: query.isError,
     errorCode,
     requestId: error?.requestId ?? null,
+    shape: error?.shape ?? null,
     refetch: () => {
       void query.refetch();
     },

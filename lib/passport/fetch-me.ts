@@ -2,6 +2,7 @@ import { parsePrivatePassportResponse } from "@/lib/passport/validate";
 import type {
   PassportMeErrorBody,
   PassportMeErrorCode,
+  PassportPayloadShapeHint,
   PrivatePassportResponse,
 } from "@/lib/passport/types";
 
@@ -9,17 +10,23 @@ export class PassportMeClientError extends Error {
   readonly code: PassportMeErrorCode;
   readonly requestId?: string;
   readonly status: number;
+  readonly shape?: PassportPayloadShapeHint;
 
   constructor(
     code: PassportMeErrorCode,
     status: number,
-    options?: { requestId?: string; message?: string }
+    options?: {
+      requestId?: string;
+      message?: string;
+      shape?: PassportPayloadShapeHint;
+    }
   ) {
     super(options?.message ?? code);
     this.name = "PassportMeClientError";
     this.code = code;
     this.status = status;
     this.requestId = options?.requestId;
+    this.shape = options?.shape;
   }
 }
 
@@ -63,6 +70,7 @@ export async function fetchPrivatePassport(
     throw new PassportMeClientError(code, response.status, {
       requestId: body?.requestId,
       message: body?.message,
+      shape: body?.shape,
     });
   }
 

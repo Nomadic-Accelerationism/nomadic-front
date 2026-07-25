@@ -63,8 +63,16 @@ export type PassportMeErrorCode =
   | "PASSPORT_UNAVAILABLE"
   | "UNEXPECTED_ERROR";
 
+export type PassportPayloadShapeHint = {
+  topLevelKeys: string[];
+  passportKeys?: Record<string, string>;
+  notes: string[];
+};
+
 export type PassportMeErrorBody = {
   error: PassportMeErrorCode;
   requestId?: string;
   message?: string;
+  /** Sanitized field-name/type map when the backend body failed validation. */
+  shape?: PassportPayloadShapeHint;
 };

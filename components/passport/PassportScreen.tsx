@@ -64,6 +64,7 @@ export function PassportScreen() {
     isError,
     errorCode,
     requestId,
+    shape,
     refetch,
     isAuthError,
     isBackendError,
@@ -150,12 +151,18 @@ export function PassportScreen() {
           <p className="mt-2 text-sm text-amber-900/80">
             Your sign-in is still active. You can try loading again.
           </p>
-          {requestId ? (
+          {requestId || shape ? (
             <details className="mt-3 text-xs text-amber-900/70">
               <summary className="cursor-pointer">Technical details</summary>
               <p className="mt-1 break-all">
-                {errorCode} · Request ID: {requestId}
+                {errorCode}
+                {requestId ? ` · Request ID: ${requestId}` : ""}
               </p>
+              {shape ? (
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded bg-white/60 p-2 text-[10px] text-amber-950">
+                  {JSON.stringify(shape, null, 2)}
+                </pre>
+              ) : null}
             </details>
           ) : null}
           <Button

@@ -1,6 +1,5 @@
 /**
- * Pure Passport helpers for node:test (no Next runtime).
- * Keep in sync with lib/passport/* TypeScript sources.
+ * Pure Passport helpers for node:test (mirrors lib/passport/validate.ts).
  */
 
 const ETH_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
@@ -9,12 +8,38 @@ function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function firstDefined(record, keys) {
+  for (const key of keys) {
+    if (key in record && record[key] !== undefined) return record[key];
+  }
+  return undefined;
+}
+
 function parseIdentityStatus(value) {
-  return value === "READY" || value === "WALLET_UNAVAILABLE" ? value : null;
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  if (["READY", "WALLET_READY", "AVAILABLE", "WALLET_AVAILABLE"].includes(normalized)) {
+    return "READY";
+  }
+  if (
+    ["WALLET_UNAVAILABLE", "UNAVAILABLE", "MISSING_WALLET", "NO_WALLET"].includes(
+      normalized
+    )
+  ) {
+    return "WALLET_UNAVAILABLE";
+  }
+  return null;
 }
 
 function parseEnsStatus(value) {
-  return value === "NOT_ISSUED" || value === "ISSUED" ? value : null;
+  if (value === null) return "NOT_ISSUED";
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  if (["NOT_ISSUED", "NONE", "UNISSUED", "PENDING"].includes(normalized)) {
+    return "NOT_ISSUED";
+  }
+  if (["ISSUED", "ACTIVE"].includes(normalized)) return "ISSUED";
+  return null;
 }
 
 function parsePublicAddress(value) {
@@ -28,71 +53,120 @@ function parsePublicAddress(value) {
 
 function parseProof(value) {
   if (!isRecord(value)) return null;
-  const proof = {};
-  if (typeof value.type === "string") proof.type = value.type;
-  if (typeof value.key === "string") proof.key = value.key;
-  if (typeof value.proofType === "string") proof.proofType = value.proofType;
-  if (typeof value.status === "string") proof.status = value.status;
-  if (value.completedAt === null || typeof value.completedAt === "string") {
-    proof.completedAt = value.completedAt;
-  }
-  return proof;
+  return {
+    type: typeof value.type === "string" ? value.type : undefined,
+    key: typeof value.key === "string" ? value.key : undefined,
+    status: typeof value.status === "string" ? value.status : undefined,
+    completedAt:
+      value.completedAt === null || typeof value.completedAt === "string"
+        ? value.completedAt
+        : undefined,
+  };
 }
 
 function parseCredential(value) {
   if (!isRecord(value)) return null;
-  if (typeof value.credentialKey !== "string" || !value.credentialKey.trim()) {
-    return null;
-  }
+  const rawKey = firstDefined(value, [
+    "credentialKey",
+    "key",
+    "id",
+    "type",
+    "credential_key",
+  ]);
+  if (typeof rawKey !== "string" || !rawKey.trim()) return null;
   return {
-    credentialKey: value.credentialKey.trim(),
+    credentialKey: rawKey.trim(),
     displayName:
-      typeof value.displayName === "string" ? value.displayName : undefined,
+      typeof value.displayName === "string"
+        ? value.displayName
+        : typeof value.name === "string"
+          ? value.name
+          : undefined,
   };
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizePrivatePassportPayload(raw) {
+  if (!isRecord(raw)) return null;
+  if (isRecord(raw.passport)) return raw.passport;
+  if (isRecord(raw.user) || "publicAddress" in raw || "wallet" in raw) {
+    const user = isRecord(raw.user) ? raw.user : {};
+    return {
+      userId: firstDefined(user, ["id", "userId"]) ?? raw.userId,
+      publicAddress: firstDefined(
+        { ...raw, ...user },
+        ["publicAddress", "wallet", "walletAddress", "address"]
+      ),
+      identityStatus: firstDefined(
+        { ...raw, ...user },
+        ["identityStatus", "identity_status", "status"]
+      ),
+      ensName: firstDefined({ ...raw, ...user }, ["ensName", "ens_name", "ens"]),
+      ensStatus: firstDefined({ ...raw, ...user }, ["ensStatus", "ens_status"]),
+      proofs: firstDefined(raw, ["proofs", "legacyProofs"]) ?? [],
+      credentials: firstDefined(raw, ["credentials"]) ?? [],
+      journeys: firstDefined(raw, ["journeys", "applications"]),
+    };
+  }
+  return null;
+}
+
 export function parsePrivatePassportResponse(raw) {
-  if (!isRecord(raw) || !isRecord(raw.passport)) return null;
-  const p = raw.passport;
-  const identityStatus = parseIdentityStatus(p.identityStatus);
-  const ensStatus = parseEnsStatus(p.ensStatus);
-  const publicAddress = parsePublicAddress(p.publicAddress);
-  if (!identityStatus || !ensStatus || publicAddress === undefined) return null;
-  if (!Array.isArray(p.proofs) || !Array.isArray(p.credentials)) return null;
+  const source = normalizePrivatePassportPayload(raw);
+  if (!source) return null;
+
+  const publicAddress = parsePublicAddress(
+    firstDefined(source, ["publicAddress", "wallet", "walletAddress", "address"])
+  );
+  if (publicAddress === undefined) return null;
+
+  let identityStatus = parseIdentityStatus(
+    firstDefined(source, ["identityStatus", "identity_status"])
+  );
+  if (!identityStatus) {
+    identityStatus = publicAddress ? "READY" : "WALLET_UNAVAILABLE";
+  }
+
+  const ensNameRaw = firstDefined(source, ["ensName", "ens_name", "ens"]);
+  let ensName = null;
+  if (ensNameRaw === null || ensNameRaw === undefined) ensName = null;
+  else if (typeof ensNameRaw === "string") ensName = ensNameRaw.trim() || null;
+  else return null;
+
+  let ensStatus = parseEnsStatus(firstDefined(source, ["ensStatus", "ens_status"]));
+  if (!ensStatus) ensStatus = ensName ? "ISSUED" : "NOT_ISSUED";
 
   const proofs = [];
-  for (const item of p.proofs) {
+  for (const item of asArray(firstDefined(source, ["proofs", "legacyProofs"]))) {
     const proof = parseProof(item);
     if (!proof) return null;
     proofs.push(proof);
   }
 
   const credentials = [];
-  for (const item of p.credentials) {
+  for (const item of asArray(firstDefined(source, ["credentials"]))) {
     const credential = parseCredential(item);
     if (!credential) return null;
     credentials.push(credential);
   }
 
   if (identityStatus === "READY" && !publicAddress) return null;
-  if (ensStatus === "ISSUED" && !(typeof p.ensName === "string" && p.ensName.trim())) {
-    return null;
-  }
+  if (ensStatus === "ISSUED" && !ensName) return null;
 
   return {
     passport: {
       publicAddress,
       identityStatus,
-      ensName:
-        ensStatus === "NOT_ISSUED"
-          ? null
-          : typeof p.ensName === "string"
-            ? p.ensName.trim() || null
-            : null,
+      ensName: ensStatus === "NOT_ISSUED" ? null : ensName,
       ensStatus,
       proofs,
       credentials,
-      journeys: Array.isArray(p.journeys) ? p.journeys : undefined,
+      journeys: Array.isArray(firstDefined(source, ["journeys", "applications"]))
+        ? firstDefined(source, ["journeys", "applications"])
+        : undefined,
     },
   };
 }
