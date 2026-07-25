@@ -17,7 +17,7 @@ export default function HackerJourneysComponent() {
   return (
     <div className="clay-page relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
       {/* Main Title */}
-      <h1 className="clay-surface clay-tone-peach mx-6 mt-8 mb-7 w-[calc(100%-3rem)] max-w-md px-6 py-6 text-center text-3xl font-bold">
+      <h1 className="clay-surface clay-tone-peach mx-6 mt-8 mb-7 w-[calc(100%_-_3rem)] max-w-md px-6 py-6 text-center text-3xl font-bold">
         Journeys & Hacker Houses
       </h1>
 

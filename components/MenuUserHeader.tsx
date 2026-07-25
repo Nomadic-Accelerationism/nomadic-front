@@ -46,9 +46,9 @@ export default function MenuUserHeaderComponent() {
 
   return (
     <Sheet>
-      <header className="clay-surface clay-tone-white sticky top-3 z-40 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-md items-center justify-between rounded-[24px] px-5 py-3">
+      <header className="clay-surface clay-tone-white sticky top-3 z-40 mx-auto mt-3 flex w-[calc(100%_-_1.5rem)] max-w-md items-center justify-between rounded-[24px] px-5 py-3">
         <div className="flex items-center">
-          <Link href="/passport">
+          <Link href="/passport" className="inline-flex min-h-11 items-center rounded focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-clay-orange">
             <div className="flex items-center cursor-pointer">
               <Image
                 src="/images/nomadic.svg"

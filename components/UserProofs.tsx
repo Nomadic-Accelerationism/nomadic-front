@@ -4,7 +4,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useState } from 'react';
 import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -181,7 +180,7 @@ function XAccountDialog({ open, onOpenChange, proof, onVerify }: {
 }
 
 // Move the fetch function outside the component
-async function fetchUserProofs({ publicAddress, didToken }: { publicAddress: string, didToken: string }) {
+async function fetchUserProofs({ publicAddress, didToken }: { publicAddress: string, didToken: string }): Promise<ProofItem[]> {
   if (!publicAddress || !didToken) return []
   
   const response = await api.post('/api/auth/get-proof-hacker-list', {
@@ -213,7 +212,7 @@ export default function UserProofsComponent() {
   }, [publicAddress, didToken, setPublicAddress, setDidToken])
 
   // Use React Query to fetch proofs
-  const { data: proofItems = [] } = useQuery({
+  const { data: proofItems = [] } = useQuery<ProofItem[]>({
     queryKey: ['userProofs', publicAddress],
     queryFn: () => fetchUserProofs({ publicAddress, didToken }),
     enabled: Boolean(publicAddress && didToken)
@@ -270,7 +269,7 @@ export default function UserProofsComponent() {
         console.warn(`Unhandled proof type: ${proofType}`)
       }
 
-      setDialogState(prev => ({ verify: false, result: true }))
+      setDialogState(prev => ({ ...prev, verify: false, result: true }))
     } catch (error) {
       console.error(`Error processing proof: ${error}`)
     }
@@ -291,7 +290,7 @@ export default function UserProofsComponent() {
       </div>
       
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-clay-muted" />
         <Input 
           variant="clay"
           type="text" 
@@ -302,12 +301,13 @@ export default function UserProofsComponent() {
         />
       </div>
       
-      {filteredProofs.map((item, index) => (
-        <Card 
-          key={index} 
-          tone={item.isActive ? "mint" : "white"}
-          interactive
-          className="flex items-center justify-between rounded-[24px] border-none py-2"
+      {filteredProofs.map((item) => (
+        <button
+          type="button"
+          key={item.name}
+          className={`clay-surface clay-interactive flex w-full items-center justify-between rounded-[24px] border-none py-2 text-left ${
+            item.isActive ? "clay-tone-mint" : "clay-tone-white"
+          }`}
           onClick={() => verifyProof(item)}
         >
           <span className="text-sm font-medium p-3 ml-3">{item.name}</span>
@@ -317,7 +317,7 @@ export default function UserProofsComponent() {
               <div className="absolute inset-0 mr-1 rounded-lg bg-clay-muted opacity-35"></div>
             )}
           </div>
-        </Card>
+        </button>
       ))}
     </div>
 

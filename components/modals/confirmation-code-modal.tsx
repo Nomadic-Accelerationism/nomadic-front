@@ -58,7 +58,7 @@ export function ConfirmationCodeModal({ isOpen, onClose, onCodeSubmit }: Confirm
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogOverlay className="bg-black/50 fixed inset-0" />
-      <DialogContent className="clay-surface clay-tone-white fixed left-1/2 top-1/2 w-7/8 max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[32px] border-none p-8">
+      <DialogContent className="clay-surface clay-tone-white fixed left-1/2 top-1/2 w-[calc(100%_-_2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[32px] border-none p-8">
         <DialogTitle className="text-2xl font-medium text-[#000000] text-center">
           Confirmation Code
         </DialogTitle>

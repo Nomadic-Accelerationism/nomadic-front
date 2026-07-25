@@ -78,7 +78,7 @@ export function AvailableJourneys() {
             {availableJourneys.map((journey, idx) => (
               <div
                 key={journey.id}
-                className={`absolute w-[320px] transition-all duration-500 ${
+                className={`absolute w-[280px] transition-all duration-500 sm:w-[320px] ${
                   idx === currentIndex
                     ? 'z-20 scale-100 opacity-100'
                     : idx === (currentIndex + 1) % availableJourneys.length
@@ -102,13 +102,13 @@ export function AvailableJourneys() {
                       objectFit="cover"
                       className="rounded-[22px]"
                     />
-                    <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-2 px-4">
+                    <div className="absolute left-0 right-0 top-0 bg-black/80 px-4 py-2 backdrop-blur-sm">
                       <h3 className="text-white text-xl font-bold text-center">
                         {journey.title}
                       </h3>
                     </div>
 
-                    <div className="absolute bottom-0 w-full py-2 px-4 bg-black/70 backdrop-blur-sm flex justify-between items-center">
+                    <div className="absolute bottom-0 flex w-full items-center justify-between bg-black/85 px-4 py-2 backdrop-blur-sm">
                       <span className="text-white font-semibold">
                         ${journey.budget}
                       </span>

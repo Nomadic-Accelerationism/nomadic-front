@@ -32,7 +32,7 @@ export default function MenuHouseHeaderComponent() {
 
   return (
     <Sheet>
-      <header className="clay-surface clay-tone-white sticky top-3 z-40 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-md items-center justify-between rounded-[24px] px-5 py-3">
+      <header className="clay-surface clay-tone-white sticky top-3 z-40 mx-auto mt-3 flex w-[calc(100%_-_1.5rem)] max-w-md items-center justify-between rounded-[24px] px-5 py-3">
         <div className="flex items-center">
           <Image
             src="/images/nomadic.png"
@@ -43,7 +43,7 @@ export default function MenuHouseHeaderComponent() {
           />
           <div className="flex flex-col">
             <p className="text-2xl font-bold pb-0">Nomadic</p>
-            <p className="text-sm text-gray-800">Hacker House</p>
+            <p className="text-sm font-medium text-clay-muted">Hacker House</p>
           </div>
         </div>
         <SheetTrigger asChild>

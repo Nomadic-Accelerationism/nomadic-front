@@ -22,7 +22,7 @@ export const ProofSelector = ({
 }: ProofSelectorProps) => {
   return (
     <div className="clay-surface clay-tone-sky px-4 py-4">
-      <div className="grid grid-cols-8 gap-2 mt-2">
+      <div className="mt-2 grid grid-cols-4 gap-3 sm:grid-cols-7">
         {filters.map((filter) => (
           <Button
             key={filter.id}

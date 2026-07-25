@@ -7,6 +7,7 @@ import JourneySucessComponent from "@/components/journey-success/JourneySuccess"
 import { Journey } from '@/interfaces/Journey'
 import { useUser } from '@/contexts/UserContext'
 import { api } from '@/lib/axios'
+import { ClayState } from "@/components/ui/clay-state";
 
 async function fetchJourney({ id, publicAddress, didToken }: { 
   id: string
@@ -36,8 +37,8 @@ export default function JourneySuccessClient() {
     enabled: Boolean(journeyId) && isAuthenticated
   })
 
-  if (isLoading) return <div>Loading...</div>
-  if (!journey) return <div>Journey not found</div>
+  if (isLoading) return <ClayState kind="loading" title="Loading journey" />
+  if (!journey) return <ClayState kind="error" title="Journey not found" description="The requested journey is unavailable or no longer exists." />
 
   return (
     <div className="clay-page min-h-screen">

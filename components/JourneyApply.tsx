@@ -10,6 +10,7 @@ import { Journey } from '@/interfaces/Journey';
 import { useUser } from '@/contexts/UserContext';
 import Image from 'next/image';
 import { format } from "date-fns";
+import { ClayState } from "@/components/ui/clay-state";
 
 export default function JourneyApplyComponent() {
   const { publicAddress } = useUser();
@@ -45,11 +46,7 @@ export default function JourneyApplyComponent() {
   };
 
   if (!journey) {
-    return (
-      <div className="clay-page flex min-h-[50vh] items-center justify-center" role="status">
-        <div className="clay-surface clay-tone-white px-6 py-5 font-semibold">Loading journey...</div>
-      </div>
-    );
+    return <ClayState kind="loading" title="Loading journey" />;
   }
 
   return (

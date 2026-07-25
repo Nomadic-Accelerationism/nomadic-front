@@ -139,7 +139,7 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
         <div>
           <Label htmlFor="location">Where</Label>
           <div className="relative">
-            <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-clay-muted" size={20} />
             <Input 
               variant="clay"
               id="location"
@@ -151,7 +151,7 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label>From</Label>
             <Popover>
@@ -194,7 +194,7 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="budget">Max Budget per Nomad</Label>
             <Input

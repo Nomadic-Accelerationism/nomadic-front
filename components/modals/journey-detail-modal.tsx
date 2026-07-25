@@ -41,13 +41,13 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogOverlay className="bg-black/50 fixed inset-0" />
-      <DialogContent className="clay-surface clay-tone-white fixed left-1/2 top-1/2 max-h-[90vh] w-7/8 max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[32px] border-none p-8">
+      <DialogContent className="clay-surface clay-tone-white fixed left-1/2 top-1/2 max-h-[90vh] w-[calc(100%_-_2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[32px] border-none p-8">
         <div className="w-full">
           <h1 className="text-2xl font-bold text-center mb-2">Journey Details</h1>
           <h2 className="text-xl font-semibold text-center mb-4">{journey.title}</h2>
 
           <div className="flex items-center space-x-2 mb-4">
-            <MapPin size={16} className="text-gray-500" />
+            <MapPin size={16} className="text-clay-muted" />
             <span className="text-sm underline">{journey.location}</span>
           </div>
 
@@ -108,9 +108,9 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
           <div className="mb-4 text-center">
             <div className="flex items-center justify-center mb-2">
               <h3 className="font-bold text-lg">Journey Budget</h3>
-              <span className="text-[#ff671e] font-semibold ml-2">{journey.budget} USDC</span>
+              <span className="clay-chip ml-2 bg-clay-peach px-3 py-1 font-bold text-clay-ink">{journey.budget} USDC</span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-clay-muted">
               This is the the budget that the house has compromised for the entry stay for the X time / This
               is the budget you should pay for the Journey
             </p>

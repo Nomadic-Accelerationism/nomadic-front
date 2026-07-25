@@ -59,7 +59,7 @@ export default function LandingComponent() {
         </div>
 
         <div
-          className={`clay-surface clay-tone-white mx-5 flex w-[calc(100%-2.5rem)] max-w-sm flex-col items-center space-y-4 px-7 py-7 transition-opacity duration-500 ${
+          className={`clay-surface clay-tone-white mx-5 flex w-[calc(100%_-_2.5rem)] max-w-sm flex-col items-center space-y-4 px-7 py-7 transition-opacity duration-500 ${
             showLoginElements ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -79,10 +79,17 @@ export default function LandingComponent() {
         </div>
 
         <div className="w-full px-8 mb-4 space-y-2">
-          <p className={`text-center text-xs text-gray-800 transition-opacity duration-500 ${
+          <p className={`text-center text-xs transition-opacity duration-500 ${
             showLoginElements ? 'opacity-100' : 'opacity-0'
-          } text-clay-muted`}>
-            By continuing, you agree to the <Link href="#" className="underline">Privacy Policy</Link> and <Link href="#" className="underline">Terms and conditions</Link>
+          } font-semibold text-clay-ink`}>
+            By continuing, you agree to the{" "}
+            <Link href="#" className="inline-flex min-h-11 items-center rounded focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-clay-ink">
+              <span className="underline">Privacy Policy</span>
+            </Link>{" "}
+            and{" "}
+            <Link href="#" className="inline-flex min-h-11 items-center rounded focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-clay-ink">
+              <span className="underline">Terms and conditions</span>
+            </Link>
           </p>
           <p className="text-center text-xs font-semibold text-clay-ink">v.0.01a</p>
         </div>

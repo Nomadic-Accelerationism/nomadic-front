@@ -84,11 +84,11 @@ export default function HackerJourneyListComponent() {
 
   const getStatusColor = (status: JourneyStatusEnum) => {
     switch (status) {
-      case JourneyStatusEnum.CONFIRMED: return 'bg-green-500'
-      case JourneyStatusEnum.PENDING: return 'bg-orange-500'
-      case JourneyStatusEnum.FINISHED: return 'bg-gray-500'
-      case JourneyStatusEnum.CANCELLED: return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case JourneyStatusEnum.CONFIRMED: return 'bg-[#b8e4c8]'
+      case JourneyStatusEnum.PENDING: return 'bg-clay-butter'
+      case JourneyStatusEnum.FINISHED: return 'bg-clay-sky'
+      case JourneyStatusEnum.CANCELLED: return 'bg-[#f4c1be]'
+      default: return 'bg-clay-sky'
     }
   }
 
@@ -152,7 +152,7 @@ export default function HackerJourneyListComponent() {
                       {isClickable && <ChevronRight className="h-6 w-6 text-white" />}
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`clay-chip px-2 py-1 text-xs font-semibold text-white ${getStatusColor(journey.status)}`}>
+                      <span className={`clay-chip px-2 py-1 text-xs font-semibold text-clay-ink ${getStatusColor(journey.status)}`}>
                         {journey.status}
                       </span>
                       <span className="clay-chip bg-clay-white px-2 py-1 text-xs font-bold text-clay-ink">

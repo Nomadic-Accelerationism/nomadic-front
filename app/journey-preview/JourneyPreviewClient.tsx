@@ -5,6 +5,7 @@ import MenuUserHeaderComponent from "@/components/MenuUserHeader";
 import JourneyPreviewComponent from "@/components/JourneyPreview";
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { ClayState } from "@/components/ui/clay-state";
 
 export default function JourneyPreviewPage() {
   const searchParams = useSearchParams();
@@ -47,7 +48,7 @@ export default function JourneyPreviewPage() {
   };
 
   if (!formData) {
-    return <div>No journey data available</div>;
+    return <ClayState kind="empty" title="No journey data available" description="Create or edit a journey before opening its preview." />;
   }
 
   return (

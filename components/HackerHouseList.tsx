@@ -89,11 +89,11 @@ export default function HackerHouseListComponent() {
 
   const getStatusColor = (status: HackerHouse['status']) => {
     switch (status) {
-      case 'Active': return 'bg-green-500'
-      case 'Upcoming': return 'bg-orange-500'
-      case 'Finished': return 'bg-gray-500'
-      case 'Cancelled': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'Active': return 'bg-[#b8e4c8]'
+      case 'Upcoming': return 'bg-clay-butter'
+      case 'Finished': return 'bg-clay-sky'
+      case 'Cancelled': return 'bg-[#f4c1be]'
+      default: return 'bg-clay-sky'
     }
   }
 
@@ -144,7 +144,7 @@ export default function HackerHouseListComponent() {
                   <ChevronRight className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className={`clay-chip px-2 py-1 text-xs font-semibold text-white ${getStatusColor(house.status)}`}>
+                  <span className={`clay-chip px-2 py-1 text-xs font-semibold text-clay-ink ${getStatusColor(house.status)}`}>
                     {house.status}
                   </span>
                   <span className="clay-chip bg-clay-white px-2 py-1 text-xs font-bold text-clay-ink">

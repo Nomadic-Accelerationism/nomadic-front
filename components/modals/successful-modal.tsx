@@ -4,6 +4,7 @@ import * as React from "react"
 import { X } from "lucide-react"
 import { Dialog, DialogContent, DialogOverlay, DialogTitle } from "@/components/ui/dialog"
 import { useRouter } from 'next/navigation'
+import Image from "next/image"
 
 interface SuccessfulModalProps {
   open: boolean
@@ -33,10 +34,12 @@ export function SuccessfulModal({ open, onOpenChange }: SuccessfulModalProps) {
         <div className="space-y-6 flex flex-col items-center">
           <h2 className="text-2xl font-medium text-[#000000] text-center">Successful!</h2>
 
-          <img
+          <Image
             src="/images/success.png"
             alt="Success"
-            className="w-40 h-40 object-contain"
+            width={160}
+            height={160}
+            className="h-40 w-40 object-contain"
           />
 
           <button

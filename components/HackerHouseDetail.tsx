@@ -36,7 +36,7 @@ export default function HackerHouseDetailComponent({
             className="object-cover"
             priority
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 flex justify-between items-center">
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/80 p-2 text-white">
             <span className="font-bold text-sm">{price}</span>
             <div className="flex items-center text-sm">
               <CalendarIcon className="w-4 h-4 mr-1" />

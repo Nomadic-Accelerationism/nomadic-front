@@ -182,7 +182,7 @@ export default function JourneyPreviewComponent({
           </div> */}
 
           <div className="flex items-center space-x-2 mb-4">
-            <MapPin size={16} className="text-gray-500" />
+            <MapPin size={16} className="text-clay-muted" />
             <span className="text-sm underline">{location}</span>
           </div>
 
@@ -235,10 +235,13 @@ export default function JourneyPreviewComponent({
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Journey photo:</h3>
             <div className="clay-image-frame bg-clay-peach">
-              <img
-                src={photo}
+              <Image
+                src={photo || "/placeholder.svg"}
                 alt="Journey"
-                className="w-full rounded-[22px]"
+                width={720}
+                height={405}
+                unoptimized
+                className="h-auto w-full rounded-[22px]"
               />
             </div>
           </div>

@@ -82,7 +82,7 @@ export default function HouseLoginComponent() {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleCodeChange(index, e.target.value)}
-                className="h-12 w-10 rounded-[16px] px-0 text-center"
+                className="h-12 w-11 rounded-[16px] px-0 text-center"
               />
             ))}
           </div>

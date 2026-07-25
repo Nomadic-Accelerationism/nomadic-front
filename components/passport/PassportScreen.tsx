@@ -28,7 +28,7 @@ export function PassportScreen() {
         role="status"
         aria-live="polite"
       >
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff671e]" aria-hidden />
+        <Loader2 className="h-8 w-8 animate-spin text-clay-ink" aria-hidden />
         <span className="sr-only">Loading passport</span>
       </div>
     );
@@ -41,7 +41,7 @@ export function PassportScreen() {
         role="status"
         aria-live="polite"
       >
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff671e]" aria-hidden />
+        <Loader2 className="h-8 w-8 animate-spin text-clay-ink" aria-hidden />
         <span className="sr-only">Redirecting to login</span>
       </div>
     );

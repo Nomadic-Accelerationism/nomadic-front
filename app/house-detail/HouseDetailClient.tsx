@@ -8,6 +8,7 @@ import HackerHouseParticipantsComponent from "@/components/HackerHouseParticipan
 import { Button } from "@/components/ui/button"
 import { Journey } from '@/interfaces/Journey'
 import { useRouter } from 'next/navigation';
+import { ClayState } from "@/components/ui/clay-state";
 
 export default function HouseDetail() {
   const searchParams = useSearchParams()
@@ -17,7 +18,9 @@ export default function HouseDetail() {
   const journeyParam = searchParams.get('journey')
   const journey: Journey = journeyParam ? JSON.parse(journeyParam) : null
 
-  if (!journey) return <div>Journey not found</div>
+  if (!journey) {
+    return <ClayState kind="error" title="Journey not found" description="Return to Journeys and select an available Hacker House." />
+  }
 
   const isMyJourney = journey.creatorAddress === publicAddress
   if (isMyJourney) {

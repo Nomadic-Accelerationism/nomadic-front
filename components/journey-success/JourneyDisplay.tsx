@@ -13,7 +13,7 @@ export function JourneyDisplay({ journey, isPending, onCancel }: JourneyDisplayP
   const router = useRouter()
 
   return (
-    <div className="clay-surface clay-tone-white mx-auto my-8 w-[calc(100%-2rem)] max-w-md p-6">
+    <div className="clay-surface clay-tone-white mx-auto my-8 w-[calc(100%_-_2rem)] max-w-md p-6">
       <h1 className="text-2xl font-bold text-center mb-4">
         {isPending 
           ? `Application to ${journey.title} sent,thank you!`
@@ -31,18 +31,20 @@ export function JourneyDisplay({ journey, isPending, onCancel }: JourneyDisplayP
         />
       </div>
 
-      <p className="text-gray-600 text-center mb-6">
+      <div className="mb-6 text-center text-clay-muted">
+        <p>
         {isPending 
           ? "Watch closely for the status of your application in My Journeys, you'll have news soon"
           : "Please wait a few hours, your Journey is being reviewed for your security and the security of the ones using the platform."
         }
+        </p>
 
         {!isPending && (
           <p className="mt-4">
             If you have any questions please send a XMTP message to nacc.eth
           </p>
         )}
-      </p>
+      </div>
 
       <div className="flex items-center justify-center mb-6">
         <Button 
@@ -58,7 +60,7 @@ export function JourneyDisplay({ journey, isPending, onCancel }: JourneyDisplayP
       <div className="text-center">
         <button
           onClick={onCancel}
-          className="text-gray-500 underline hover:text-gray-700"
+          className="inline-flex min-h-11 items-center rounded-lg px-3 font-semibold text-clay-muted underline underline-offset-4 focus-visible:outline focus-visible:outline-3 focus-visible:outline-clay-ink"
         >
           Cancel journey
         </button>
