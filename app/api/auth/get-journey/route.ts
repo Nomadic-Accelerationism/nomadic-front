@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getNomadicApiUrl, NomadicApiConfigError } from '@/lib/config/nomadic-api'
 
 export async function POST(request: Request) {
   try {
@@ -11,13 +12,18 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log('--------------------------------')
-    console.log('journeyId', journeyId)
-    console.log('didToken', didToken)
-    console.log('publicAddress', publicAddress)
-    console.log('--------------------------------')
-
-    const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/get-journey"
+    let nomadicApiUrl: string;
+    try {
+      nomadicApiUrl = getNomadicApiUrl('/get-journey');
+    } catch (error) {
+      if (error instanceof NomadicApiConfigError) {
+        return NextResponse.json(
+          { error: 'Nomadic API is not configured', code: 'MISSING_API_CONFIG' },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
     
     const response = await fetch(nomadicApiUrl, {
       method: 'POST',

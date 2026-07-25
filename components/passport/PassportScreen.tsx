@@ -5,9 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { isPlausibleEthAddress } from "@/lib/wallet";
 import { PassportIdentity } from "@/components/passport/PassportIdentity";
+import { PassportProofs } from "@/components/passport/PassportProofs";
 import { CredentialCard } from "@/components/passport/CredentialCard";
+import { PassportJourneys } from "@/components/passport/PassportJourneys";
 
 export function PassportScreen() {
   const router = useRouter();
@@ -47,7 +48,6 @@ export function PassportScreen() {
     );
   }
 
-  const walletAvailable = isPlausibleEthAddress(publicAddress);
   const privateEmail =
     typeof userMetadata?.email === "string" && userMetadata.email.trim()
       ? userMetadata.email.trim()
@@ -82,12 +82,14 @@ export function PassportScreen() {
             Nomadic Passport
           </h1>
           <p className="mt-2 text-center text-sm text-gray-700">
-            Your portable identity for communities and events.
+            Your portable identity for communities, proofs, and Journeys.
           </p>
         </div>
 
         <div className="w-full space-y-8">
           <PassportIdentity publicAddress={publicAddress} />
+
+          <PassportProofs />
 
           <section aria-labelledby="passport-credentials-heading">
             <h2
@@ -96,8 +98,10 @@ export function PassportScreen() {
             >
               Credentials
             </h2>
-            <CredentialCard claimAvailable={walletAvailable} />
+            <CredentialCard />
           </section>
+
+          <PassportJourneys />
 
           {privateEmail ? (
             <section

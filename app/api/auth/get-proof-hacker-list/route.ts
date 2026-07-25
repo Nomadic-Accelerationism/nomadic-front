@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { getNomadicApiUrl, NomadicApiConfigError } from '@/lib/config/nomadic-api';
 
 export async function POST(request: Request) {
   try {
@@ -6,10 +7,6 @@ export async function POST(request: Request) {
     //const didToken = request.headers.get('authorization')?.split('Bearer ')[1];
 
     const { publicAddress, didToken } = await request.json();
-    console.log("From get-proof-hacker-list route");
-    console.log('request: ', request);
-    console.log('didToken: ', didToken);
-    console.log('publicAddress: ', publicAddress);
     if (!didToken) {
       return NextResponse.json(
         { error: 'Authorization token required' },
@@ -17,7 +14,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/get-proof-hacker-list";
+    let nomadicApiUrl: string;
+    try {
+      nomadicApiUrl = getNomadicApiUrl('/get-proof-hacker-list');
+    } catch (error) {
+      if (error instanceof NomadicApiConfigError) {
+        return NextResponse.json(
+          { error: 'Nomadic API is not configured', code: 'MISSING_API_CONFIG' },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
 
     const response = await fetch(nomadicApiUrl, {
       method: 'GET',

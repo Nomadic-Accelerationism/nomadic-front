@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
+import { getNomadicApiUrl, NomadicApiConfigError } from '@/lib/config/nomadic-api'
 
 export async function POST(request: Request) {
   try {
     const { publicAddress, didToken } = await request.json();
     // console.log("From get-hacker-journeys route");
-    // console.log('didToken: ', didToken);
     // console.log('publicAddress: ', publicAddress);
 
     if (!didToken) {
@@ -14,7 +14,18 @@ export async function POST(request: Request) {
       );
     }
     
-    const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/get-hacker-journeys";
+    let nomadicApiUrl: string;
+    try {
+      nomadicApiUrl = getNomadicApiUrl('/get-hacker-journeys');
+    } catch (error) {
+      if (error instanceof NomadicApiConfigError) {
+        return NextResponse.json(
+          { error: 'Nomadic API is not configured', code: 'MISSING_API_CONFIG' },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
     
     const response = await fetch(nomadicApiUrl, {
       method: 'GET',

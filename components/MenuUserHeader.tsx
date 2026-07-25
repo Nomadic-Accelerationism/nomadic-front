@@ -21,9 +21,10 @@ export default function MenuUserHeaderComponent() {
   
   const menuItems = [
     { name: "Passport", url: "/passport" },
-    { name: "Home", url: "/home-user" },
+    { name: "Lisbon House Journey", url: "/journeys/lisbon-house" },
     { name: "My Proofs", url: "/user-proofs" },
-    { name: "Journeys", url: "/hacker-journeys" },
+    // Legacy Journey list retained for compatibility:
+    { name: "All Journeys", url: "/hacker-journeys" },
     // Legacy demo surfaces intentionally not promoted:
     // { name: "$NACC Tokens", url: "/nacc-tokens" },
     // { name: "Generate Single Use ID", url: "/generate-single-use-id" },

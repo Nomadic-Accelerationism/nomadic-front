@@ -8,10 +8,16 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MenuUserHeaderComponent from "@/components/MenuUserHeader";
 import { useUser } from "@/contexts/UserContext";
+import { LISBON_HOUSE_JOURNEY } from "@/lib/journeys/lisbon-house";
 
+/**
+ * Legacy credential placeholder route.
+ * Primary P0 path is Journey discovery → policy → apply (World unavailable).
+ */
 export default function LisbonCredentialPlaceholderPage() {
   const router = useRouter();
   const { isAuthenticated, isInitialized } = useUser();
+  const journey = LISBON_HOUSE_JOURNEY;
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -57,32 +63,35 @@ export default function LisbonCredentialPlaceholderPage() {
                 height={64}
               />
               <h1 className="mt-4 text-2xl font-bold text-black">
-                Nomadic Lisbon 2026
+                Credential not issued
               </h1>
               <p className="mt-2 text-sm text-gray-700">
-                A World Selfie Check–verified credential claimed through Nomadic
-                during ETHGlobal Lisbon 2026.
+                Eligibility credentials are earned through a Journey application
+                after private proofs — nothing has been issued for this Passport.
               </p>
             </div>
 
             <div className="rounded-2xl border border-black/80 bg-white p-5 shadow-sm">
               <p className="text-sm font-semibold text-black">
-                Verification not connected yet
+                Continue from the Lisbon House Journey
               </p>
               <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                World Selfie Check, server verification, and credential claims
-                are not available in this build. This page is a Passport
-                placeholder only — nothing has been verified or saved.
-              </p>
-              <p className="mt-3 rounded-xl bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700">
-                Status: Not claimed
+                Open {journey.community.name}, review {journey.policy.displayName},
+                then see application requirements. World verification is not
+                available yet — Nomadic will not create a fake credential.
               </p>
             </div>
 
             <Button
               asChild
+              className="mt-6 h-12 w-full rounded-xl bg-[#ff671e] text-base font-bold text-black hover:bg-orange-500"
+            >
+              <Link href={journey.routes.detail}>Open Lisbon House Journey</Link>
+            </Button>
+            <Button
+              asChild
               variant="outline"
-              className="mt-6 h-12 w-full rounded-xl border-black bg-white text-base font-semibold"
+              className="mt-3 h-12 w-full rounded-xl border-black bg-white text-base font-semibold"
             >
               <Link href="/passport">Back to Passport</Link>
             </Button>

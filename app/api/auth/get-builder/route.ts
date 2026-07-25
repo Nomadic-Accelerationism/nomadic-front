@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getNomadicApiUrl, NomadicApiConfigError } from '@/lib/config/nomadic-api'
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const nomadicApiUrl = process.env.NEXT_PUBLIC_NOMADIC_API_URL + "/builder"
+    let nomadicApiUrl: string;
+    try {
+      nomadicApiUrl = getNomadicApiUrl('/builder');
+    } catch (error) {
+      if (error instanceof NomadicApiConfigError) {
+        return NextResponse.json(
+          { error: 'Nomadic API is not configured', code: 'MISSING_API_CONFIG' },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
     
     const response = await fetch(`${nomadicApiUrl}?wallet=${wallet}`, {
       method: 'GET',

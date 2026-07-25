@@ -1,12 +1,9 @@
-import Image from "next/image";
-import HomeUserComponent from "@/components/HomeUser";
-import MenuUserHeaderComponent from "@/components/MenuUserHeader";
+import { redirect } from "next/navigation";
 
+/**
+ * Compatibility route: legacy links used /home-user as the post-login home.
+ * P0 authenticated home is the Passport.
+ */
 export default function HomeUser() {
-  return (
-    <>
-      <MenuUserHeaderComponent />
-      <HomeUserComponent />
-    </>
-  );
+  redirect("/passport");
 }

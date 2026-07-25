@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import Link from 'next/link';
+import React, { useMemo, useState } from "react";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -13,97 +12,192 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Magic } from 'magic-sdk';
-import axios from 'axios';
-import { useUser } from '@/contexts/UserContext';
-import { useRouter } from 'next/navigation';
+import { Magic } from "magic-sdk";
+import axios from "axios";
+import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { isNomadicApiConfigured } from "@/lib/config/nomadic-api";
+import type { ValidateOtpErrorCode } from "@/lib/auth/validate-otp-errors";
 
+type AuthUiState =
+  | "idle"
+  | "requesting_otp"
+  | "otp_sent"
+  | "validating_magic_session"
+  | "creating_nomadic_session"
+  | "authenticated"
+  | "configuration_error"
+  | "backend_unavailable"
+  | "invalid_session"
+  | "unexpected_error";
 
-// Move Magic initialization inside a function to ensure client-side only execution
 const createMagic = () => {
-  return typeof window !== 'undefined' 
-    ? new Magic(process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY || '')
-    : null;
+  if (typeof window === "undefined") return null;
+  const key = process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY?.trim();
+  if (!key) return null;
+  return new Magic(key);
 };
 
 const magic = createMagic();
-
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 if (magic) {
   magic.preload();
 }
 
+function mapValidateOtpCode(code: unknown): AuthUiState {
+  switch (code as ValidateOtpErrorCode) {
+    case "MISSING_API_CONFIG":
+      return "configuration_error";
+    case "BACKEND_UNAVAILABLE":
+      return "backend_unavailable";
+    case "INVALID_SESSION":
+    case "MISSING_DID":
+      return "invalid_session";
+    default:
+      return "unexpected_error";
+  }
+}
+
+const USER_MESSAGES: Partial<Record<AuthUiState, string>> = {
+  requesting_otp: "Requesting a sign-in code…",
+  otp_sent: "Check your email for the Magic sign-in code.",
+  validating_magic_session: "Validating your Magic session…",
+  creating_nomadic_session: "Creating your Nomadic Passport session…",
+  authenticated: "Signed in. Opening your Passport…",
+  configuration_error: "Nomadic authentication is temporarily unavailable.",
+  backend_unavailable:
+    "Your email was verified, but Nomadic could not start your Passport session. Please try again.",
+  invalid_session: "Your verification session expired. Please sign in again.",
+  unexpected_error: "Something went wrong. Please try again.",
+};
 
 export default function UserLoginComponent() {
-
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [email, setEmail] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const { setUserMetadata, setDidToken, setPublicAddress } = useUser();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [authState, setAuthState] = useState<AuthUiState>(() => {
+    if (!process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY?.trim()) {
+      return "configuration_error";
+    }
+    if (!isNomadicApiConfigured()) {
+      return "configuration_error";
+    }
+    return "idle";
+  });
+  const [requestId, setRequestId] = useState<string | null>(null);
+
+  const isBusy = useMemo(
+    () =>
+      [
+        "requesting_otp",
+        "otp_sent",
+        "validating_magic_session",
+        "creating_nomadic_session",
+        "authenticated",
+      ].includes(authState),
+    [authState]
+  );
+
+  const statusMessage = USER_MESSAGES[authState] ?? null;
+  const isErrorState = [
+    "configuration_error",
+    "backend_unavailable",
+    "invalid_session",
+    "unexpected_error",
+  ].includes(authState);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
+    if (isErrorState && authState !== "configuration_error") {
+      setAuthState("idle");
+      setRequestId(null);
+    }
   };
 
-  const handleCodeChange = (index: number, value: string) => {
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-  };
+  const requestOTP = async (loginEmail: string) => {
+    setRequestId(null);
 
-  const requestOTP = async (email: string) => {
+    if (!process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY?.trim() || !magic) {
+      setAuthState("configuration_error");
+      return;
+    }
+    if (!isNomadicApiConfigured()) {
+      setAuthState("configuration_error");
+      return;
+    }
+
     try {
-      setIsLoading(true);
-      if (!magic) {
-        throw new Error('Magic SDK is not initialized');
+      setAuthState("requesting_otp");
+
+      // Magic UI handles OTP entry; treat return as OTP completed.
+      setAuthState("otp_sent");
+      const didToken = await magic.auth.loginWithEmailOTP({ email: loginEmail });
+
+      if (!didToken) {
+        setAuthState("invalid_session");
+        return;
       }
-      
-      const didToken = await magic.auth.loginWithEmailOTP({ email });
-      const userInfo = await magic.user.getInfo();
-      
-      setDidToken(didToken || '');
 
-      const response = await axios.post('/api/auth/validate-otp', { 
-        email,
-        didToken 
-      });
-      
-      const metadata = response.data.metadata;
+      setAuthState("validating_magic_session");
+      await magic.user.getInfo();
+
+      // Do not treat Magic OTP success as Nomadic login until backend succeeds.
+      setAuthState("creating_nomadic_session");
+      const response = await axios.post(
+        "/api/auth/validate-otp",
+        { email: loginEmail, didToken },
+        { validateStatus: () => true }
+      );
+
+      if (response.status < 200 || response.status >= 300) {
+        const code = response.data?.code;
+        const rid =
+          typeof response.data?.requestId === "string"
+            ? response.data.requestId
+            : null;
+        setRequestId(rid);
+        setAuthState(mapValidateOtpCode(code));
+        return;
+      }
+
+      const metadata = response.data?.metadata;
+      if (!metadata) {
+        setAuthState("unexpected_error");
+        return;
+      }
+
+      // Persist session only after backend success.
+      setDidToken(didToken);
       setUserMetadata(metadata);
-
       if (metadata.publicAddress) {
         setPublicAddress(metadata.publicAddress);
       }
 
-      router.push('/home-user');
-      
+      setAuthState("authenticated");
+      router.push("/passport");
     } catch (error) {
-      console.error('Magic SDK error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      // Avoid logging tokens; axios errors may embed request bodies.
+      console.error("Login flow failed", axios.isAxiosError(error) ? error.code : "error");
+      if (axios.isAxiosError(error) && !error.response) {
+        setAuthState("backend_unavailable");
+      } else {
+        setAuthState("unexpected_error");
+      }
     }
   };
- 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!emailRegex.test(email)) {
       setIsAlertOpen(true);
       return;
     }
-    
-    try {
-      await requestOTP(email);
-    } catch (error) {
-      // Handle error appropriately
-      console.error('Failed to send OTP:', error);
-    }
+
+    await requestOTP(email);
   };
 
   const requestNewOTP = () => {
@@ -111,7 +205,7 @@ export default function UserLoginComponent() {
       setIsAlertOpen(true);
       return;
     }
-    requestOTP(email);
+    void requestOTP(email);
   };
 
   return (
@@ -127,7 +221,8 @@ export default function UserLoginComponent() {
           <h2 className="mt-12 text-sm">Nomad Login or Register</h2>
           <p className="mt-6 text-xl font-bold">Travel, share, hack and enjoy</p>
           <p className="mt-2 text-sm text-gray-600 text-center">
-            Enter your email below to receive a magic sign-in link. We recommend using a personal email for continuity.
+            Enter your email below to receive a magic sign-in link. We recommend
+            using a personal email for continuity.
           </p>
         </div>
 
@@ -139,48 +234,66 @@ export default function UserLoginComponent() {
               value={email}
               onChange={handleEmailChange}
               className="pr-12 rounded-xl"
-              disabled={isLoading}
+              disabled={isBusy || authState === "configuration_error"}
+              aria-describedby={statusMessage ? "login-status" : undefined}
             />
             <Button
               type="submit"
               className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
-              disabled={isLoading}
+              disabled={isBusy || authState === "configuration_error"}
             >
-              {isLoading ? (
+              {isBusy ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
                 </svg>
               )}
             </Button>
           </div>
 
-        {/* <div className="">
-          <div className="flex justify-between space-x-1 ml-8 mr-8">
-            {code.map((digit, index) => (
-              <Input
-                key={index}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleCodeChange(index, e.target.value)}
-                className="w-10 h-12 text-center rounded-md bg-gray-300 border border-gray-800"
-              />
-            ))}
-          </div>
-        </div> */}
+          {statusMessage ? (
+            <div
+              id="login-status"
+              className={`mx-8 rounded-xl border px-4 py-3 text-sm ${
+                isErrorState
+                  ? "border-red-200 bg-red-50 text-red-900"
+                  : "border-black/10 bg-gray-50 text-gray-800"
+              }`}
+              role={isErrorState ? "alert" : "status"}
+              aria-live="polite"
+            >
+              <p>{statusMessage}</p>
+              {requestId ? (
+                <details className="mt-2 text-xs text-gray-500">
+                  <summary className="cursor-pointer">Technical details</summary>
+                  <p className="mt-1 break-all">Request ID: {requestId}</p>
+                </details>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="flex justify-center">
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-900 mx-8"
-            onClick={requestNewOTP}
-          >
-            Send new code
-          </Button>
-
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-gray-600 hover:text-gray-900 mx-8"
+              onClick={requestNewOTP}
+              disabled={isBusy || authState === "configuration_error"}
+            >
+              Send new code
+            </Button>
           </div>
         </form>
       </div>
@@ -198,9 +311,7 @@ export default function UserLoginComponent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button onClick={() => setIsAlertOpen(false)}>
-              OK
-            </Button>
+            <Button onClick={() => setIsAlertOpen(false)}>OK</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
