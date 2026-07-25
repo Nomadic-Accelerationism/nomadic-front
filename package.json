@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:passport": "node --test scripts/passport-me.test.mjs",
+    "test:world": "node --test scripts/world.test.mjs",
     "spike:ens": "node scripts/ens-spike-test.mjs"
   },
   "dependencies": {

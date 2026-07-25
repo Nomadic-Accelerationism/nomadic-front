@@ -5,23 +5,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WorldVerificationPanel } from "@/components/world/WorldVerificationPanel";
 import { useUser } from "@/contexts/UserContext";
 import {
   LISBON_HOUSE_JOURNEY,
   proofStatusLabel,
 } from "@/lib/journeys/lisbon-house";
+import { isWorldPublicConfigured } from "@/lib/world/client";
 
 /**
- * Apply shell before live World credentials.
- * Boundary for future IDKit: replace the unavailable verification panel only.
- * Do not create applications, credentials, or fake proof completion here.
+ * Lisbon House apply — World Identity + Selfie via IDKit.
+ * Does not create applications, credentials, or fake Passport completion.
  */
 export function LisbonHouseApplyScreen() {
   const router = useRouter();
-  const { isAuthenticated, isInitialized } = useUser();
+  const { isAuthenticated, isInitialized, publicAddress } = useUser();
   const fixture = LISBON_HOUSE_JOURNEY;
   const { identityCheck, selfieCheck } = fixture.proofs;
   const { dataMinimization } = fixture.policy;
+  const worldConfigured = isWorldPublicConfigured();
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -116,38 +118,39 @@ export function LisbonHouseApplyScreen() {
           </ul>
         </section>
 
-        {/*
-          WORLD_INTEGRATION_BOUNDARY
-          Replace this panel with IDKit / World verify UI when partner credentials exist.
-          Do not mark proofs completed or create applications from a demo bypass.
-        */}
-        <section
-          className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
-          aria-labelledby="world-unavailable-heading"
-          data-world-integration-boundary="unavailable"
-        >
-          <h2
-            id="world-unavailable-heading"
-            className="text-base font-semibold text-amber-950"
-          >
-            Verification
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-amber-950">
-            World verification is not available yet.
-          </p>
-          <p className="mt-2 text-xs text-amber-900/80">
-            Your email sign-in is not enough to submit this application. When
-            Identity Check and Selfie Check are enabled, you will complete them
-            here before applying.
-          </p>
-          <Button
-            type="button"
-            disabled
-            className="mt-4 h-12 w-full rounded-xl bg-gray-200 text-base font-bold text-gray-500"
-          >
-            Start World verification
-          </Button>
-        </section>
+        <div className="mt-8">
+          {worldConfigured ? (
+            <WorldVerificationPanel signal={publicAddress || undefined} />
+          ) : (
+            <section
+              className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
+              aria-labelledby="world-unavailable-heading"
+              data-world-integration-boundary="unavailable"
+            >
+              <h2
+                id="world-unavailable-heading"
+                className="text-base font-semibold text-amber-950"
+              >
+                Verification
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-amber-950">
+                World verification is not available yet.
+              </p>
+              <p className="mt-2 text-xs text-amber-900/80">
+                Your email sign-in is not enough to submit this application. When
+                Identity Check and Selfie Check are enabled, you will complete
+                them here before applying.
+              </p>
+              <Button
+                type="button"
+                disabled
+                className="mt-4 h-12 w-full rounded-xl bg-gray-200 text-base font-bold text-gray-500"
+              >
+                Start World verification
+              </Button>
+            </section>
+          )}
+        </div>
 
         <Button
           asChild
