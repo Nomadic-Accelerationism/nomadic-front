@@ -27,35 +27,43 @@ export default function HouseLoginComponent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen px-8 bg-white">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center mt-36">
-          <Image
-            src="/images/nomadic.webp"
-            alt="Nomadic Logo"
-            width={100}
-            height={100}
-          />
-          <h2 className="mt-12 text-sm">Hacker House Login or Register</h2>
-          <p className="mt-6 text-xl font-bold">Create your dream hack space</p>
-          <p className="mt-2 text-sm text-gray-600 text-center">
+    <div className="clay-page flex min-h-screen flex-col items-center justify-between px-5 py-8">
+      <div className="w-full max-w-md space-y-7">
+        <div className="flex flex-col items-center pt-12">
+          <div className="clay-surface clay-tone-white flex h-32 w-32 items-center justify-center rounded-full">
+            <Image
+              src="/images/nomadic.webp"
+              alt="Nomadic Logo"
+              width={88}
+              height={88}
+              priority
+            />
+          </div>
+          <div className="clay-surface clay-tone-lilac mt-8 w-full px-6 py-6 text-center">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-clay-muted">Hacker House Login or Register</h2>
+          <p className="mt-4 text-2xl font-bold">Create your dream hack space</p>
+          <p className="mt-2 text-sm text-clay-muted text-center">
             Enter your email below to receive a magic sign-in link. We recommend using a personal email for continuity.
           </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="relative mx-8">
+        <form onSubmit={handleSubmit} className="clay-surface clay-tone-white space-y-5 px-5 py-6">
+          <div className="relative">
             <Input
+              variant="clay"
               type="email"
               placeholder="Your email address"
               value={email}
               onChange={handleEmailChange}
-              className="pr-12 rounded-xl"
+              className="pr-16"
             />
             <Link href="/home-house">
               <Button
-                type="submit"
-                className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
+                variant="clayIcon"
+                type="button"
+                className="absolute right-1 top-1 h-12 w-12"
+                aria-label="Continue to Hacker House"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -68,12 +76,13 @@ export default function HouseLoginComponent() {
           <div className="flex justify-between space-x-1 ml-8 mr-8">
             {code.map((digit, index) => (
               <Input
+                variant="clay"
                 key={index}
                 type="text"
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleCodeChange(index, e.target.value)}
-                className="w-10 h-12 text-center rounded-md bg-gray-300 border border-gray-800"
+                className="h-12 w-11 rounded-[16px] px-0 text-center"
               />
             ))}
           </div>
@@ -81,8 +90,9 @@ export default function HouseLoginComponent() {
 
           <Button
             type="button"
-            variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-900"
+            variant="claySecondary"
+            size="clay"
+            className="w-full"
           >
             Send new code
           </Button>
@@ -90,7 +100,7 @@ export default function HouseLoginComponent() {
       </div>
 
       <div className="mt-8 text-center">
-        <p className="text-xs text-gray-500">v.0.01a</p>
+        <p className="text-xs font-semibold text-clay-muted">v.0.01a</p>
       </div>
     </div>
   );

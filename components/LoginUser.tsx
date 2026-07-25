@@ -115,36 +115,44 @@ export default function UserLoginComponent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen px-8 bg-white">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center mt-36">
-          <Image
-            src="/images/nomadic.webp"
-            alt="Nomadic Logo"
-            width={100}
-            height={100}
-          />
-          <h2 className="mt-12 text-sm">Nomad Login or Register</h2>
-          <p className="mt-6 text-xl font-bold">Travel, share, hack and enjoy</p>
-          <p className="mt-2 text-sm text-gray-600 text-center">
+    <div className="clay-page flex min-h-screen flex-col items-center justify-between px-5 py-8">
+      <div className="w-full max-w-md space-y-7">
+        <div className="flex flex-col items-center pt-12">
+          <div className="clay-surface clay-tone-white flex h-32 w-32 items-center justify-center rounded-full">
+            <Image
+              src="/images/nomadic.webp"
+              alt="Nomadic Logo"
+              width={88}
+              height={88}
+              priority
+            />
+          </div>
+          <div className="clay-surface clay-tone-peach mt-8 w-full px-6 py-6 text-center">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-clay-muted">Nomad Login or Register</h2>
+          <p className="mt-4 text-2xl font-bold">Travel, share, hack and enjoy</p>
+          <p className="mt-2 text-sm text-clay-muted text-center">
             Enter your email below to receive a magic sign-in link. We recommend using a personal email for continuity.
           </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="relative mx-8">
+        <form onSubmit={handleSubmit} className="clay-surface clay-tone-white space-y-5 px-5 py-6">
+          <div className="relative">
             <Input
+              variant="clay"
               type="email"
               placeholder="Your email address"
               value={email}
               onChange={handleEmailChange}
-              className="pr-12 rounded-xl"
+              className="pr-16"
               disabled={isLoading}
             />
             <Button
+              variant="clayIcon"
               type="submit"
-              className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
+              className="absolute right-1 top-1 h-12 w-12"
               disabled={isLoading}
+              aria-label="Continue with email"
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -174,8 +182,9 @@ export default function UserLoginComponent() {
           <div className="flex justify-center">
           <Button
             type="button"
-            variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-900 mx-8"
+            variant="claySecondary"
+            size="clay"
+            className="w-full"
             onClick={requestNewOTP}
           >
             Send new code
@@ -186,11 +195,11 @@ export default function UserLoginComponent() {
       </div>
 
       <div className="mt-8 text-center">
-        <p className="text-xs text-gray-500">v.0.01a</p>
+        <p className="text-xs font-semibold text-clay-muted">v.0.01a</p>
       </div>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="clay-surface clay-tone-white rounded-[28px] border-none">
           <AlertDialogHeader>
             <AlertDialogTitle>Invalid Email</AlertDialogTitle>
             <AlertDialogDescription>
@@ -198,7 +207,7 @@ export default function UserLoginComponent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button onClick={() => setIsAlertOpen(false)}>
+            <Button variant="clayPrimary" size="clay" onClick={() => setIsAlertOpen(false)}>
               OK
             </Button>
           </AlertDialogFooter>

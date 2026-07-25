@@ -114,7 +114,7 @@ export function CancelJourney({ journey, isPending }: CancelJourneyProps) {
         open={isCancelDialogOpen}
         onOpenChange={setIsCancelDialogOpen}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="clay-surface clay-tone-white rounded-[28px] border-none">
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Journey</AlertDialogTitle>
             <AlertDialogDescription>
@@ -123,8 +123,8 @@ export function CancelJourney({ journey, isPending }: CancelJourneyProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <Button onClick={handleCancelVerification} disabled={isLoading}>
+            <AlertDialogCancel className="clay-control rounded-[22px] bg-clay-peach" disabled={isLoading}>Cancel</AlertDialogCancel>
+            <Button variant="clayPrimary" onClick={handleCancelVerification} disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
@@ -149,13 +149,13 @@ export function CancelJourney({ journey, isPending }: CancelJourneyProps) {
       />
 
       <AlertDialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="clay-surface clay-tone-white rounded-[28px] border-none">
           <AlertDialogHeader>
             <AlertDialogTitle>Error</AlertDialogTitle>
             <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button onClick={() => setIsErrorDialogOpen(false)}>OK</Button>
+            <Button variant="clayPrimary" onClick={() => setIsErrorDialogOpen(false)}>OK</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -4,6 +4,7 @@ import * as React from "react"
 import { X } from "lucide-react"
 import { Dialog, DialogContent, DialogOverlay, DialogTitle } from "@/components/ui/dialog"
 import { useRouter } from 'next/navigation'
+import Image from "next/image"
 
 interface SuccessfulModalProps {
   open: boolean
@@ -21,10 +22,10 @@ export function SuccessfulModal({ open, onOpenChange }: SuccessfulModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogOverlay className="bg-black/50 fixed inset-0" />
-      <DialogContent className="bg-[#ffffff] rounded-[32px] w-full max-w-xs p-8 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-none">
+      <DialogContent className="clay-surface clay-tone-mint fixed left-1/2 top-1/2 w-full max-w-xs -translate-x-1/2 -translate-y-1/2 rounded-[32px] border-none p-8">
         <DialogTitle className="sr-only">Success</DialogTitle>
         <button
-          className="absolute right-6 top-6 text-[#000000] hover:text-[#808080] transition-colors"
+          className="clay-control absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-clay-white text-clay-ink"
           onClick={() => onOpenChange(false)}
         >
           <X className="h-4 w-4" />
@@ -33,14 +34,16 @@ export function SuccessfulModal({ open, onOpenChange }: SuccessfulModalProps) {
         <div className="space-y-6 flex flex-col items-center">
           <h2 className="text-2xl font-medium text-[#000000] text-center">Successful!</h2>
 
-          <img
+          <Image
             src="/images/success.png"
             alt="Success"
-            className="w-40 h-40 object-contain"
+            width={160}
+            height={160}
+            className="h-40 w-40 object-contain"
           />
 
           <button
-            className="px-8 py-3 bg-[#ff671f] text-[#000000] rounded-xl font-medium hover:bg-[#111111] hover:text-white transition-colors"
+            className="clay-control bg-clay-orange px-8 py-3 font-bold text-clay-ink"
             onClick={handleLFGClick}
           >
             LFG!

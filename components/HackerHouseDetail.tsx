@@ -23,11 +23,11 @@ export default function HackerHouseDetailComponent({
   imageUrl
 }: HackerHouseDetailProps) {
   return (
-    <div className="w-full max-w-md mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4 text-black">
+    <div className="clay-page mx-auto w-full max-w-md p-6">
+      <h2 className="clay-surface clay-tone-butter mb-5 px-5 py-4 text-2xl font-bold text-clay-ink">
         #{location} {name}
       </h2>
-      <div className="flex justify-between items-stretch rounded-xl overflow-hidden shadow-lg bg-white">
+      <div className="clay-surface clay-tone-white flex items-stretch justify-between overflow-hidden rounded-[28px]">
         <div className="w-7/12 relative">
           <Image
             src={imageUrl || '/placeholder.svg'}
@@ -36,7 +36,7 @@ export default function HackerHouseDetailComponent({
             className="object-cover"
             priority
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 flex justify-between items-center">
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/80 p-2 text-white">
             <span className="font-bold text-sm">{price}</span>
             <div className="flex items-center text-sm">
               <CalendarIcon className="w-4 h-4 mr-1" />
@@ -45,9 +45,9 @@ export default function HackerHouseDetailComponent({
           </div>
         </div>
 
-        <div className="w-5/12 p-4 bg-gradient-to-r from-[#ff671e] to-white">
-          <p className="text-gray-700 mb-4 text-sm">{description}</p>
-          <div className="flex items-center text-gray-500 text-sm">
+        <div className="w-5/12 bg-clay-peach p-4">
+          <p className="mb-4 text-sm text-clay-muted">{description}</p>
+          <div className="flex items-center text-sm text-clay-muted">
             <MapPinIcon className="w-4 h-4 mr-1" />
             <span>{location}</span>
           </div>

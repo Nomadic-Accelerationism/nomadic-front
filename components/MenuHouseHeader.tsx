@@ -21,10 +21,18 @@ export default function MenuHouseHeaderComponent() {
     "Pending Reviews",
     "About"
   ];
+  const menuToneClasses = [
+    "bg-clay-peach",
+    "bg-clay-mint",
+    "bg-clay-sky",
+    "bg-clay-lilac",
+    "bg-clay-butter",
+    "bg-clay-white",
+  ];
 
   return (
     <Sheet>
-      <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
+      <header className="clay-surface clay-tone-white sticky top-3 z-40 mx-auto mt-3 flex w-[calc(100%_-_1.5rem)] max-w-md items-center justify-between rounded-[24px] px-5 py-3">
         <div className="flex items-center">
           <Image
             src="/images/nomadic.png"
@@ -35,18 +43,18 @@ export default function MenuHouseHeaderComponent() {
           />
           <div className="flex flex-col">
             <p className="text-2xl font-bold pb-0">Nomadic</p>
-            <p className="text-sm text-gray-800">Hacker House</p>
+            <p className="text-sm font-medium text-clay-muted">Hacker House</p>
           </div>
         </div>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-gray-700">
+          <Button variant="clayIcon" className="text-clay-ink">
             <MenuIcon className="h-6 w-6" />
             <span className="sr-only">Open menu</span>
           </Button>
         </SheetTrigger>
       </header>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
-        <div className="h-full bg-gradient-to-t from-[#ff7231] via-[#ffc4a8] to-white flex flex-col">
+      <SheetContent side="left" className="w-[300px] border-none bg-clay-canvas p-0 shadow-clay sm:w-[400px]">
+        <div className="clay-page-gradient flex h-full flex-col">
           <SheetHeader className="p-4 flex justify-between items-center border-b">
             <SheetTitle className="flex items-center">
               <Image
@@ -62,21 +70,22 @@ export default function MenuHouseHeaderComponent() {
           <div className="flex-grow overflow-y-auto px-4">
             <nav className="mt-8">
               {menuItems.map((item, index) => (
-                <a
-                  key={index}
-                  href="#"
-                  className="block px-4 py-2 text-lg font-semibold text-gray-800 hover:bg-white hover:bg-opacity-30 rounded-lg mb-2"
+                <Button
+                  asChild
+                  key={item}
+                  variant="claySecondary"
+                  className={`mb-3 h-14 w-full justify-start rounded-[22px] text-lg ${menuToneClasses[index % menuToneClasses.length]}`}
                 >
-                  {item}
-                </a>
+                  <a href="#">{item}</a>
+                </Button>
               ))}
             </nav>
           </div>
           <div className="mt-auto p-4 space-y-4 border-t">
-            <Button variant="ghost" className="w-full text-left justify-start">
+            <Button variant="claySecondary" className="w-full justify-start bg-clay-sky">
               Switch to Nomad Profile
             </Button>
-            <Button variant="ghost" className="w-full text-left justify-start">
+            <Button variant="claySecondary" className="w-full justify-start bg-clay-peach">
               Logout
             </Button>
             <p className="text-xs text-center mt-4">v.0.01a</p>

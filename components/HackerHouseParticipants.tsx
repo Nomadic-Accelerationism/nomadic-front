@@ -56,16 +56,16 @@ export default function HackerHouseParticipantsComponent() {
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="clay-surface clay-tone-white mx-auto max-w-md p-5">
       <div className="flex justify-between items-center mb-4 mx-6">
         <h1 className="text-2xl font-bold">Participants</h1>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Filter participants">
+            <Button variant="clayIcon" aria-label="Filter participants">
               <Filter className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80">
+          <PopoverContent className="clay-surface clay-tone-white w-80 rounded-[24px] border-none">
             <div className="space-y-4">
               <div>
                 <h3 className="font-medium mb-2">Status</h3>
@@ -73,7 +73,7 @@ export default function HackerHouseParticipantsComponent() {
                   {Object.keys(statusColors).map((status) => (
                     <Button
                       key={status}
-                      variant="outline"
+                      variant="claySecondary"
                       size="sm"
                       className={statusFilter.includes(status) ? 'bg-primary text-primary-foreground' : ''}
                       onClick={() => {
@@ -103,7 +103,7 @@ export default function HackerHouseParticipantsComponent() {
                   <span>{pointsFilter[1]}</span>
                 </div>
               </div>
-              <Button onClick={handleFilterChange}>Apply Filters</Button>
+              <Button variant="clayPrimary" onClick={handleFilterChange}>Apply Filters</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -112,7 +112,7 @@ export default function HackerHouseParticipantsComponent() {
         {filteredParticipants.map((participant) => (
           <div
             key={participant.id}
-            className={`flex items-center justify-between rounded-lg border border-gray-700 overflow-hidden ${statusColors[participant.status]}`}
+            className={`clay-surface flex items-center justify-between overflow-hidden rounded-[20px] border-none ${statusColors[participant.status]}`}
           >
             <div className="flex items-center space-x-2 pl-3 pr-4 flex-grow">
               <MoreHorizontal className="h-4 w-4" />

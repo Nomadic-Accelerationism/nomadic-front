@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Button } from "@/components/ui/button";
 
 export default function LandingComponent() {
   
@@ -25,7 +26,7 @@ export default function LandingComponent() {
   }, []);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="clay-page-gradient relative h-screen w-full overflow-hidden">
       {/* Overlay (background) */}
       <div
         className={`absolute inset-0 bg-gradient-to-t from-[#fe7432] via-[#ffcfb8] to-transparent transition-all duration-1000 ease-in-out ${
@@ -46,41 +47,51 @@ export default function LandingComponent() {
             showLoginElements ? 'mt-36' : 'mt-[50vh] -translate-y-1/2'
           }`}
         >
-          <Image
-            src="/images/nomadic.webp"
-            alt="Nomadic Logo"
-            width={100}
-            height={100}
-          />
+          <div className="clay-surface clay-tone-white flex h-36 w-36 items-center justify-center rounded-full">
+            <Image
+              src="/images/nomadic.webp"
+              alt="Nomadic Logo"
+              width={100}
+              height={100}
+              priority
+            />
+          </div>
         </div>
 
         <div
-          className={`flex flex-col items-center space-y-4 transition-opacity duration-500 ${
+          className={`clay-surface clay-tone-white mx-5 flex w-[calc(100%_-_2.5rem)] max-w-sm flex-col items-center space-y-4 px-7 py-7 transition-opacity duration-500 ${
             showLoginElements ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <Link href="/login-user">
-            <button className="bg-[#ff671e] text-xl text-black font-semibold py-4 px-6 rounded-xl shadow-lg border border-gray-500 hover:bg-orange-500 transition duration-300">
+          <Button asChild variant="clayPrimary" size="clay" className="w-full text-lg">
+            <Link href="/login-user">
               Nomad Email Login
-            </button>
-          </Link>
+            </Link>
+          </Button>
           <div className="flex items-center space-x-4">
-            <div className="h-px w-16 bg-gray-500"></div>
-            <span className="text-gray-500">or</span>
-            <div className="h-px w-16 bg-gray-500"></div>
+            <div className="h-px w-16 bg-clay-muted/40"></div>
+            <span className="text-sm font-semibold text-clay-muted">or</span>
+            <div className="h-px w-16 bg-clay-muted/40"></div>
           </div>
-          <Link href="/login-house" className="text-black underline hover:text-orange-400 transition duration-300">
-            Hacker House Email Login
-          </Link>
+          <Button asChild variant="claySecondary" size="clay" className="w-full text-base">
+            <Link href="/login-house">Hacker House Email Login</Link>
+          </Button>
         </div>
 
         <div className="w-full px-8 mb-4 space-y-2">
-          <p className={`text-center text-xs text-gray-800 transition-opacity duration-500 ${
+          <p className={`text-center text-xs transition-opacity duration-500 ${
             showLoginElements ? 'opacity-100' : 'opacity-0'
-          }`}>
-            By continuing, you agree to the <Link href="#" className="underline">Privacy Policy</Link> and <Link href="#" className="underline">Terms and conditions</Link>
+          } font-semibold text-clay-ink`}>
+            By continuing, you agree to the{" "}
+            <Link href="#" className="inline-flex min-h-11 items-center rounded focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-clay-ink">
+              <span className="underline">Privacy Policy</span>
+            </Link>{" "}
+            and{" "}
+            <Link href="#" className="inline-flex min-h-11 items-center rounded focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-clay-ink">
+              <span className="underline">Terms and conditions</span>
+            </Link>
           </p>
-          <p className="text-center text-xs text-gray-800">v.0.01a</p>
+          <p className="text-center text-xs font-semibold text-clay-ink">v.0.01a</p>
         </div>
       </div>
     </div>

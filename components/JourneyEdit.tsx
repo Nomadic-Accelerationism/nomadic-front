@@ -120,47 +120,49 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-6">Edit Journey</h1>
+    <div className="clay-page mx-auto min-h-screen max-w-md p-6">
+      <h1 className="clay-surface clay-tone-lilac mb-7 px-6 py-6 text-center text-3xl font-bold">Edit Journey</h1>
 
-      <div className="space-y-4 items-center justify-center">
+      <div className="clay-surface clay-tone-white space-y-5 px-5 py-6">
         <div>
           <Label htmlFor="title">Journey Title</Label>
           <Input 
+            variant="clay"
             id="title" 
             value={formData.title}
             onChange={handleInputChange}
             placeholder="Journey Title" 
-            className={formData.title ? "bg-gray-100" : ""}
+            className={formData.title ? "bg-clay-white" : ""}
           />
         </div>
 
         <div>
           <Label htmlFor="location">Where</Label>
           <div className="relative">
-            <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-clay-muted" size={20} />
             <Input 
+              variant="clay"
               id="location"
               value={formData.location}
               onChange={handleInputChange}
               placeholder="Where" 
-              className={`pl-10 ${formData.location ? "bg-gray-100" : ""}`}
+              className="pl-10"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label>From</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={`w-full justify-start text-left font-normal ${formData.startDate ? "bg-gray-100" : ""}`}>
+                <Button variant="claySecondary" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.startDate ? format(formData.startDate, "PPP") 
                     : <span>Select a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="clay-surface clay-tone-white w-auto rounded-[22px] border-none p-0">
                 <Calendar 
                   mode="single" 
                   selected={formData.startDate}
@@ -174,13 +176,13 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
             <Label>To</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={`w-full justify-start text-left font-normal ${formData.finishDate ? "bg-gray-100" : ""}`}>
+                <Button variant="claySecondary" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.finishDate ? format(formData.finishDate, "PPP") 
                     : <span>Select a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="clay-surface clay-tone-white w-auto rounded-[22px] border-none p-0">
                 <Calendar 
                   mode="single" 
                   selected={formData.finishDate}
@@ -192,25 +194,25 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="budget">Max Budget per Nomad</Label>
             <Input
+              variant="clay"
               id="budget"
               value={formData.budget}
               onChange={handleInputChange}
               placeholder="USDC" 
-              className={formData.budget ? "bg-gray-100" : ""}
             />
           </div>
           <div>
             <Label htmlFor="guestCapacity">Share with max. of...</Label>
             <Input 
+              variant="clay"
               id="guestCapacity"
               value={formData.guestCapacity}
               onChange={handleInputChange}
               placeholder="# Nomads" 
-              className={formData.guestCapacity ? "bg-gray-100" : ""}
             />
           </div>
         </div>
@@ -218,11 +220,12 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
         <div>
           <Label htmlFor="description">Description</Label>
           <Textarea 
+            variant="clay"
             id="description"
             value={formData.description}
             onChange={handleInputChange}
             placeholder="Description" 
-            className={`h-24 ${formData.description ? "bg-gray-100" : ""}`}
+            className="h-28"
           />
         </div>
 
@@ -236,7 +239,9 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
               onChange={handleImageChange}
             />
             <Button 
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              variant="claySecondary"
+              size="clay"
+              className="w-full bg-clay-sky"
               onClick={() => document.getElementById('photo-upload')?.click()}
             >
               {formData.photo ? 'Change photo' : 'Upload photo'}
@@ -265,11 +270,11 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
         <div>
           <Label htmlFor="optionalQuestion">Optional questions</Label>
           <Input 
+            variant="clay"
             id="optionalQuestion" 
             value={formData.optionalQuestion}
             onChange={handleInputChange}
             placeholder="Example: What makes you the perfect candidate?" 
-            className={formData.optionalQuestion ? "bg-gray-100" : ""}
           />
         </div>
 
@@ -285,13 +290,17 @@ export default function JourneyEditComponent({ journey }: JourneyEditProps) {
 
         <div className="flex justify-between gap-4">
           <Button 
-            className="w-full max-w-[230px] my-4 bg-gray-200 hover:bg-gray-300 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+            variant="claySecondary"
+            size="clay"
+            className="my-4 w-full max-w-[230px]"
             onClick={() => router.back()}
           >
             Go Back
           </Button>
           <Button 
-            className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+            variant="clayPrimary"
+            size="clay"
+            className="my-4 w-full max-w-[230px]"
             onClick={goToPreviewEdit}
           >
             Preview

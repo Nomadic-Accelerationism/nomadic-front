@@ -65,16 +65,17 @@ export default function HackerJourneyListComponent() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 my-4 flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="clay-surface clay-tone-white container mx-auto my-4 flex h-64 items-center justify-center px-4" role="status">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-clay-peach border-b-clay-ink"></div>
+        <span className="sr-only">Loading journeys</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 my-4">
-        <div className="text-red-500 text-center">
+      <div className="clay-surface clay-tone-peach container mx-auto my-4 px-5 py-6">
+        <div className="text-center font-semibold text-red-800">
           {error instanceof Error ? error.message : error}
         </div>
       </div>
@@ -83,25 +84,25 @@ export default function HackerJourneyListComponent() {
 
   const getStatusColor = (status: JourneyStatusEnum) => {
     switch (status) {
-      case JourneyStatusEnum.CONFIRMED: return 'bg-green-500'
-      case JourneyStatusEnum.PENDING: return 'bg-orange-500'
-      case JourneyStatusEnum.FINISHED: return 'bg-gray-500'
-      case JourneyStatusEnum.CANCELLED: return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case JourneyStatusEnum.CONFIRMED: return 'bg-[#b8e4c8]'
+      case JourneyStatusEnum.PENDING: return 'bg-clay-butter'
+      case JourneyStatusEnum.FINISHED: return 'bg-clay-sky'
+      case JourneyStatusEnum.CANCELLED: return 'bg-[#f4c1be]'
+      default: return 'bg-clay-sky'
     }
   }
 
   return (
-    <div className="container mx-auto px-4 my-4">
-      <div className="flex justify-between items-center mb-6">
+    <div className="clay-surface clay-tone-white container mx-auto my-4 px-5 py-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-center">My Journeys</h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="clayIcon" aria-label="Sort journeys">
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="clay-surface clay-tone-white rounded-[22px] border-none">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleSort('date')}>
@@ -115,8 +116,8 @@ export default function HackerJourneyListComponent() {
       </div>
 
       {journeys.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No journeys found</p>
+        <div className="clay-surface clay-tone-butter py-8 text-center">
+          <p className="font-semibold text-clay-muted">No journeys found</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -125,18 +126,19 @@ export default function HackerJourneyListComponent() {
                               journey.status !== JourneyStatusEnum.FINISHED;
 
             const JourneyContent = (
-              <div className={`rounded-lg overflow-hidden shadow-lg ${
+              <div className={`clay-image-frame bg-clay-sky ${
+                isClickable ? 'clay-interactive' : ''
+              } ${
                 !isClickable ? 'opacity-75 cursor-not-allowed' : ''
               }`}>
-                <div className="relative h-28">
-                  <div className="absolute inset-0 bg-gray-500/40 z-0" />
+                <div className="relative h-32 overflow-hidden rounded-[22px]">
                   <Image
                     src={journey.photo || '/placeholder.svg'}
                     alt={journey.title}
-                    layout="fill"
-                    className="object-contain"
-                    style={{ zIndex: -2 }}
+                    fill
+                    className="object-cover"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
 
                   <div className="p-4 relative z-10">
                     <div className="flex justify-between items-start mb-2">
@@ -147,13 +149,13 @@ export default function HackerJourneyListComponent() {
                           {journey.endDate ? new Date(journey.endDate).toLocaleDateString() : 'TBA'}
                         </p>
                       </div>
-                      {isClickable && <ChevronRight className="h-6 w-6 text-gray-400" />}
+                      {isClickable && <ChevronRight className="h-6 w-6 text-white" />}
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(journey.status)}`}>
+                      <span className={`clay-chip px-2 py-1 text-xs font-semibold text-clay-ink ${getStatusColor(journey.status)}`}>
                         {journey.status}
                       </span>
-                      <span className="bg-white text-black px-2 py-1 rounded-full text-xs font-semibold">
+                      <span className="clay-chip bg-clay-white px-2 py-1 text-xs font-bold text-clay-ink">
                         {journey.budget}$
                       </span>
                     </div>
@@ -178,7 +180,7 @@ export default function HackerJourneyListComponent() {
                       : `/journey/${journey.id}`
                 } 
                 key={journey.id} 
-                className="block"
+                className="block rounded-[28px] focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-clay-ink"
               >
                 {JourneyContent}
               </Link>

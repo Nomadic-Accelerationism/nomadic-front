@@ -41,23 +41,23 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogOverlay className="bg-black/50 fixed inset-0" />
-      <DialogContent className="bg-[#ffffff] rounded-[32px] w-7/8 max-w-md p-8 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-none overflow-y-auto max-h-[90vh]">
+      <DialogContent className="clay-surface clay-tone-white fixed left-1/2 top-1/2 max-h-[90vh] w-[calc(100%_-_2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[32px] border-none p-8">
         <div className="w-full">
           <h1 className="text-2xl font-bold text-center mb-2">Journey Details</h1>
           <h2 className="text-xl font-semibold text-center mb-4">{journey.title}</h2>
 
           <div className="flex items-center space-x-2 mb-4">
-            <MapPin size={16} className="text-gray-500" />
+            <MapPin size={16} className="text-clay-muted" />
             <span className="text-sm underline">{journey.location}</span>
           </div>
 
-          <div className="relative w-full mb-4" style={{ paddingTop: '56.25%' }}> 
+          <div className="clay-image-frame relative mb-5 w-full bg-clay-peach" style={{ paddingTop: '56.25%' }}>
             <Image 
               src={journey.photo || '/placeholder.svg'} 
               alt="Journey" 
               layout="fill"
               objectFit="cover"
-              className="rounded-lg absolute top-0 left-0"
+              className="absolute left-1.5 top-1.5 rounded-[22px]"
             />
           </div>
 
@@ -77,7 +77,7 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
                   return (
                     <div 
                       key={index} 
-                      className="w-12 h-12 flex items-center justify-center relative"
+                      className="clay-chip relative flex h-12 w-12 items-center justify-center bg-clay-sky"
                     >
                       <Image 
                         src={getProofIcon(proofEnum)} 
@@ -108,9 +108,9 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
           <div className="mb-4 text-center">
             <div className="flex items-center justify-center mb-2">
               <h3 className="font-bold text-lg">Journey Budget</h3>
-              <span className="text-[#ff671e] font-semibold ml-2">{journey.budget} USDC</span>
+              <span className="clay-chip ml-2 bg-clay-peach px-3 py-1 font-bold text-clay-ink">{journey.budget} USDC</span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-clay-muted">
               This is the the budget that the house has compromised for the entry stay for the X time / This
               is the budget you should pay for the Journey
             </p>
@@ -126,8 +126,10 @@ export function JourneyDetailModal({ isOpen, onClose, journey, onApply }: Journe
 
           <div className="flex justify-center">
             <Button 
+              variant="clayPrimary"
+              size="clay"
               onClick={handleApply}
-              className="py-3 px-12 bg-[#ff671e] hover:bg-orange-500 text-black rounded-xl transition-colors font-bold shadow-xl border-2 border-gray-600"
+              className="px-12"
             >
               Apply
             </Button>

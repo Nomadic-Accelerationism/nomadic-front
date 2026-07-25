@@ -28,7 +28,7 @@ export function PassportScreen() {
         role="status"
         aria-live="polite"
       >
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff671e]" aria-hidden />
+        <Loader2 className="h-8 w-8 animate-spin text-clay-ink" aria-hidden />
         <span className="sr-only">Loading passport</span>
       </div>
     );
@@ -41,7 +41,7 @@ export function PassportScreen() {
         role="status"
         aria-live="polite"
       >
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff671e]" aria-hidden />
+        <Loader2 className="h-8 w-8 animate-spin text-clay-ink" aria-hidden />
         <span className="sr-only">Redirecting to login</span>
       </div>
     );
@@ -55,22 +55,11 @@ export function PassportScreen() {
 
   return (
     <div
-      className="relative flex w-full flex-col items-center overflow-hidden"
+      className="clay-page-gradient relative flex w-full flex-col items-center overflow-hidden"
       style={{ minHeight: "calc(100vh - 80px)" }}
     >
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(to top, #fe7432 5%, #ffcfb8 40%, white 60%, white 100%)",
-          backgroundSize: "100% 100%",
-          backgroundPosition: "bottom",
-        }}
-        aria-hidden
-      />
-
       <div className="relative z-10 flex w-full max-w-md flex-grow flex-col items-center px-6 pb-10 pt-8">
-        <div className="mb-6 flex flex-col items-center">
+        <div className="clay-surface clay-tone-white mb-8 flex w-full flex-col items-center px-6 py-6">
           <Image
             src="/images/nomadic.webp"
             alt="Nomadic"
@@ -81,7 +70,7 @@ export function PassportScreen() {
           <h1 className="mt-4 text-center text-2xl font-bold text-black">
             Nomadic Passport
           </h1>
-          <p className="mt-2 text-center text-sm text-gray-700">
+          <p className="mt-2 text-center text-sm text-clay-muted">
             Your portable identity for communities and events.
           </p>
         </div>
@@ -92,7 +81,7 @@ export function PassportScreen() {
           <section aria-labelledby="passport-credentials-heading">
             <h2
               id="passport-credentials-heading"
-              className="mb-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-700"
+              className="mb-4 text-left text-sm font-bold uppercase tracking-[0.14em] text-clay-muted"
             >
               Credentials
             </h2>
@@ -102,18 +91,18 @@ export function PassportScreen() {
           {privateEmail ? (
             <section
               aria-labelledby="passport-account-heading"
-              className="rounded-2xl border border-black/10 bg-white/80 px-4 py-4 text-left"
+              className="clay-surface clay-tone-lilac rounded-[26px] border-none px-5 py-5 text-left"
             >
               <h2
                 id="passport-account-heading"
-                className="text-sm font-semibold text-gray-700"
+                className="text-sm font-bold text-clay-ink"
               >
                 Private account
               </h2>
-              <p className="mt-1 break-all text-sm text-gray-600">
+              <p className="mt-1 break-all text-sm text-clay-muted">
                 Signed in as {privateEmail}
               </p>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-clay-muted">
                 Email stays private and is never used as your public Passport
                 identity.
               </p>
@@ -121,7 +110,7 @@ export function PassportScreen() {
           ) : null}
         </div>
 
-        <p className="mt-auto pt-8 text-xs text-gray-800">v.0.01a · Lisbon</p>
+        <p className="mt-auto pt-8 text-xs font-semibold text-clay-ink">v.0.01a · Lisbon</p>
       </div>
     </div>
   );

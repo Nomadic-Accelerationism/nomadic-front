@@ -20,12 +20,24 @@ const config = {
         "2xl": "1400px",
       },
     },
-    extend: {
+      extend: {
         fontFamily: {
           sans: ['Satoshi', 'sans-serif'], // This makes Satoshi the default font
           satoshi: ['Satoshi', 'sans-serif'],
         },
         colors: {
+        clay: {
+          canvas: "var(--clay-canvas)",
+          ink: "var(--clay-ink)",
+          muted: "var(--clay-muted)",
+          orange: "var(--nomadic-orange)",
+          peach: "var(--clay-peach)",
+          mint: "var(--clay-mint)",
+          sky: "var(--clay-sky)",
+          lilac: "var(--clay-lilac)",
+          butter: "var(--clay-butter)",
+          white: "var(--clay-white)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -61,9 +73,17 @@ const config = {
         },
       },
       borderRadius: {
+        clay: "28px",
+        "clay-control": "26px",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        clay: "var(--clay-shadow)",
+        "clay-hover": "var(--clay-shadow-hover)",
+        "clay-pressed": "var(--clay-shadow-pressed)",
+        "clay-field": "var(--clay-field-shadow)",
       },
       keyframes: {
         "accordion-down": {

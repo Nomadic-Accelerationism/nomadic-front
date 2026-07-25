@@ -4,9 +4,9 @@ import HomeHouseComponent from "@/components/HomeHouse";
 
 export default function HomeHouse() {
   return (
-    <>
+    <div className="clay-page min-h-screen">
       <MenuHouseHeaderComponent />
       <HomeHouseComponent />
-    </>
+    </div>
   );
 }
