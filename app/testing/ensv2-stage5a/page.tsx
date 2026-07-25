@@ -13,8 +13,9 @@ import {
   type Stage5APreflight,
 } from "@/lib/ensv2/stage5a";
 import {
+  getMagicSepoliaRpcUrl,
+  getPublicSepoliaRpcUrl,
   getSepoliaMagic,
-  getSepoliaRpcUrl,
 } from "@/lib/magic/sepolia-singleton";
 
 type UiPhase =
@@ -32,7 +33,9 @@ type UiPhase =
  * Does not run Stage 5B.
  */
 export default function EnsV2Stage5APage() {
-  const rpcUrl = useMemo(() => getSepoliaRpcUrl(), []);
+  // Reads use public RPC; Magic txs use same-origin proxy (no keyed URL in browser).
+  const readRpcUrl = useMemo(() => getPublicSepoliaRpcUrl(), []);
+  const magicRpcUrl = useMemo(() => getMagicSepoliaRpcUrl(), []);
   const revokeTx = useMemo(() => getStage5ARevokeTx(), []);
   const [phase, setPhase] = useState<UiPhase>("boot");
   const [email, setEmail] = useState("");
@@ -48,10 +51,10 @@ export default function EnsV2Stage5APage() {
   }, []);
 
   const refreshPreflight = useCallback(async () => {
-    const result = await runStage5APreflight(rpcUrl);
+    const result = await runStage5APreflight(readRpcUrl);
     setPreflight(result);
     return result;
-  }, [rpcUrl]);
+  }, [readRpcUrl]);
 
   useEffect(() => {
     let cancelled = false;
@@ -192,7 +195,7 @@ export default function EnsV2Stage5APage() {
         }
       }
 
-      const after = await runStage5APreflight(rpcUrl);
+      const after = await runStage5APreflight(readRpcUrl);
       setPostflight(after);
       setPreflight(after);
       if (!after.alreadyRevoked) {
@@ -213,7 +216,7 @@ export default function EnsV2Stage5APage() {
       setError(err instanceof Error ? err.message : "Revoke failed");
       setPhase("error");
     }
-  }, [address, preflight, pushLog, revokeTx, rpcUrl]);
+  }, [address, preflight, pushLog, readRpcUrl, revokeTx]);
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-10 text-left">
@@ -231,8 +234,12 @@ export default function EnsV2Stage5APage() {
           <dd>Sepolia {STAGE5A_CHAIN_ID}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-gray-500">RPC</dt>
-          <dd className="break-all">{rpcUrl}</dd>
+          <dt className="font-semibold text-gray-500">Magic RPC (proxy)</dt>
+          <dd className="break-all">{magicRpcUrl}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold text-gray-500">Read RPC (public)</dt>
+          <dd className="break-all">{readRpcUrl}</dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-500">Resolver</dt>
