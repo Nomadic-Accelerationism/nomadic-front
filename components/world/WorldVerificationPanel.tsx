@@ -362,7 +362,8 @@ export function WorldVerificationPanel({
         verifiedAt?: string;
       };
 
-      if (!res.ok || !data.ok || !data.summary) {
+      // Cryptographic failure only — do not throw on persist/sync issues.
+      if (!res.ok || !data.ok) {
         const message =
           data.detail || data.code || `Verify failed (${res.status})`;
         setter({
@@ -376,14 +377,14 @@ export function WorldVerificationPanel({
 
       const verifiedAt =
         data.verifiedAt ||
-        data.summary.verifiedAt ||
+        data.summary?.verifiedAt ||
         new Date().toISOString();
 
       setter({
         status: "success",
         message: null,
         verifiedAt,
-        summary: data.summary,
+        summary: data.summary ?? null,
       });
       successKindsRef.current.add(kind);
 
@@ -412,6 +413,7 @@ export function WorldVerificationPanel({
       }
 
       onProofSynced?.(kind);
+      // Resolve handleVerify so IDKit does not emit failed_by_host_app.
     },
     [authHeaders, didToken, onProofSynced, refetchPassport],
   );
@@ -426,11 +428,21 @@ export function WorldVerificationPanel({
     const kind = activeKindRef.current;
     if (!kind) return;
     const setter = kind === "identity" ? setIdentity : setSelfie;
-    setter({
-      status: "error",
-      message: `IDKit error: ${errorCode}`,
-      verifiedAt: null,
-      summary: null,
+    // Preserve a more specific host verify message when IDKit wraps it.
+    setter((prev) => {
+      if (
+        errorCode === "failed_by_host_app" &&
+        prev.status === "error" &&
+        prev.message
+      ) {
+        return prev;
+      }
+      return {
+        status: "error",
+        message: `IDKit error: ${errorCode}`,
+        verifiedAt: null,
+        summary: null,
+      };
     });
     setOpen(false);
     setSession(null);
