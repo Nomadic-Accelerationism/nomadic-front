@@ -20,14 +20,16 @@ export default function MenuUserHeaderComponent() {
   const { logout } = useUser();
   
   const menuItems = [
+    { name: "Passport", url: "/passport" },
     { name: "Home", url: "/home-user" },
     { name: "My Proofs", url: "/user-proofs" },
     { name: "Journeys", url: "/hacker-journeys" },
+    // Legacy demo surfaces intentionally not promoted:
     // { name: "$NACC Tokens", url: "/nacc-tokens" },
     // { name: "Generate Single Use ID", url: "/generate-single-use-id" },
     // { name: "Recommend a Nomad", url: "/recommend" },
     // { name: "Pending Reviews", url: "/reviews" },
-    { name: "About", url: "/about" }
+    { name: "About", url: "/about" },
   ];
 
   const handleLogout = async () => {
@@ -39,7 +41,7 @@ export default function MenuUserHeaderComponent() {
     <Sheet>
       <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
         <div className="flex items-center">
-          <Link href="/home-user">
+          <Link href="/passport">
             <div className="flex items-center cursor-pointer">
               <Image
                 src="/images/nomadic.svg"

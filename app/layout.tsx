@@ -28,6 +28,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Minimal audit fix: Privy throws during prerender when appId is empty.
+  // Only mount PrivyProvider when a real app id is configured.
+  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID?.trim() || '';
+
   return (
     <UserProvider>
       <QueryClientProvider client={new QueryClient()}>
@@ -36,9 +40,11 @@ export default function RootLayout({
             <link rel="icon" href="/favicon.png" />
           </head>
           <body className={`${satoshi.variable} font-satoshi`}>
-            <PrivyProvider appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}>
-              {children}
-            </PrivyProvider>
+            {privyAppId ? (
+              <PrivyProvider appId={privyAppId}>{children}</PrivyProvider>
+            ) : (
+              children
+            )}
           </body>
         </html>
       </QueryClientProvider>
