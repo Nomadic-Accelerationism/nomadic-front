@@ -15,39 +15,31 @@ do not recompute namehash).
 
 ```text
 Server-only (never NEXT_PUBLIC_*):
-ENS_SEPOLIA_RPC_URL=<keyed dRPC Sepolia URL>
+ENS_SEPOLIA_RPC_URL=https://lb.drpc.live/sepolia/<key>
 
-Magic iframe (auth.magic.link) → public Sepolia RPC (no key):
-https://ethereum-sepolia-rpc.publicnode.com
+Browser + Magic iframe → same-origin proxy (no key in browser):
+POST {origin}/api/ens/sepolia-rpc
+  └─ server forwards to ENS_SEPOLIA_RPC_URL (dRPC)
 
 Magic custom network:
-{ rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com", chainId: 11155111 }
-
-Page-side proxy (probes / receipt poll; keyed dRPC stays server-only):
-POST {origin}/api/ens/sepolia-rpc
+{ rpcUrl: "{origin}/api/ens/sepolia-rpc", chainId: 11155111 }
 
 Do NOT use Magic network: "sepolia" (changes the address set).
-Do NOT put ENS_SEPOLIA_RPC_URL in NEXT_PUBLIC_*.
+Do NOT put the dRPC URL/key in NEXT_PUBLIC_* or client bundles.
+
+Public fallback (page reads only / proxy fallback if env unset):
+https://ethereum-sepolia-rpc.publicnode.com
 ```
 
 Also requires:
 
 - `NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY`
 
-### Why Magic does not use the Vercel proxy
+### Retest
 
-Prod logs showed page `fetch` to `/api/ens/sepolia-rpc` succeeding while
-Magic `eth_sendTransaction` / `eth_chainId` failed with
-`[-32603] Failed to fetch` **without any Magic→proxy request**. Magic's
-iframe needs a CORS-friendly public RPC; publicnode is keyless and works
-cross-origin from `auth.magic.link`.
-
-### Magic `[-32603] Failed to fetch`
-
-1. Test on **production** `https://nomadic-front-rosy.vercel.app/testing/ensv2-stage5a`
-2. **Hard-refresh** (or open a fresh tab) so a stale Magic iframe from an
-   older rpcUrl is not reused
-3. Sign in **on the Stage 5A page** only (not `/login-user` first)
-4. Confirm the Magic transaction modal
+1. Production: `https://nomadic-front-rosy.vercel.app/testing/ensv2-stage5a`
+2. **Hard-refresh / new tab** (stale Magic iframe from publicnode rpcUrl will fail)
+3. Confirm page shows Magic RPC = `/api/ens/sepolia-rpc` and `dRPC via proxy: yes`
+4. Sign in **on that page only**, then confirm the Magic modal
 
 See contracts doc: `nomadic-contracts/docs/ENSV2_STAGE5A.md`.

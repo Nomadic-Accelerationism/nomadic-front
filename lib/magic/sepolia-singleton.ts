@@ -1,21 +1,17 @@
 /**
  * Working Magic singleton for Sepolia ENSv2 Stage ops.
  *
- * Magic iframe (auth.magic.link) must call a CORS-friendly public Sepolia RPC
- * directly — Vercel same-origin proxy probes work from the page, but Magic's
- * provider often fails with [-32603] Failed to fetch before any proxy request
- * is observed.
- *
- *   Magic rpcUrl  = https://ethereum-sepolia-rpc.publicnode.com  (no API key)
- *   chainId       = 11155111
- *   Page probes   = {origin}/api/ens/sepolia-rpc  (keyed dRPC server-side)
+ * One custom-network instance:
+ *   rpcUrl  = {origin}/api/ens/sepolia-rpc   ← Magic iframe
+ *   upstream = ENS_SEPOLIA_RPC_URL (dRPC)    ← server-only
+ *   chainId = 11155111
  *
  * Never use Magic built-in `network: "sepolia"` (changes the address set).
  * Never put ENS_SEPOLIA_RPC_URL / dRPC keys in NEXT_PUBLIC_* or the browser.
  * Preserves the mainnet-mapped Magic address used for Passport ownership.
  *
  * Do not create a second Magic instance alongside this module in the same page.
- * Hard-refresh if a stale .magic-iframe from another network config exists.
+ * Hard-refresh if a stale .magic-iframe from another rpcUrl exists.
  */
 
 "use client";
@@ -24,29 +20,27 @@ import { Magic } from "magic-sdk";
 
 const SEPOLIA_CHAIN_ID = 11155111;
 
-/** Public Sepolia RPC — no API key; CORS-friendly for Magic's iframe. */
+/** Public Sepolia RPC — no API key (page reads / fallback only). */
 export const PUBLIC_SEPOLIA_RPC_URL =
   "https://ethereum-sepolia-rpc.publicnode.com";
 
 let magicSingleton: Magic | null | undefined;
 
 /**
- * RPC URL baked into the Magic custom network (iframe).
- * Must be absolute and reachable cross-origin from auth.magic.link.
+ * Same-origin JSON-RPC proxy used by Magic eth_sendTransaction.
+ * Absolute URL required so Magic's provider can resolve it.
+ * Server forwards to ENS_SEPOLIA_RPC_URL (dRPC) — key never reaches the browser.
  */
 export function getMagicSepoliaRpcUrl(): string {
-  return PUBLIC_SEPOLIA_RPC_URL;
-}
-
-/**
- * Same-origin keyed proxy for page-side probes / receipt polling.
- * Server uses ENS_SEPOLIA_RPC_URL; browser never sees the key.
- */
-export function getEnsSepoliaProxyUrl(): string {
   if (typeof window === "undefined") {
     return "/api/ens/sepolia-rpc";
   }
   return `${window.location.origin}/api/ens/sepolia-rpc`;
+}
+
+/** Alias for page-side proxy probes (same URL as Magic). */
+export function getEnsSepoliaProxyUrl(): string {
+  return getMagicSepoliaRpcUrl();
 }
 
 /** Browser reads that do not need the keyed dRPC endpoint. */
@@ -54,7 +48,7 @@ export function getPublicSepoliaRpcUrl(): string {
   return PUBLIC_SEPOLIA_RPC_URL;
 }
 
-/** @deprecated use getMagicSepoliaRpcUrl / getEnsSepoliaProxyUrl */
+/** @deprecated use getMagicSepoliaRpcUrl */
 export function getSepoliaRpcUrl(): string {
   return getMagicSepoliaRpcUrl();
 }
@@ -76,7 +70,6 @@ export function getSepoliaMagic(): Magic | null {
 
   const iframes = countMagicIframes();
   if (iframes > 0) {
-    // Stale iframe from a prior Magic(network) config will break RPC.
     console.warn(
       `[magic] ${iframes} existing magic-iframe(s) — hard-refresh if RPC fails`,
     );
