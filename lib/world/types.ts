@@ -50,12 +50,14 @@ export type WorldVerifySummary = {
   protocol_version?: string;
   environment?: string;
   nullifierPresent: boolean;
+  /** Dev/diagnostics only — never render in product UI. */
   nullifierFingerprint?: string;
   identity_attested?: boolean;
   user_presence_completed?: boolean;
   session_id_present: boolean;
   resultIdentifiers: string[];
   upstreamHttpStatus: number;
+  verifiedAt?: string;
 };
 
 export type WorldRequestResponse =
@@ -77,9 +79,10 @@ export type WorldRequestResponse =
 export type WorldVerifyResponse =
   | {
       ok: true;
-      persisted: false;
+      persisted: boolean;
       summary: WorldVerifySummary;
       note: string;
+      verifiedAt?: string;
     }
   | {
       ok: false;

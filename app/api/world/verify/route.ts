@@ -40,17 +40,21 @@ export async function POST(request: Request) {
   const result = await verifyWorldResult({
     action: body.action,
     idkitResponse: body.idkitResponse,
+    didToken: did,
   });
 
   if (!result.ok) {
     const status =
-      result.code === "MISSING_CREDENTIALS" || result.code === "WORLD_DISABLED"
-        ? 503
-        : result.code === "INVALID_BODY"
-          ? 400
-          : result.code === "VERIFICATION_FAILED"
-            ? 422
-            : 502;
+      result.code === "UNAUTHORIZED"
+        ? 401
+        : result.code === "MISSING_CREDENTIALS" ||
+            result.code === "WORLD_DISABLED"
+          ? 503
+          : result.code === "INVALID_BODY"
+            ? 400
+            : result.code === "VERIFICATION_FAILED"
+              ? 422
+              : 502;
     return NextResponse.json(result, { status });
   }
 

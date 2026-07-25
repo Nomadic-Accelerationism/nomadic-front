@@ -5,7 +5,7 @@
 import { Inter } from "next/font/google";
 import localFont from 'next/font/local'
 import "./globals.css";
-import React from 'react';
+import React, { useState } from 'react';
 import { UserProvider } from '@/contexts/UserContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {PrivyProvider} from '@privy-io/react-auth';
@@ -28,13 +28,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Stable client so Passport invalidation/refetch survives re-renders.
+  const [queryClient] = useState(() => new QueryClient());
   // Minimal audit fix: Privy throws during prerender when appId is empty.
   // Only mount PrivyProvider when a real app id is configured.
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID?.trim() || '';
 
   return (
     <UserProvider>
-      <QueryClientProvider client={new QueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <html lang="en">
           <head>
             <link rel="icon" href="/favicon.png" />

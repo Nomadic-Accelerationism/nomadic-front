@@ -4,6 +4,7 @@ import {
   extractBearerDid,
   mapBackendStatusToPassportError,
   mergePassportProofs,
+  passportProofStatusLabel,
   parsePrivatePassportResponse,
   passportMeError,
 } from "./passport-me-helpers.mjs";
@@ -157,6 +158,7 @@ test("proofs: one completed Identity Check from backend", () => {
   const identity = merged.find((item) => item.id === "WORLD_IDENTITY_CHECK");
   const selfie = merged.find((item) => item.id === "WORLD_SELFIE_CHECK");
   assert.equal(identity.status, "completed");
+  assert.equal(passportProofStatusLabel(identity.status), "Verified");
   assert.equal(selfie.status, "not_completed");
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IDKitRequestWidget,
   identityCheck,
@@ -8,8 +8,16 @@ import {
   type RpContext,
 } from "@worldcoin/idkit";
 import type { IDKitErrorCodes, IDKitResult } from "@worldcoin/idkit-core";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/contexts/UserContext";
+import { PRIVATE_PASSPORT_QUERY_KEY } from "@/hooks/usePrivatePassport";
+import { fetchPrivatePassport } from "@/lib/passport/fetch-me";
+import {
+  formatProofVerifiedAt,
+  isPassportProofVerified,
+} from "@/lib/passport/merge-proofs";
 import { resolveSessionDidToken } from "@/lib/passport/session-did";
+import type { PassportProof } from "@/lib/passport/types";
 import {
   WORLD_IDENTITY_ACTION,
   WORLD_IDENTITY_MINIMUM_AGE,
@@ -33,6 +41,7 @@ type CheckStatus = "idle" | "running" | "success" | "cancelled" | "error";
 type StepState = {
   status: CheckStatus;
   message: string | null;
+  verifiedAt: string | null;
   summary: WorldVerifySummary | null;
 };
 
@@ -48,16 +57,17 @@ type SessionPayload = {
 type Props = {
   /** Optional signal for Selfie Check (wallet preferred). */
   signal?: string;
-  /** Fired once both checks verify with World (nothing persisted yet). */
-  onBothVerified?: (payload: {
-    identity: WorldVerifySummary;
-    selfie: WorldVerifySummary;
-  }) => void;
+  /** Backend Passport proofs — source of truth for Verified state after refresh. */
+  backendProofs?: PassportProof[];
+  /** Fired after a check verifies and Passport refetch is attempted. */
+  onProofSynced?: (kind: CheckKind) => void;
+  onBothVerified?: () => void;
 };
 
 const INITIAL: StepState = {
   status: "idle",
   message: null,
+  verifiedAt: null,
   summary: null,
 };
 
@@ -76,30 +86,88 @@ function statusLabel(status: CheckStatus): string {
   }
 }
 
-export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
+function stepFromBackend(
+  proofs: PassportProof[] | undefined,
+  kind: CheckKind
+): StepState {
+  const id =
+    kind === "identity" ? "WORLD_IDENTITY_CHECK" : "WORLD_SELFIE_CHECK";
+  if (!isPassportProofVerified(proofs, id)) return INITIAL;
+  const record = proofs?.find((p) => {
+    const key = (p.type || p.key || p.proofType || p.action || "").toUpperCase();
+    if (kind === "identity") {
+      return (
+        key.includes("IDENTITY") || key === "LISBON_IDENTITY_V1"
+      );
+    }
+    return key.includes("SELFIE") || key === "APPLY_LISBON_HOUSE_V1";
+  });
+  return {
+    status: "success",
+    message: null,
+    verifiedAt: record?.verifiedAt || record?.completedAt || null,
+    summary: null,
+  };
+}
+
+export function WorldVerificationPanel({
+  signal,
+  backendProofs,
+  onProofSynced,
+  onBothVerified,
+}: Props) {
+  const queryClient = useQueryClient();
   const { didToken, publicAddress } = useUser();
-  const [identity, setIdentity] = useState<StepState>(INITIAL);
-  const [selfie, setSelfie] = useState<StepState>(INITIAL);
+  const [identity, setIdentity] = useState<StepState>(() =>
+    stepFromBackend(backendProofs, "identity")
+  );
+  const [selfie, setSelfie] = useState<StepState>(() =>
+    stepFromBackend(backendProofs, "selfie")
+  );
   const [panelError, setPanelError] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<SessionPayload | null>(null);
   const activeKindRef = useRef<CheckKind | null>(null);
   const successKindsRef = useRef<Set<CheckKind>>(new Set());
-  const identitySummaryRef = useRef<WorldVerifySummary | null>(null);
-  const selfieSummaryRef = useRef<WorldVerifySummary | null>(null);
   const bothNotifiedRef = useRef(false);
 
   const configured = isWorldPublicConfigured();
   const publicAppId = readPublicWorldAppId();
   const publicEnv = readPublicWorldEnvironment();
   const selfieSignal =
-    signal?.trim() ||
-    publicAddress?.trim() ||
-    "lisbon-house-apply";
+    signal?.trim() || publicAddress?.trim() || "lisbon-house-apply";
+
+  // Keep panel aligned with backend proofs after refetch / remount.
+  useEffect(() => {
+    if (isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK")) {
+      setIdentity((prev) =>
+        prev.status === "running"
+          ? prev
+          : stepFromBackend(backendProofs, "identity")
+      );
+      successKindsRef.current.add("identity");
+    }
+    if (isPassportProofVerified(backendProofs, "WORLD_SELFIE_CHECK")) {
+      setSelfie((prev) =>
+        prev.status === "running"
+          ? prev
+          : stepFromBackend(backendProofs, "selfie")
+      );
+      successKindsRef.current.add("selfie");
+    }
+  }, [backendProofs]);
 
   const bothDone =
-    identity.status === "success" && selfie.status === "success";
+    isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK") &&
+    isPassportProofVerified(backendProofs, "WORLD_SELFIE_CHECK");
+
+  useEffect(() => {
+    if (!bothDone || bothNotifiedRef.current) return;
+    bothNotifiedRef.current = true;
+    onBothVerified?.();
+  }, [bothDone, onBothVerified]);
 
   const widgetPreset = useMemo(() => {
     if (!session) return null;
@@ -122,6 +190,15 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
     };
   }, [didToken]);
 
+  const refetchPassport = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [...PRIVATE_PASSPORT_QUERY_KEY],
+    });
+    await queryClient.refetchQueries({
+      queryKey: [...PRIVATE_PASSPORT_QUERY_KEY],
+    });
+  }, [queryClient]);
+
   const markCancelled = useCallback((kind: CheckKind) => {
     const setter = kind === "identity" ? setIdentity : setSelfie;
     setter((prev) =>
@@ -129,6 +206,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         ? {
             status: "cancelled",
             message: "World App closed before verification finished.",
+            verifiedAt: null,
             summary: null,
           }
         : prev,
@@ -138,13 +216,18 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
   const beginCheck = useCallback(
     async (kind: CheckKind) => {
       setPanelError(null);
+      setSyncError(null);
       if (!configured) {
         setPanelError(
           "World is not configured (NEXT_PUBLIC_WORLD_APP_ID missing).",
         );
         return;
       }
-      if (kind === "selfie" && identity.status !== "success") {
+      if (
+        kind === "selfie" &&
+        !isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK") &&
+        identity.status !== "success"
+      ) {
         setPanelError("Complete Identity Check first.");
         return;
       }
@@ -163,7 +246,12 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
 
       setBusy(true);
       activeKindRef.current = kind;
-      setter({ status: "running", message: null, summary: null });
+      setter({
+        status: "running",
+        message: null,
+        verifiedAt: null,
+        summary: null,
+      });
       setSession(null);
       setOpen(false);
 
@@ -203,6 +291,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
               data.detail ||
               data.code ||
               `Could not start World request (${res.status})`,
+            verifiedAt: null,
             summary: null,
           });
           activeKindRef.current = null;
@@ -222,6 +311,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         setter({
           status: "error",
           message: err instanceof Error ? err.message : "Request failed",
+          verifiedAt: null,
           summary: null,
         });
         activeKindRef.current = null;
@@ -229,7 +319,14 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         setBusy(false);
       }
     },
-    [authHeaders, configured, identity.status, publicEnv, selfieSignal],
+    [
+      authHeaders,
+      backendProofs,
+      configured,
+      identity.status,
+      publicEnv,
+      selfieSignal,
+    ],
   );
 
   const handleVerify = useCallback(
@@ -247,6 +344,8 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
       const action =
         kind === "identity" ? WORLD_IDENTITY_ACTION : WORLD_SELFIE_ACTION;
       const setter = kind === "identity" ? setIdentity : setSelfie;
+      const proofId =
+        kind === "identity" ? "WORLD_IDENTITY_CHECK" : "WORLD_SELFIE_CHECK";
 
       const res = await fetch("/api/world/verify", {
         method: "POST",
@@ -260,49 +359,68 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         summary?: WorldVerifySummary;
         note?: string;
         persisted?: boolean;
+        verifiedAt?: string;
       };
 
       if (!res.ok || !data.ok || !data.summary) {
         const message =
           data.detail || data.code || `Verify failed (${res.status})`;
-        setter({ status: "error", message, summary: data.summary ?? null });
+        setter({
+          status: "error",
+          message,
+          verifiedAt: null,
+          summary: data.summary ?? null,
+        });
         throw new Error(message);
       }
 
+      const verifiedAt =
+        data.verifiedAt ||
+        data.summary.verifiedAt ||
+        new Date().toISOString();
+
       setter({
         status: "success",
-        message: data.note ?? null,
+        message: null,
+        verifiedAt,
         summary: data.summary,
       });
       successKindsRef.current.add(kind);
-      if (kind === "identity") identitySummaryRef.current = data.summary;
-      if (kind === "selfie") selfieSummaryRef.current = data.summary;
-    },
-    [authHeaders],
-  );
 
-  const handleSuccess = useCallback(
-    (_result: IDKitResult) => {
-      setOpen(false);
-      setSession(null);
-      activeKindRef.current = null;
+      await refetchPassport();
 
-      const identitySummary = identitySummaryRef.current;
-      const selfieSummary = selfieSummaryRef.current;
-      if (
-        identitySummary &&
-        selfieSummary &&
-        !bothNotifiedRef.current
-      ) {
-        bothNotifiedRef.current = true;
-        onBothVerified?.({
-          identity: identitySummary,
-          selfie: selfieSummary,
-        });
+      let inPassport = false;
+      try {
+        const token = await resolveSessionDidToken(didToken);
+        if (token) {
+          const fresh = await fetchPrivatePassport(token);
+          inPassport = isPassportProofVerified(
+            fresh.passport.proofs,
+            proofId,
+          );
+        }
+      } catch {
+        inPassport = false;
       }
+
+      if (!data.persisted || !inPassport) {
+        setSyncError(
+          "World verified this check, but your Passport has not synced the proof yet. Tap Retry sync or refresh Passport.",
+        );
+      } else {
+        setSyncError(null);
+      }
+
+      onProofSynced?.(kind);
     },
-    [onBothVerified],
+    [authHeaders, didToken, onProofSynced, refetchPassport],
   );
+
+  const handleSuccess = useCallback((_result: IDKitResult) => {
+    setOpen(false);
+    setSession(null);
+    activeKindRef.current = null;
+  }, []);
 
   const handleError = useCallback((errorCode: IDKitErrorCodes) => {
     const kind = activeKindRef.current;
@@ -311,6 +429,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
     setter({
       status: "error",
       message: `IDKit error: ${errorCode}`,
+      verifiedAt: null,
       summary: null,
     });
     setOpen(false);
@@ -332,7 +451,6 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         activeKindRef.current = null;
         return;
       }
-      // Closed without success — treat as cancel unless already errored.
       markCancelled(kind);
       setSession(null);
       activeKindRef.current = null;
@@ -377,9 +495,8 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
             World verification
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-gray-700">
-            Complete Identity Check, then Selfie Check. Results are verified
-            with World immediately. Passport Proofs stay incomplete until the
-            backend persists records — this UI does not fake completion.
+            Complete Identity Check, then Selfie Check. Verified status comes
+            from your Passport after the backend saves each proof.
           </p>
           <p className="mt-2 text-xs text-gray-500">
             IDKit environment:{" "}
@@ -404,6 +521,19 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         </p>
       ) : null}
 
+      {syncError ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          <p>{syncError}</p>
+          <button
+            type="button"
+            className="mt-2 text-xs font-semibold underline"
+            onClick={() => void refetchPassport().then(() => setSyncError(null))}
+          >
+            Retry Passport sync
+          </button>
+        </div>
+      ) : null}
+
       <ol className="mt-5 space-y-3">
         <CheckRow
           title="1. Identity Check"
@@ -426,7 +556,8 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
           disabled={
             busy ||
             selfie.status === "running" ||
-            identity.status !== "success" ||
+            (!isPassportProofVerified(backendProofs, "WORLD_IDENTITY_CHECK") &&
+              identity.status !== "success") ||
             bothDone
           }
           ctaLabel={
@@ -440,11 +571,15 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         />
       </ol>
 
-      {bothDone ? (
-        <p className="mt-5 text-sm text-emerald-900">
-          Cryptographic checks passed with World. Application submit and
-          Passport credential issuance still require backend persistence.
-        </p>
+      {process.env.NODE_ENV === "development" &&
+      (identity.summary?.nullifierFingerprint ||
+        selfie.summary?.nullifierFingerprint) ? (
+        <details className="mt-4 text-xs text-gray-500">
+          <summary className="cursor-pointer">Dev diagnostics</summary>
+          <p className="mt-1">
+            Fingerprints only (never shown in production Passport UI).
+          </p>
+        </details>
       ) : null}
 
       {session && widgetPreset ? (
@@ -491,6 +626,8 @@ function CheckRow({
           ? "border-amber-200 bg-amber-50"
           : "border-black/10 bg-white";
 
+  const verifiedLabel = formatProofVerifiedAt(state.verifiedAt);
+
   return (
     <li className={`rounded-xl border px-4 py-3 ${tone}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -498,11 +635,15 @@ function CheckRow({
           <p className="text-sm font-semibold text-black">{title}</p>
           <p className="mt-1 text-xs text-gray-600">{subtitle}</p>
           <p className="mt-2 text-xs text-gray-700">
-            Status: {statusLabel(state.status)}
-            {state.summary?.nullifierFingerprint
-              ? ` · nullifier ${state.summary.nullifierFingerprint}`
-              : ""}
+            {state.status === "success"
+              ? "Verified with World"
+              : `Status: ${statusLabel(state.status)}`}
           </p>
+          {state.status === "success" && verifiedLabel ? (
+            <p className="mt-1 text-xs text-gray-600">
+              Verified at: {verifiedLabel}
+            </p>
+          ) : null}
           {state.message ? (
             <p className="mt-1 text-xs text-gray-700">{state.message}</p>
           ) : null}

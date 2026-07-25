@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  formatProofVerifiedAt,
   mergePassportProofs,
   passportProofStatusLabel,
   type PassportProofUiStatus,
@@ -26,14 +27,13 @@ function statusBadgeClass(status: PassportProofUiStatus): string {
 }
 
 export type PassportProofsProps = {
-  /** Backend completion records — never invent Completed without these. */
+  /** Backend completion records — never invent Verified without these. */
   backendProofs: PassportProof[];
 };
 
 /**
  * Passport Proofs area.
  * Supported products are frontend knowledge; completion is backend-only.
- * World CTAs deep-link to Journey apply — local IDKit success ≠ Completed here.
  */
 export function PassportProofs({ backendProofs }: PassportProofsProps) {
   const items = mergePassportProofs(backendProofs);
@@ -51,14 +51,16 @@ export function PassportProofs({ backendProofs }: PassportProofsProps) {
       </h2>
       <p className="mb-3 text-sm text-gray-600">
         World checks live inside your Passport Proofs system and are used when a
-        Journey requires them. Completed appears only after the backend stores a
-        verified record.
+        Journey requires them. Verified appears only after the backend stores a
+        proof record.
       </p>
       <ul className="space-y-3">
         {items.map((item) => (
           <li
             key={item.id}
             className="rounded-2xl border border-black/10 bg-white/80 px-4 py-4"
+            data-proof-id={item.id}
+            data-proof-status={item.status}
           >
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-base font-semibold text-black">{item.title}</h3>
@@ -73,6 +75,14 @@ export function PassportProofs({ backendProofs }: PassportProofsProps) {
             <p className="mt-2 text-sm leading-relaxed text-gray-600">
               {item.description}
             </p>
+            {item.status === "completed" ? (
+              <p className="mt-2 text-xs text-gray-500">
+                Verified with World
+                {formatProofVerifiedAt(item.verifiedAt)
+                  ? ` · Verified at: ${formatProofVerifiedAt(item.verifiedAt)}`
+                  : ""}
+              </p>
+            ) : null}
             {item.status !== "completed" && worldConfigured ? (
               <Link
                 href={applyHref}
@@ -90,9 +100,9 @@ export function PassportProofs({ backendProofs }: PassportProofsProps) {
           className="mt-4 text-xs text-gray-500"
           data-world-integration-boundary="passport-cta"
         >
-          Identity Check and Selfie Check run on the Journey apply flow. A
-          successful World verify here does not mark Passport Proofs completed
-          until Nomadic persists the result.
+          Identity Check and Selfie Check run on the Journey apply flow. Local
+          IDKit success does not mark Passport Proofs verified until Nomadic
+          persists the result.
         </p>
       ) : null}
     </section>
