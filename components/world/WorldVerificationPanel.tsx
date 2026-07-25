@@ -21,6 +21,7 @@ import {
   readPublicWorldEnvironment,
 } from "@/lib/world/client";
 import type {
+  WorldEnvironment,
   WorldPreset,
   WorldVerifySummary,
 } from "@/lib/world/types";
@@ -40,6 +41,7 @@ type SessionPayload = {
   action: string;
   preset: WorldPreset;
   allowLegacy: boolean;
+  environment: WorldEnvironment;
   rpContext: RpContext;
 };
 
@@ -190,6 +192,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
           detail?: string;
           app_id?: string;
           allow_legacy_proofs?: boolean;
+          environment?: WorldEnvironment;
           rp_context?: RpContext;
         };
 
@@ -211,6 +214,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
           action,
           preset,
           allowLegacy: Boolean(data.allow_legacy_proofs),
+          environment: data.environment || publicEnv,
           rpContext: data.rp_context,
         });
         setOpen(true);
@@ -225,7 +229,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
         setBusy(false);
       }
     },
-    [authHeaders, configured, identity.status, selfieSignal],
+    [authHeaders, configured, identity.status, publicEnv, selfieSignal],
   );
 
   const handleVerify = useCallback(
@@ -377,6 +381,15 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
             with World immediately. Passport Proofs stay incomplete until the
             backend persists records — this UI does not fake completion.
           </p>
+          <p className="mt-2 text-xs text-gray-500">
+            IDKit environment:{" "}
+            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px]">
+              {publicEnv}
+            </code>
+            {publicEnv === "staging"
+              ? " (simulator OK)"
+              : " — set NEXT_PUBLIC_WORLD_ENVIRONMENT=staging for the simulator"}
+          </p>
         </div>
         {bothDone ? (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
@@ -442,6 +455,7 @@ export function WorldVerificationPanel({ signal, onBothVerified }: Props) {
           action={session.action}
           rp_context={session.rpContext}
           allow_legacy_proofs={session.allowLegacy}
+          environment={session.environment}
           preset={widgetPreset}
           autoClose
           handleVerify={handleVerify}
