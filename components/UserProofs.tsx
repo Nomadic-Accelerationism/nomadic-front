@@ -38,7 +38,7 @@ function VerifyDialog({ open, onOpenChange, proof, onVerify }: {
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[385px] rounded-3xl">
+      <DialogContent className="clay-surface clay-tone-white max-w-[385px] rounded-[30px] border-none">
         <DialogHeader className="text-center space-y-4">
           <DialogTitle className="text-2xl font-normal">
             {proof?.title}
@@ -57,7 +57,7 @@ function VerifyDialog({ open, onOpenChange, proof, onVerify }: {
               />
             </div>
           </div>
-          <div className="px-6 py-2 rounded-full bg-muted">
+          <div className="clay-chip bg-clay-sky px-6 py-2">
             {proof?.isActive ? "Generated" : "Not Generated"}
           </div>
           {proof && (
@@ -66,7 +66,9 @@ function VerifyDialog({ open, onOpenChange, proof, onVerify }: {
                 {proof.isActive ? getMetMessage(proof.proof.toString()) : getNotMetMessage(proof.proof.toString())}
               </p>
               <Button 
-                className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full"
+                variant="clayPrimary"
+                size="clay"
+                className="w-full text-lg"
                 onClick={onVerify}
               >
                 {proof?.isActive ? "Update" : "Generate"}
@@ -87,7 +89,7 @@ function ResultDialog({ open, onOpenChange, proof, result }: {
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[385px] rounded-3xl">
+      <DialogContent className="clay-surface clay-tone-white max-w-[385px] rounded-[30px] border-none">
         <DialogHeader className="text-center space-y-4">
           <DialogTitle className="text-2xl font-normal">
             {proof?.title}
@@ -106,14 +108,16 @@ function ResultDialog({ open, onOpenChange, proof, result }: {
               />
             </div>
           </div>
-          <div className={`px-6 py-2 rounded-full ${
-            result?.status ? 'bg-green-500' : 'bg-[#FF5C00]'
+          <div className={`clay-chip px-6 py-2 ${
+            result?.status ? 'bg-clay-mint' : 'bg-clay-peach'
           }`}>
             {result?.status ? "Generated" : "Not Found"}
           </div>
           {proof && (
             <Button 
-              className="w-full h-12 text-lg bg-[#FF5C00] hover:bg-[#FF5C00]/90 text-white rounded-full"
+                variant="clayPrimary"
+                size="clay"
+                className="w-full text-lg"
               onClick={() => onOpenChange(false)}
             >
               {result?.status ? "LFG!" : "Try Again"}
@@ -133,7 +137,7 @@ function XAccountDialog({ open, onOpenChange, proof, onVerify }: {
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[385px] rounded-3xl">
+      <DialogContent className="clay-surface clay-tone-white max-w-[385px] rounded-[30px] border-none">
         <DialogHeader className="text-center space-y-4">
           <DialogTitle className="text-2xl font-normal">
             {proof?.title} **
@@ -152,7 +156,7 @@ function XAccountDialog({ open, onOpenChange, proof, onVerify }: {
               />
             </div>
           </div>
-          <div className="px-6 py-2 rounded-full bg-muted">
+          <div className="clay-chip bg-clay-lilac px-6 py-2">
             {proof?.isActive ? "Connected" : "Not Connected"}
           </div>
           {proof && (
@@ -161,7 +165,9 @@ function XAccountDialog({ open, onOpenChange, proof, onVerify }: {
                 {proof.isActive ? "Your X account is connected" : "Connect your X account to continue"}
               </p>
               <Button 
-                className="w-full h-12 text-lg bg-black hover:bg-black/90 text-white rounded-full"
+                variant="claySecondary"
+                size="clay"
+                className="w-full bg-clay-lilac text-lg"
                 onClick={onVerify}
               >
                 {proof?.isActive ? "Update Connection" : "Connect X Account"}
@@ -278,15 +284,19 @@ export default function UserProofsComponent() {
 
   return (
     <>
-    <div className="max-w-sm mx-auto py-4 space-y-4 px-8">
-      <h1 className="text-2xl font-bold text-center">My Proofs</h1>
+    <div className="clay-page mx-auto min-h-screen max-w-md space-y-5 px-6 py-8">
+      <div className="clay-surface clay-tone-peach px-6 py-6 text-center">
+        <h1 className="text-3xl font-bold">My Proofs</h1>
+        <p className="mt-2 text-sm text-clay-muted">Build a portable trail of verified community signals.</p>
+      </div>
       
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <Input 
+          variant="clay"
           type="text" 
           placeholder="Search" 
-          className="pl-10 rounded-xl bg-gray-100"
+          className="pl-11"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -295,16 +305,16 @@ export default function UserProofsComponent() {
       {filteredProofs.map((item, index) => (
         <Card 
           key={index} 
-          className={`flex items-center justify-between rounded-xl border border-gray-700 py-1 ${
-            item.isActive ? 'bg-white' : 'bg-gray-200'
-          }`}
+          tone={item.isActive ? "mint" : "white"}
+          interactive
+          className="flex items-center justify-between rounded-[24px] border-none py-2"
           onClick={() => verifyProof(item)}
         >
           <span className="text-sm font-medium p-3 ml-3">{item.name}</span>
           <div className="relative">
             <img src={item.icon} alt={item.name} className="w-12 h-12 mr-1" />
             {!item.isActive && (
-              <div className="absolute inset-0 bg-gray-500 opacity-50 mr-1 rounded-lg"></div>
+              <div className="absolute inset-0 mr-1 rounded-lg bg-clay-muted opacity-35"></div>
             )}
           </div>
         </Card>

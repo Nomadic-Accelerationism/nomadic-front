@@ -13,9 +13,9 @@ const UserProofsComponent = dynamic(
 
 export default function Home() {
   return (
-    <>
+    <div className="clay-page min-h-screen">
       <MenuUserHeaderComponent />
       <UserProofsComponent />
-    </>
+    </div>
   );
 }

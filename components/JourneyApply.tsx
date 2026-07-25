@@ -44,28 +44,36 @@ export default function JourneyApplyComponent() {
     router.push('/journey-success?status=applied');
   };
 
-  if (!journey) return <div>Loading...</div>;
+  if (!journey) {
+    return (
+      <div className="clay-page flex min-h-[50vh] items-center justify-center" role="status">
+        <div className="clay-surface clay-tone-white px-6 py-5 font-semibold">Loading journey...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-6">Apply to Journey</h1>
+    <div className="clay-page mx-auto min-h-screen max-w-md p-6">
+      <h1 className="clay-surface clay-tone-mint mb-7 px-6 py-6 text-center text-3xl font-bold">Apply to Journey</h1>
 
-      <div className="mb-6">
+      <div className="clay-surface clay-tone-butter mb-6 px-5 py-5">
         <h2 className="text-xl font-semibold mb-2">{journey.title}</h2>
         <p className="text-sm mb-2">{journey.location}</p>
-        <p className="text-orange-500 text-sm">
+        <p className="text-sm font-semibold text-clay-ink">
           {journey.startDate && format(new Date(journey.startDate), "PPP")} - {" "}
           {journey.endDate && format(new Date(journey.endDate), "PPP")}
         </p>
-        <p className="text-orange-500 text-sm">Budget: {journey.budget} USDC</p>
+        <p className="text-sm font-semibold text-clay-ink">Budget: {journey.budget} USDC</p>
       </div>
 
+      <div className="clay-surface clay-tone-white px-5 py-6">
       {journey.optionalQuestion && (
         <div className="space-y-4 mb-6">
           <div>
             <Label htmlFor="response">Question from Host</Label>
             <p className="text-sm mb-2">{journey.optionalQuestion}</p>
             <Textarea
+              variant="clay"
               id="response"
               value={formData.response}
               onChange={handleInputChange}
@@ -80,6 +88,7 @@ export default function JourneyApplyComponent() {
         <div>
           <Label htmlFor="socialMediaHandle">Your Social Media Handle</Label>
           <Input
+            variant="clay"
             id="socialMediaHandle"
             value={formData.socialMediaHandle}
             onChange={handleInputChange}
@@ -90,11 +99,14 @@ export default function JourneyApplyComponent() {
 
       <div className="flex justify-center">
         <Button
+          variant="clayPrimary"
+          size="clay"
           onClick={handleSubmit}
-          className="w-full max-w-[230px] bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          className="w-full max-w-[260px] text-lg"
         >
           Submit Application
         </Button>
+      </div>
       </div>
     </div>
   );

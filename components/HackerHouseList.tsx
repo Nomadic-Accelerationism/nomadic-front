@@ -98,16 +98,16 @@ export default function HackerHouseListComponent() {
   }
 
   return (
-    <div className="container mx-auto px-4 my-4">
-      <div className="flex justify-between items-center mb-6">
+    <div className="clay-surface clay-tone-white container mx-auto my-4 px-5 py-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">My Hacker Houses</h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="clayIcon" aria-label="Sort Hacker Houses">
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="clay-surface clay-tone-white rounded-[22px] border-none">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => sortHouses('date')}>
@@ -122,43 +122,40 @@ export default function HackerHouseListComponent() {
 
       <div className="space-y-4">
         {houses.map((house) => (
-          // <Link href={`/house-detail/${house.id}`} key={house.id} className="block">
-          <Link href={`/house-detail/`} key={house.id} className="block">
-          <div className="rounded-lg overflow-hidden shadow-lg">
-              <div className="relative h-28">
-                <Image
-                  src={house.image}
-                  alt={house.name}
-                  layout="fill"
-                  objectFit="cover"
-                  style={{ zIndex: -1 }}
-                />
-
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
+          <Link
+            href="/house-detail/"
+            key={house.id}
+            className="clay-image-frame clay-interactive block bg-clay-peach focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-clay-ink"
+          >
+            <div className="relative h-32 overflow-hidden rounded-[22px]">
+              <Image
+                src={house.image}
+                alt={house.name}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+              <div className="relative z-10 p-4">
+                <div className="mb-2 flex items-start justify-between">
                   <div>
-                    <h2 className="text-white text-lg font-semibold">#{house.id} {house.name}</h2>
-                    <p className="text-white text-md">{new Date(house.startDate).toLocaleDateString()} - {new Date(house.endDate).toLocaleDateString()}</p>
+                    <h2 className="text-lg font-bold text-white">#{house.id} {house.name}</h2>
+                    <p className="text-sm font-medium text-white">{new Date(house.startDate).toLocaleDateString()} - {new Date(house.endDate).toLocaleDateString()}</p>
                   </div>
-                  <ChevronRight className="h-6 w-6 text-gray-400" />
+                  <ChevronRight className="h-6 w-6 text-white" />
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(house.status)}`}>
+                <div className="flex items-center justify-between">
+                  <span className={`clay-chip px-2 py-1 text-xs font-semibold text-white ${getStatusColor(house.status)}`}>
                     {house.status}
                   </span>
-                  <span className="bg-white text-black px-2 py-1 rounded-full text-xs font-semibold">
+                  <span className="clay-chip bg-clay-white px-2 py-1 text-xs font-bold text-clay-ink">
                     {house.rating}/10
                   </span>
                 </div>
-              </div>
-
-
               </div>
             </div>
           </Link>
         ))}
       </div>
-
     </div>
   )
 }

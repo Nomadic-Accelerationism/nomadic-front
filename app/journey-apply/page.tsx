@@ -5,11 +5,11 @@ import { Suspense } from 'react';
 
 export default function JourneyApplyPage() {
   return (
-    <>
+    <div className="clay-page min-h-screen">
       <MenuUserHeaderComponent />
       <Suspense fallback={<div>Loading...</div>}>
         <JourneyApplyComponent />
       </Suspense>
-    </>
+    </div>
   );
 }

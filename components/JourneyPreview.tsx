@@ -157,8 +157,9 @@ export default function JourneyPreviewComponent({
   };
   return (
       <>
-        <div className="w-full max-w-md mx-auto bg-white p-6 rounded-lg">
-          <h1 className="text-2xl font-bold text-center mb-2">Preview your Journey</h1>
+        <div className="clay-page mx-auto min-h-screen w-full max-w-md p-6">
+          <div className="clay-surface clay-tone-white px-5 py-6">
+          <h1 className="text-center text-3xl font-bold">Preview your Journey</h1>
           <h2 className="text-xl font-semibold text-center mb-4">{title}</h2>
 
           {/* <p className="text-sm mb-2">Your social media to be contacted:</p>
@@ -185,11 +186,11 @@ export default function JourneyPreviewComponent({
             <span className="text-sm underline">{location}</span>
           </div>
 
-          <div className="space-y-1 mb-4">
-            <p className="text-sm text-orange-500">Journey first day: {startDate ? format(startDate, "PPP") : "Not Set"}</p>
-            <p className="text-sm text-orange-500">Journey last day: {endDate ? format(endDate, "PPP") : "Not Set"}</p>
-            <p className="text-sm text-orange-500">Max Budget per Nomad: {budget} USDC</p>
-            <p className="text-sm text-orange-500">Max Nomads in the Journey: {guestCapacity} Nomads</p>
+          <div className="clay-surface clay-tone-butter mb-5 space-y-1 rounded-[22px] px-4 py-4">
+            <p className="text-sm font-semibold text-clay-ink">Journey first day: {startDate ? format(startDate, "PPP") : "Not Set"}</p>
+            <p className="text-sm font-semibold text-clay-ink">Journey last day: {endDate ? format(endDate, "PPP") : "Not Set"}</p>
+            <p className="text-sm font-semibold text-clay-ink">Max Budget per Nomad: {budget} USDC</p>
+            <p className="text-sm font-semibold text-clay-ink">Max Nomads in the Journey: {guestCapacity} Nomads</p>
           </div>
 
           <div className="mb-4">
@@ -200,7 +201,7 @@ export default function JourneyPreviewComponent({
                   {[...requiredProofs, ...(customProofs || [])].map((proof, index) => (
                     <div 
                       key={index} 
-                      className={`w-12 h-12 rounded-md flex items-center justify-center ${getProofColor(proof)} relative`}
+                      className={`clay-chip relative flex h-12 w-12 items-center justify-center ${getProofColor(proof)}`}
                     >
                       <Image 
                         src={getProofIcon(proof)} 
@@ -233,11 +234,13 @@ export default function JourneyPreviewComponent({
 
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Journey photo:</h3>
-            <img 
-              src={photo} 
-              alt="Journey" 
-              className="w-full rounded-lg"
-            />
+            <div className="clay-image-frame bg-clay-peach">
+              <img
+                src={photo}
+                alt="Journey"
+                className="w-full rounded-[22px]"
+              />
+            </div>
           </div>
 
           <div className="mb-4">
@@ -247,18 +250,22 @@ export default function JourneyPreviewComponent({
 
           <div className="flex justify-between mt-6">
             <Button 
-              variant="outline" 
+              variant="claySecondary"
+              size="clay"
               onClick={onEdit}
-              className="w-[48%] bg-gray-200 hover:bg-gray-300 text-black font-bold"
+              className="w-[48%]"
             >
               Edit
             </Button>
             <Button 
+              variant="clayPrimary"
+              size="clay"
               onClick={handleConfirm}
-              className="w-[48%] bg-orange-500 hover:bg-orange-600 text-black font-bold"
+              className="w-[48%]"
             >
               Confirm
             </Button>
+          </div>
           </div>
         </div>
 

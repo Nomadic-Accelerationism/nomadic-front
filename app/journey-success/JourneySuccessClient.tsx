@@ -40,9 +40,9 @@ export default function JourneySuccessClient() {
   if (!journey) return <div>Journey not found</div>
 
   return (
-    <>
+    <div className="clay-page min-h-screen">
       <MenuUserHeaderComponent />
       <JourneySucessComponent journey={journey} />
-    </>
+    </div>
   );
 }

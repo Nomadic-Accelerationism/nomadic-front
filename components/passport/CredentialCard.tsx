@@ -21,24 +21,26 @@ export function CredentialCard({
   return (
     <article
       className={cn(
-        "w-full rounded-2xl border border-black/80 bg-white p-5 text-left shadow-sm",
+        "clay-surface clay-tone-mint w-full rounded-[28px] border-none p-5 text-left",
         !claimAvailable && "opacity-80",
         className
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-lg font-bold leading-tight">{CREDENTIAL_NAME}</h3>
-        <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+        <span className="clay-chip shrink-0 bg-clay-white px-3 py-1 text-xs font-bold text-clay-muted">
           Not claimed
         </span>
       </div>
-      <p className="mt-3 text-sm leading-relaxed text-gray-600">
+      <p className="mt-3 text-sm leading-relaxed text-clay-muted">
         {CREDENTIAL_DESCRIPTION}
       </p>
       {claimAvailable ? (
         <Button
           asChild
-          className="mt-5 h-12 w-full rounded-xl bg-[#ff671e] text-base font-bold text-black hover:bg-orange-500"
+          variant="clayPrimary"
+          size="clay"
+          className="mt-5 w-full"
         >
           <Link href="/credentials/lisbon-2026">View credential</Link>
         </Button>
@@ -46,7 +48,9 @@ export function CredentialCard({
         <Button
           type="button"
           disabled
-          className="mt-5 h-12 w-full rounded-xl bg-gray-200 text-base font-bold text-gray-500"
+          variant="claySecondary"
+          size="clay"
+          className="mt-5 w-full"
         >
           Wallet required
         </Button>

@@ -51,7 +51,7 @@ export default function JourneyPreviewPage() {
   }
 
   return (
-    <>
+    <div className="clay-page min-h-screen">
       <MenuUserHeaderComponent />
       <JourneyPreviewComponent 
         title={formData.title}
@@ -68,6 +68,6 @@ export default function JourneyPreviewPage() {
         onEdit={onEdit}
         onConfirm={() => {}}
       />
-    </>
+    </div>
   );
 }

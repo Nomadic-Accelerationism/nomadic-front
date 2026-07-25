@@ -31,6 +31,13 @@ export default function MenuUserHeaderComponent() {
     // { name: "Pending Reviews", url: "/reviews" },
     { name: "About", url: "/about" },
   ];
+  const menuToneClasses = [
+    "bg-clay-peach",
+    "bg-clay-mint",
+    "bg-clay-sky",
+    "bg-clay-lilac",
+    "bg-clay-butter",
+  ];
 
   const handleLogout = async () => {
     await logout();
@@ -39,7 +46,7 @@ export default function MenuUserHeaderComponent() {
 
   return (
     <Sheet>
-      <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
+      <header className="clay-surface clay-tone-white sticky top-3 z-40 mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-md items-center justify-between rounded-[24px] px-5 py-3">
         <div className="flex items-center">
           <Link href="/passport">
             <div className="flex items-center cursor-pointer">
@@ -55,14 +62,14 @@ export default function MenuUserHeaderComponent() {
           </Link>
         </div>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-gray-700">
+          <Button variant="clayIcon" className="text-clay-ink">
             <MenuIcon className="h-6 w-6" />
             <span className="sr-only">Open menu</span>
           </Button>
         </SheetTrigger>
       </header>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
-        <div className="h-full bg-gradient-to-t from-[#ff7231] via-[#ffc4a8] to-white flex flex-col">
+      <SheetContent side="left" className="w-[300px] border-none bg-clay-canvas p-0 shadow-clay sm:w-[400px]">
+        <div className="clay-page-gradient flex h-full flex-col">
           <SheetHeader className="p-4 flex justify-between items-center border-b">
             <SheetTitle className="flex items-center">
               <Image
@@ -78,12 +85,12 @@ export default function MenuUserHeaderComponent() {
           <div className="flex-grow overflow-y-auto px-4">
 
             <nav className="flex flex-1 flex-col gap-2 mt-4">
-              {menuItems.map((item) => (
+              {menuItems.map((item, index) => (
                 <Button
                   key={item.name}
                   asChild
-                  variant="secondary"
-                  className="h-14 justify-start rounded-2xl bg-gray-100 text-lg font-normal text-black hover:bg-white/90 border border-black"
+                  variant="claySecondary"
+                  className={`h-14 justify-start rounded-[22px] text-lg font-bold ${menuToneClasses[index % menuToneClasses.length]}`}
                 >
                   <Link href={item.url}>{item.name}</Link>
                 </Button>
@@ -95,14 +102,14 @@ export default function MenuUserHeaderComponent() {
 
             <div className="flex flex-col">
               <div className="w-1/2 border-t border-black mb-2"></div>
-              <Button variant="ghost" className="w-full text-left justify-start pl-0">
+              <Button variant="claySecondary" className="w-full justify-start bg-clay-sky">
                 Switch to Hacker House Profile
               </Button>
             </div>
             
             <div className="flex flex-col">
               <div className="w-1/2 border-t border-black mb-2"></div>
-              <Button variant="ghost" className="w-full text-left justify-start pl-0">
+              <Button variant="claySecondary" className="w-full justify-start bg-clay-butter">
                 Bug Report
               </Button>
             </div>
@@ -110,8 +117,8 @@ export default function MenuUserHeaderComponent() {
             <div className="flex flex-col">
               <div className="w-1/2 border-t border-black mb-2"></div>
               <Button 
-                variant="ghost" 
-                className="w-full text-left justify-start pl-0"
+                variant="claySecondary"
+                className="w-full justify-start bg-clay-peach"
                 onClick={handleLogout}
               >
                 Logout

@@ -10,6 +10,7 @@ import { JourneyDetailModal } from './modals/journey-detail-modal';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/axios';
+import { Button } from "@/components/ui/button";
 
 // Move the fetch function outside the component
 async function fetchJourneys({ publicAddress, didToken }: { publicAddress: string; didToken: string }) {
@@ -35,7 +36,7 @@ export function AvailableJourneys() {
   const { didToken, publicAddress, isAuthenticated } = useUser();
   const router = useRouter();
 
-  const { data: availableJourneys = [], isLoading } = useQuery({
+  const { data: availableJourneys = [], isLoading } = useQuery<Journey[]>({
     queryKey: ['available-journeys', didToken, publicAddress],
     queryFn: () => fetchJourneys({ publicAddress, didToken }),
     enabled: isAuthenticated && Boolean(didToken) && Boolean(publicAddress),
@@ -69,8 +70,8 @@ export function AvailableJourneys() {
   if (availableJourneys.length === 0) return null;
 
   return (
-    <div className="w-full mb-8">
-      <h2 className="text-2xl font-semibold mb-6 text-center">Discover What&apos;s Up</h2>
+    <div className="clay-surface clay-tone-lilac mb-8 w-full px-4 py-6">
+      <h2 className="mb-6 text-center text-2xl font-bold">Discover What&apos;s Up</h2>
       <div className="relative">
         <div className="relative h-[250px] w-full overflow-hidden">
           <div className="absolute w-full h-full flex items-center justify-center">
@@ -87,17 +88,19 @@ export function AvailableJourneys() {
                     : 'z-0 scale-80 opacity-0'
                 }`}
               >
-                <div 
-                  className="rounded-2xl overflow-hidden shadow-2xl cursor-pointer"
+                <button
+                  type="button"
+                  className="clay-image-frame clay-interactive w-full cursor-pointer bg-clay-peach text-left focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-clay-ink"
                   onClick={() => handleJourneyClick(journey)}
+                  aria-label={`View ${journey.title}`}
                 >
-                  <div className="relative h-[200px]">
+                  <div className="relative h-[200px] overflow-hidden rounded-[22px]">
                     <Image
                       src={journey.photo || '/placeholder.jpg'}
                       alt={journey.title}
                       layout="fill"
                       objectFit="cover"
-                      className="rounded-2xl"
+                      className="rounded-[22px]"
                     />
                     <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-2 px-4">
                       <h3 className="text-white text-xl font-bold text-center">
@@ -115,24 +118,30 @@ export function AvailableJourneys() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             ))}
           </div>
         </div>
 
-        <button
+        <Button
+          type="button"
+          variant="clayIcon"
           onClick={prevJourney}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 rounded-full p-2 transition-colors duration-200"
+          className="absolute left-0 top-1/2 z-30 -translate-y-1/2 bg-clay-sky"
+          aria-label="Previous journey"
         >
-          <ChevronLeft className="h-6 w-6 text-white" />
-        </button>
-        <button
+          <ChevronLeft className="h-6 w-6 text-clay-ink" />
+        </Button>
+        <Button
+          type="button"
+          variant="clayIcon"
           onClick={nextJourney}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 rounded-full p-2 transition-colors duration-200"
+          className="absolute right-0 top-1/2 z-30 -translate-y-1/2 bg-clay-sky"
+          aria-label="Next journey"
         >
-          <ChevronRight className="h-6 w-6 text-white" />
-        </button>
+          <ChevronRight className="h-6 w-6 text-clay-ink" />
+        </Button>
       </div>
 
       {selectedJourney && (

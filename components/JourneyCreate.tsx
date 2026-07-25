@@ -166,13 +166,14 @@ export default function JourneyCreateComponent() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-6">Create a Journey</h1>
+    <div className="clay-page mx-auto min-h-screen max-w-md p-6">
+      <h1 className="clay-surface clay-tone-peach mb-7 px-6 py-6 text-center text-3xl font-bold">Create a Journey</h1>
 
-      <div className="space-y-4 items-center justify-center">
+      <div className="clay-surface clay-tone-white space-y-5 px-5 py-6">
         <div>
           <Label htmlFor="title">Journey Title</Label>
           <Input 
+          variant="clay"
           id="title" 
           value={formData.title}
           onChange={handleInputChange}
@@ -184,6 +185,7 @@ export default function JourneyCreateComponent() {
           <div className="relative">
             <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input 
+            variant="clay"
             id="location"
             value={formData.location}
             onChange={handleInputChange}
@@ -197,13 +199,13 @@ export default function JourneyCreateComponent() {
             <Label>From</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button variant="claySecondary" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.startDate ? format(formData.startDate, "PPP") 
                     : <span>Select a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="clay-surface clay-tone-white w-auto rounded-[22px] border-none p-0">
                 <Calendar 
                   mode="single" 
                   selected={formData.startDate}
@@ -217,13 +219,13 @@ export default function JourneyCreateComponent() {
             <Label>To</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button variant="claySecondary" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.finishDate ? format(formData.finishDate, "PPP") 
                     : <span>Select a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="clay-surface clay-tone-white w-auto rounded-[22px] border-none p-0">
                 <Calendar 
                   mode="single" 
                   selected={formData.finishDate}
@@ -239,6 +241,7 @@ export default function JourneyCreateComponent() {
           <div>
             <Label htmlFor="budget">Max Budget per Nomad</Label>
             <Input
+              variant="clay"
               id="budget"
               value={formData.budget}
               onChange={handleInputChange}
@@ -250,6 +253,7 @@ export default function JourneyCreateComponent() {
           <div>
             <Label htmlFor="guestCapacity">Share with max. of...</Label>
             <Input 
+              variant="clay"
               id="guestCapacity"
               value={formData.guestCapacity}
               onChange={handleInputChange}
@@ -263,21 +267,22 @@ export default function JourneyCreateComponent() {
         <div>
           <Label htmlFor="description">Description</Label>
           <Textarea 
+          variant="clay"
           id="description"
           value={formData.description}
           onChange={handleInputChange}
           placeholder="Description" 
-          className="h-24" />
+          className="h-28" />
         </div>
 
         <div className="space-y-2">
           <Label>Journey Photo</Label>
           <div className="flex flex-col items-center gap-4">
             {formData.photo && (
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+              <div className="clay-image-frame relative aspect-video w-full bg-clay-sky">
                 <button
                   onClick={() => setFormData(prev => ({ ...prev, photo: '' }))}
-                  className="absolute top-2 right-2 z-10 p-2 rounded-full bg-red-500/80 hover:bg-red-600 transition-colors"
+                  className="clay-control absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 p-2 hover:bg-red-700"
                   type="button"
                   aria-label="Remove image"
                 >
@@ -314,7 +319,9 @@ export default function JourneyCreateComponent() {
               onChange={handleImageChange}
             />
             <Button 
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              variant="claySecondary"
+              size="clay"
+              className="w-full bg-clay-sky"
               onClick={() => document.getElementById('photo-upload')?.click()}
             >
               {formData.photo ? 'Change photo' : 'Load photo'}
@@ -325,6 +332,7 @@ export default function JourneyCreateComponent() {
         <div>
           <Label htmlFor="optionalQuestion">Optional questions</Label>
           <Input 
+          variant="clay"
           id="optionalQuestion" 
           value={formData.optionalQuestion}
           onChange={handleInputChange}
@@ -340,7 +348,9 @@ export default function JourneyCreateComponent() {
 
         <div className="flex items-center justify-center">
           <Button 
-            className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600 mx-auto font-bold"
+            variant="clayPrimary"
+            size="clay"
+            className="my-4 mx-auto w-full max-w-[260px] text-lg"
             onClick={goToPreviewCreate}
           >
             Preview & Create

@@ -22,7 +22,7 @@ export default function HouseDetail() {
   const isMyJourney = journey.creatorAddress === publicAddress
   if (isMyJourney) {
     return (
-      <>
+      <div className="clay-page pb-10">
         <MenuHouseHeaderComponent />
         <HackerHouseDetailComponent 
           number={journey.id || ''}
@@ -37,17 +37,19 @@ export default function HouseDetail() {
         <HackerHouseParticipantsComponent />
         <div className="flex flex-col items-center mt-4">
           <Button 
-            className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+            variant="clayPrimary"
+            size="clay"
+            className="my-4 w-full max-w-[260px] text-lg"
             onClick={() => router.push(`/journey-edit?journey=${encodeURIComponent(JSON.stringify(journey))}`)}>
             Edit Journey
           </Button>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="clay-page pb-10">
       <MenuHouseHeaderComponent />
       <HackerHouseDetailComponent 
         number={journey.id || ''}
@@ -63,11 +65,13 @@ export default function HouseDetail() {
       <div className="flex flex-col items-center mt-4">
 
         <Button 
-          className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          variant="clayPrimary"
+          size="clay"
+          className="my-4 w-full max-w-[260px] text-lg"
           onClick={() => console.log("Apply to Journey")}>
           Apply to Journey
         </Button>      
       </div>
-    </>
+    </div>
   )
 }

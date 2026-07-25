@@ -14,7 +14,7 @@ export default function HomeHouseComponent() {
   }; 
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
+    <div className="clay-page relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between" style={{ minHeight: 'calc(100vh - 80px)' }}>
 
       {/* Content */}
 
@@ -23,7 +23,9 @@ export default function HomeHouseComponent() {
         <HackerHouseListComponent />
 
         <Button 
-          className="w-full max-w-[230px] my-4 bg-[#ff671e] hover:bg-orange-500 text-black text-xl py-8 rounded-xl shadow-xl border border-gray-600"
+          variant="clayPrimary"
+          size="clay"
+          className="my-6 w-full max-w-[260px] text-lg"
           onClick={goToProofs}
         >
           Create Hacker House
@@ -33,7 +35,7 @@ export default function HomeHouseComponent() {
 
       {/* Version number */}
       <div className="relative z-10 mb-4">
-        <p className="text-xs text-gray-800">v.0.01a</p>
+        <p className="text-xs font-semibold text-clay-muted">v.0.01a</p>
       </div>
     </div>
   );

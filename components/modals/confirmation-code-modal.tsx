@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 interface ConfirmationCodeModalProps {
   isOpen: boolean;
@@ -57,20 +58,20 @@ export function ConfirmationCodeModal({ isOpen, onClose, onCodeSubmit }: Confirm
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogOverlay className="bg-black/50 fixed inset-0" />
-      <DialogContent className="bg-[#ffffff] rounded-[32px] w-7/8 max-w-md p-8 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-none">
+      <DialogContent className="clay-surface clay-tone-white fixed left-1/2 top-1/2 w-7/8 max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[32px] border-none p-8">
         <DialogTitle className="text-2xl font-medium text-[#000000] text-center">
           Confirmation Code
         </DialogTitle>
-        <DialogDescription className="text-[#808080] mt-2">
+        <DialogDescription className="mt-2 text-clay-muted">
           Please enter the verification code sent to your email.
         </DialogDescription>
 
         <div className="space-y-6">
-          <p className="text-[#ff671f] font-medium">
+          <p className="clay-surface clay-tone-peach rounded-[20px] px-4 py-3 font-semibold text-clay-ink">
             You&apos;re about to cancel this HH request, this action cannot be reverted.
           </p>
 
-          <p className="text-[#808080]">You can check on your e-mail</p>
+          <p className="text-clay-muted">You can check on your e-mail</p>
 
           <div className="flex gap-2 justify-between">
             {code.map((digit, index) => (
@@ -85,33 +86,37 @@ export function ConfirmationCodeModal({ isOpen, onClose, onCodeSubmit }: Confirm
                 onChange={(e) => handleInputChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-12 h-12 rounded-lg bg-[#d9d9d9] text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[#808080] border border-black"
+                className="clay-field h-12 w-12 rounded-[16px] px-0 text-center text-lg font-bold"
                 aria-label={`Digit ${index + 1}`}
               />
             ))}
           </div>
 
           <button
-            className="text-[#808080] hover:text-[#000000] transition-colors text-sm"
+            className="rounded-lg px-2 py-2 text-sm font-semibold text-clay-muted underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-3 focus-visible:outline-clay-ink"
             onClick={() => console.log("Send new code")}
           >
             Send new code
           </button>
 
           <div className="flex justify-center gap-4">
-            <button
-              className="w-1/2 py-3 bg-gray-500 text-black rounded-xl transition-colors font-bold shadow-xl border-2 border-gray-600"
+            <Button
+              variant="claySecondary"
+              size="clay"
+              className="w-1/2"
               onClick={() => onClose()}
             >
               Go Back
-            </button>
-            <button
-              className="w-1/2 py-3 bg-primary text-white rounded-xl transition-colors font-bold shadow-xl"
+            </Button>
+            <Button
+              variant="clayPrimary"
+              size="clay"
+              className="w-1/2"
               onClick={handleSubmit}
               disabled={code.join('').length !== 6}
             >
               Verify
-            </button>
+            </Button>
           </div>
         </div>
       </DialogContent>
