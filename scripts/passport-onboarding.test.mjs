@@ -35,6 +35,9 @@ assert.equal(validatePassportHandle("ma--ria").ok, false);
 assert.equal(validatePassportHandle("maria.eth").ok, false);
 assert.equal(validatePassportHandle("mar ia").ok, false);
 assert.equal(validatePassportHandle("admin").ok, false);
+assert.equal(validatePassportHandle("administrator").ok, false);
+assert.equal(validatePassportHandle("platform").ok, false);
+assert.equal(validatePassportHandle("nomadic-passport").ok, false);
 assert.equal(validatePassportHandle("lisbon-house").ok, false);
 assert.equal(validatePassportHandle("world").ok, false);
 assert.equal(validatePassportHandle("Maria").ok, true);
@@ -111,6 +114,17 @@ for (const f of bundlish) {
   assert.ok(!/ENS_SEPOLIA_RPC_URL/.test(src), `${f} must not reference server RPC env`);
 }
 console.log("ok — no client secrets");
+
+section("Generic Passport never inherits Victor Lisbon credential");
+const stampHook = read("hooks/useEnsCredentialStamp.ts");
+assert.ok(!stampHook.includes("DEFAULT_LISBON_CREDENTIAL_NAME"));
+assert.ok(stampHook.includes("lisbonCredentialNameFromPassport"));
+assert.ok(stampHook.includes("enabled: Boolean(credentialName)"));
+const stampsUi = read("components/passport/PassportCommunityStamps.tsx");
+assert.ok(stampsUi.includes("stamps-empty"));
+assert.ok(stampsUi.includes("No community credentials published yet."));
+assert.ok(!stampsUi.includes("DEFAULT_LISBON_CREDENTIAL_NAME"));
+console.log("ok — no Victor stamp fallback");
 
 section("Product passport surfaces hide chain jargon");
 const cover = read("components/passport/PassportCover.tsx");

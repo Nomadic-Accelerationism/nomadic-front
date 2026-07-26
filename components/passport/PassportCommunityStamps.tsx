@@ -10,7 +10,8 @@ export type PassportCommunityStampsProps = {
 export function PassportCommunityStamps({
   ensName,
 }: PassportCommunityStampsProps) {
-  const { stamp, isLoading, refetch } = useEnsCredentialStamp(ensName);
+  const { stamp, isLoading, refetch, hasCredentialTarget } =
+    useEnsCredentialStamp(ensName);
 
   return (
     <section aria-labelledby="passport-stamps-heading">
@@ -21,7 +22,16 @@ export function PassportCommunityStamps({
         Community stamps
       </h2>
 
-      {isLoading ? (
+      {!hasCredentialTarget ? (
+        <div
+          className="surface-soft px-3 py-4 text-xs text-[var(--nomadic-muted)]"
+          data-state="stamps-empty"
+        >
+          No community credentials published yet.
+        </div>
+      ) : null}
+
+      {hasCredentialTarget && isLoading ? (
         <div
           className="surface-soft flex items-center gap-2 px-3 py-4 text-xs text-[var(--nomadic-muted)]"
           role="status"
@@ -35,7 +45,7 @@ export function PassportCommunityStamps({
         </div>
       ) : null}
 
-      {!isLoading && stamp?.ok ? (
+      {hasCredentialTarget && !isLoading && stamp?.ok ? (
         <article
           className="surface-clay relative overflow-hidden px-4 py-3.5"
           data-stamp="lisbon-house"
@@ -66,27 +76,37 @@ export function PassportCommunityStamps({
         </article>
       ) : null}
 
-      {!isLoading && stamp && !stamp.ok ? (
-        <div
-          className="rounded-[var(--nomadic-radius-md)] border border-[var(--nomadic-pending)]/25 bg-[var(--nomadic-pending-soft)] px-3 py-3 text-xs text-[var(--nomadic-ink)]"
-          role="alert"
-          data-state="ens-unavailable"
-          data-code={stamp.code}
-        >
-          <p className="font-semibold">
-            {stamp.code === "RESOLVER_UNAVAILABLE"
-              ? "Resolver unavailable"
-              : "Credential unavailable"}
-          </p>
-          <p className="mt-1 text-[var(--nomadic-muted)]">{stamp.message}</p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="mt-2 text-[11px] font-semibold text-[var(--nomadic-orange-deep)] underline-offset-2 hover:underline"
+      {hasCredentialTarget && !isLoading && stamp && !stamp.ok ? (
+        stamp.code === "CREDENTIAL_UNAVAILABLE" ||
+        stamp.code === "INVALID_NAME" ? (
+          <div
+            className="surface-soft px-3 py-4 text-xs text-[var(--nomadic-muted)]"
+            data-state="stamps-empty"
           >
-            Retry
-          </button>
-        </div>
+            No community credentials published yet.
+          </div>
+        ) : (
+          <div
+            className="rounded-[var(--nomadic-radius-md)] border border-[var(--nomadic-pending)]/25 bg-[var(--nomadic-pending-soft)] px-3 py-3 text-xs text-[var(--nomadic-ink)]"
+            role="alert"
+            data-state="ens-unavailable"
+            data-code={stamp.code}
+          >
+            <p className="font-semibold">
+              {stamp.code === "RESOLVER_UNAVAILABLE"
+                ? "Credential check unavailable"
+                : "Credential unavailable"}
+            </p>
+            <p className="mt-1 text-[var(--nomadic-muted)]">{stamp.message}</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="mt-2 min-h-11 text-[11px] font-semibold text-[var(--nomadic-orange-deep)] underline-offset-2 hover:underline"
+            >
+              Retry
+            </button>
+          </div>
+        )
       ) : null}
     </section>
   );

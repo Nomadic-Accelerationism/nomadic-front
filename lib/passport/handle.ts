@@ -1,6 +1,9 @@
 /**
  * Passport handle (label) validation for onboarding.
  * Product name: {label}.nomadic-passport.eth
+ *
+ * Frontend is at least as restrictive as nomadic-back
+ * `RESERVED_PASSPORT_LABELS` (backend remains authoritative).
  */
 
 export const PASSPORT_ENS_PARENT = "nomadic-passport.eth";
@@ -8,30 +11,56 @@ export const PASSPORT_ENS_PARENT = "nomadic-passport.eth";
 export const HANDLE_MIN_LENGTH = 3;
 export const HANDLE_MAX_LENGTH = 20;
 
-/** Shared server/client reserved labels — never offer for self-service. */
+/**
+ * Canonical reserved labels aligned with backend reservedLabels.ts,
+ * plus a few extra FE-only blocks (resolver, security, testing).
+ */
 export const RESERVED_PASSPORT_HANDLES = new Set([
   "admin",
+  "administrator",
   "api",
   "app",
+  "auth",
+  "community",
+  "credential",
+  "credentials",
+  "dao",
+  "docs",
   "ens",
+  "eth",
   "help",
+  "house",
   "issuer",
+  "journey",
+  "journeys",
+  "lab",
   "lisbon",
   "lisbon-house",
+  "login",
   "magic",
+  "moderator",
   "nomadic",
+  "nomadic-passport",
+  "null",
+  "official",
+  "operator",
+  "owner",
   "passport",
+  "platform",
+  "proof",
+  "proofs",
+  "public",
   "resolver",
   "root",
   "security",
+  "status",
   "support",
   "system",
   "test",
   "testing",
-  "world",
-  "www",
-  "null",
   "undefined",
+  "www",
+  "world",
 ]);
 
 export type HandleValidation =

@@ -15,6 +15,7 @@ import { useUser } from "@/contexts/UserContext";
 import { usePrivatePassport } from "@/hooks/usePrivatePassport";
 import { usePassportHandleAvailability } from "@/hooks/usePassportHandleAvailability";
 import { usePassportProvisionFlow } from "@/hooks/usePassportProvisionFlow";
+import { fetchPrivatePassport } from "@/lib/passport/fetch-me";
 import { displayLabelFromHandle } from "@/lib/passport/handle";
 import {
   evaluateProvisioningGate,
@@ -86,11 +87,29 @@ export function StartOnboardingScreen() {
     }
     if (flow.phase === "complete") {
       void (async () => {
-        await refetch();
-        router.replace("/passport");
+        refetch();
+        const token = await resolveSessionDidToken(didToken);
+        if (!token) return;
+        try {
+          const me = await fetchPrivatePassport(token);
+          const ensName =
+            typeof me.passport.ensName === "string"
+              ? me.passport.ensName.trim()
+              : "";
+          const expected = flow.provision?.passportName?.toLowerCase();
+          const issuedOk =
+            me.passport.ensStatus === "ISSUED" &&
+            ensName.length > 0 &&
+            (!expected || ensName.toLowerCase() === expected);
+          if (issuedOk) {
+            router.replace("/passport");
+          }
+        } catch {
+          // Stay on provision UI until /passport/me confirms ISSUED.
+        }
       })();
     }
-  }, [flow.phase, flow.provision, refetch, router]);
+  }, [didToken, flow.phase, flow.provision, refetch, router]);
 
   useEffect(() => {
     if (!existingQuery.data?.found) return;

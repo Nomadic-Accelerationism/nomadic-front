@@ -105,7 +105,35 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
   const attemptRef = useRef<SafeResumeRecord | null>(null);
   const platformMutex = useRef(false);
   const pollTimer = useRef<number | null>(null);
+  const pollCount = useRef(0);
   const cancelled = useRef(false);
+  const MAX_POLL_ATTEMPTS = 40;
+
+  const confirmIssuedWithMe = useCallback(
+    async (
+      didToken: string,
+      expectedName: string | null | undefined
+    ): Promise<boolean> => {
+      try {
+        const me = await fetchPrivatePassport(didToken);
+        const ensName =
+          typeof me.passport.ensName === "string"
+            ? me.passport.ensName.trim()
+            : "";
+        if (me.passport.ensStatus !== "ISSUED" || !ensName) return false;
+        if (
+          expectedName &&
+          ensName.toLowerCase() !== expectedName.trim().toLowerCase()
+        ) {
+          return false;
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    []
+  );
 
   const stopPoll = useCallback(() => {
     if (pollTimer.current != null) {
@@ -173,7 +201,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
             // keep prior
           }
           if (error instanceof ProvisionClientError) {
-            setMessage(productMessageForProvisionError(error.code, error.message));
+            setMessage(productMessageForProvisionError(error.code));
             if (error.code !== "LOCK_HELD") {
               setPhase(
                 error.code === "MINT_ADAPTER_UNAVAILABLE" ? "blocked" : "failed"
@@ -201,6 +229,15 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
     (didToken: string, id: string, delayMs = 2200) => {
       stopPoll();
       pollTimer.current = window.setTimeout(async () => {
+        pollCount.current += 1;
+        if (pollCount.current > MAX_POLL_ATTEMPTS) {
+          setMessage(
+            "We couldn’t verify the transaction yet. Try again shortly."
+          );
+          setPhase("failed");
+          playBloom();
+          return;
+        }
         try {
           let next = await getProvision(didToken, id);
           if (cancelled.current) return;
@@ -211,6 +248,14 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
           }
 
           if (next.status === "ISSUED") {
+            const confirmed = await confirmIssuedWithMe(
+              didToken,
+              next.passportName
+            );
+            if (!confirmed) {
+              schedulePoll(didToken, id, Math.min(delayMs * 1.35, 8000));
+              return;
+            }
             clearProvisionResume();
             attemptRef.current = null;
             setPhase("complete");
@@ -227,7 +272,13 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
         }
       }, delayMs);
     },
-    [applyProvision, queryClient, runPlatformLoop, stopPoll]
+    [
+      applyProvision,
+      confirmIssuedWithMe,
+      queryClient,
+      runPlatformLoop,
+      stopPoll,
+    ]
   );
 
   const clearAttemptForNewLabel = useCallback((label: string) => {
@@ -260,6 +311,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
       setMessage(null);
       setInsufficientFunds(false);
       setPhase("preparing");
+      pollCount.current = 0;
 
       try {
         const adapter = await refreshMintAdapter();
@@ -328,6 +380,15 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
         next = await runPlatformLoop(input.didToken, next);
 
         if (next.status === "ISSUED") {
+          const confirmed = await confirmIssuedWithMe(
+            input.didToken,
+            next.passportName
+          );
+          if (!confirmed) {
+            setPhase("verifying");
+            schedulePoll(input.didToken, next.id);
+            return;
+          }
           clearProvisionResume();
           setPhase("complete");
           playSuccess();
@@ -340,9 +401,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
         }
       } catch (error) {
         if (error instanceof ProvisionClientError) {
-          setMessage(
-            productMessageForProvisionError(error.code, error.message)
-          );
+          setMessage(productMessageForProvisionError(error.code));
           setPhase(
             error.code === "MINT_ADAPTER_UNAVAILABLE" ? "blocked" : "failed"
           );
@@ -357,6 +416,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
     },
     [
       applyProvision,
+      confirmIssuedWithMe,
       queryClient,
       refreshMintAdapter,
       runPlatformLoop,
@@ -391,9 +451,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
           schedulePoll(input.didToken, next.id);
         } catch (error) {
           if (error instanceof ProvisionClientError) {
-            setMessage(
-              productMessageForProvisionError(error.code, error.message)
-            );
+            setMessage(productMessageForProvisionError(error.code));
           }
           playBloom();
         }
@@ -427,6 +485,15 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
         applyProvision(next);
 
         if (next.status === "ISSUED") {
+          const confirmed = await confirmIssuedWithMe(
+            input.didToken,
+            next.passportName
+          );
+          if (!confirmed) {
+            setPhase("verifying");
+            schedulePoll(input.didToken, next.id);
+            return;
+          }
           clearProvisionResume();
           setPhase("complete");
           playSuccess();
@@ -447,9 +514,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
           // keep
         }
         if (error instanceof ProvisionClientError) {
-          setMessage(
-            productMessageForProvisionError(error.code, error.message)
-          );
+          setMessage(productMessageForProvisionError(error.code));
         } else {
           setMessage(
             "We couldn’t verify the transaction yet. Try again shortly."
@@ -462,6 +527,7 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
     },
     [
       applyProvision,
+      confirmIssuedWithMe,
       provision,
       queryClient,
       runPlatformLoop,
@@ -499,6 +565,15 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
         applyProvision(next);
 
         if (next.status === "ISSUED") {
+          const confirmed = await confirmIssuedWithMe(
+            input.didToken,
+            next.passportName
+          );
+          if (!confirmed) {
+            setPhase("verifying");
+            schedulePoll(input.didToken, next.id);
+            return;
+          }
           clearProvisionResume();
           setPhase("complete");
           playSuccess();
@@ -524,7 +599,13 @@ export function usePassportProvisionFlow(): ProvisionFlowApi {
         setBusy(false);
       }
     },
-    [applyProvision, queryClient, runPlatformLoop, schedulePoll]
+    [
+      applyProvision,
+      confirmIssuedWithMe,
+      queryClient,
+      runPlatformLoop,
+      schedulePoll,
+    ]
   );
 
   const needsUserSignature = Boolean(

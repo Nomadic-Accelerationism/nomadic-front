@@ -144,11 +144,18 @@ export function parseMintAdapterStatus(
 
   const row =
     body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  // Ignore backend `reason` — never treat internal readiness as product copy.
   return {
     available: false,
-    reason: typeof row.reason === "string" ? row.reason : undefined,
     code: typeof row.code === "string" ? row.code : "MINT_ADAPTER_UNAVAILABLE",
     error:
       typeof row.error === "string" ? row.error : "MINT_ADAPTER_UNAVAILABLE",
+    message:
+      typeof row.message === "string" &&
+      !/^(FEATURE_DISABLED|MISSING_|PLATFORM_SIGNER|ARTIFACTS_)/i.test(
+        row.message
+      )
+        ? row.message
+        : "Passport creation is temporarily unavailable.",
   };
 }

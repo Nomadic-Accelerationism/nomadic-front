@@ -68,9 +68,11 @@ export type MintAdapterStatus =
     }
   | {
       available: false;
+      /** @deprecated Backend may still emit reason; BFF strips it. Do not render. */
       reason?: string;
       code?: string;
       error?: string;
+      message?: string;
     };
 
 /** Product-facing phases — not every backend enum. */
