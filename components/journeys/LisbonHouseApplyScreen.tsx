@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WorldVerificationPanel } from "@/components/world/WorldVerificationPanel";
 import { useUser } from "@/contexts/UserContext";
 import { usePrivatePassport } from "@/hooks/usePrivatePassport";
 import {
@@ -274,27 +273,30 @@ export function LisbonHouseApplyScreen() {
         </section>
 
         {!submitted ? (
-          <div className="mt-8">
+          <section
+            className="surface-soft mt-8 px-4 py-5 text-left"
+            aria-labelledby="passport-world-checks-heading"
+            data-world-integration-boundary="passport-redirect"
+          >
+            <h2
+              id="passport-world-checks-heading"
+              className="text-base font-semibold text-[var(--nomadic-ink)]"
+            >
+              World checks live on your Passport
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--nomadic-muted)]">
+              {worldConfigured
+                ? "Identity Check and Selfie Check run on the Passport screen. Complete them there, then return here to apply."
+                : "World verification is not available yet."}
+            </p>
             {worldConfigured ? (
-              <WorldVerificationPanel
-                signal={publicAddress || undefined}
-                backendProofs={passport?.proofs}
-                onProofSynced={() => refetch()}
-              />
-            ) : (
-              <section
-                className="rounded-[var(--nomadic-radius-md)] border border-[var(--nomadic-pending)]/25 bg-[var(--nomadic-pending-soft)] px-4 py-5 text-left"
-                data-world-integration-boundary="unavailable"
-              >
-                <h2 className="text-base font-semibold text-[var(--nomadic-ink)]">
-                  Verification
-                </h2>
-                <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
-                  World verification is not available yet.
-                </p>
-              </section>
-            )}
-          </div>
+              <Button asChild size="lg" className="mt-4 w-full">
+                <Link href="/passport#world-verification">
+                  Open Passport World checks
+                </Link>
+              </Button>
+            ) : null}
+          </section>
         ) : null}
 
         <section

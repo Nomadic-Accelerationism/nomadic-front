@@ -8,7 +8,6 @@ import {
   type PassportProofUiStatus,
 } from "@/lib/passport/merge-proofs";
 import type { PassportProof } from "@/lib/passport/types";
-import { LISBON_HOUSE_JOURNEY } from "@/lib/journeys/lisbon-house";
 import { isWorldPublicConfigured } from "@/lib/world/client";
 
 function statusBadgeClass(status: PassportProofUiStatus): string {
@@ -38,7 +37,6 @@ export type PassportProofsProps = {
 export function PassportProofs({ backendProofs }: PassportProofsProps) {
   const items = mergePassportProofs(backendProofs);
   const worldConfigured = isWorldPublicConfigured();
-  const applyHref = LISBON_HOUSE_JOURNEY.routes.apply;
   const anyIncomplete = items.some((item) => item.status !== "completed");
 
   return (
@@ -85,10 +83,10 @@ export function PassportProofs({ backendProofs }: PassportProofsProps) {
             ) : null}
             {item.status !== "completed" && worldConfigured ? (
               <Link
-                href={applyHref}
+                href="/passport#world-verification"
                 className="mt-3 inline-flex text-sm font-semibold text-[#ff671e] underline-offset-2 hover:underline"
               >
-                Complete via Lisbon House apply
+                Complete on Passport
               </Link>
             ) : null}
           </li>
@@ -100,9 +98,9 @@ export function PassportProofs({ backendProofs }: PassportProofsProps) {
           className="mt-4 text-xs text-gray-500"
           data-world-integration-boundary="passport-cta"
         >
-          Identity Check and Selfie Check run on the Journey apply flow. Local
-          IDKit success does not mark Passport Proofs verified until Nomadic
-          persists the result.
+          Identity Check and Selfie Check run on your Passport. Local IDKit
+          success does not mark Passport Proofs verified until Nomadic persists
+          the result.
         </p>
       ) : null}
     </section>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
 import { PassportCover } from "@/components/passport/PassportCover";
 import { PassportOpenSheet } from "@/components/passport/PassportOpenSheet";
+import { WorldVerificationPanel } from "@/components/world/WorldVerificationPanel";
 import { useUser } from "@/contexts/UserContext";
 import { usePrivatePassport } from "@/hooks/usePrivatePassport";
 import { passportBookTitle } from "@/lib/passport/display-name";
@@ -14,10 +15,11 @@ import {
   isPassportBookOpen,
   type PassportBookState,
 } from "@/lib/passport/ui-state";
+import { isWorldPublicConfigured } from "@/lib/world/client";
 
 export function PassportScreen() {
   const router = useRouter();
-  const { isAuthenticated, isInitialized, logout } = useUser();
+  const { isAuthenticated, isInitialized, logout, publicAddress } = useUser();
   const {
     passport,
     isLoading,
@@ -30,6 +32,7 @@ export function PassportScreen() {
     isBackendError,
   } = usePrivatePassport();
   const [bookState, setBookState] = useState<PassportBookState>("closed");
+  const worldConfigured = isWorldPublicConfigured();
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -138,13 +141,42 @@ export function PassportScreen() {
     passport.ensStatus === "ISSUED" && passport.ensName
       ? passport.ensName.split(".")[0]
       : abbreviatedHandle(passport.publicAddress);
+  const worldSignal =
+    passport.publicAddress || publicAddress || undefined;
 
   return (
-    <MobileAppShell contentClassName="justify-center">
+    <MobileAppShell contentClassName="justify-start gap-6 pb-8 pt-2">
       <PassportCover
         displayName={coverName}
         onOpen={() => setBookState("open")}
+        subtitle={
+          passport.ensStatus === "ISSUED"
+            ? "Temporary communities · Journeys"
+            : "Passport name not issued yet · World checks stay available"
+        }
       />
+
+      {worldConfigured ? (
+        <WorldVerificationPanel
+          signal={worldSignal}
+          backendProofs={passport.proofs}
+          onProofSynced={() => refetch()}
+        />
+      ) : (
+        <section
+          id="world-verification"
+          className="w-full rounded-[var(--nomadic-radius-md)] border border-[var(--nomadic-pending)]/25 bg-[var(--nomadic-pending-soft)] px-4 py-5 text-left"
+          data-world-integration-boundary="unavailable"
+        >
+          <h2 className="text-base font-semibold text-[var(--nomadic-ink)]">
+            World verification
+          </h2>
+          <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
+            World verification is not available yet.
+          </p>
+        </section>
+      )}
+
       <PassportOpenSheet
         open={isPassportBookOpen(bookState)}
         onOpenChange={(open) => setBookState(open ? "open" : "closed")}

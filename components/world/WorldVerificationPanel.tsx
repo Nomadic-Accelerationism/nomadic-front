@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
   IDKitRequestWidget,
   identityCheck,
@@ -33,6 +34,12 @@ import type {
   WorldPreset,
   WorldVerifySummary,
 } from "@/lib/world/types";
+
+/** User-uploaded Nomadic mark (from `nomadic logo 26.svg` embed). */
+export const WORLD_IDENTITY_ACTION_LOGO = "/images/nomadic-logo-26.png";
+/** User-uploaded horizontal lockup (from `nomadic logo 26 horizontal.svg`). */
+export const WORLD_SELFIE_ACTION_LOGO =
+  "/images/nomadic-logo-26-horizontal.png";
 
 type CheckKind = "identity" | "selfie";
 
@@ -461,6 +468,7 @@ export function WorldVerificationPanel({
   if (!configured) {
     return (
       <section
+        id="world-verification"
         className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
         aria-labelledby="world-misconfigured-heading"
         data-world-integration-boundary="misconfigured"
@@ -481,6 +489,7 @@ export function WorldVerificationPanel({
 
   return (
     <section
+      id="world-verification"
       className="rounded-2xl border border-black/10 bg-white/90 px-4 py-5 text-left"
       aria-labelledby="world-verification-heading"
       data-world-integration-boundary="live"
@@ -539,6 +548,10 @@ export function WorldVerificationPanel({
           title="1. Identity Check"
           subtitle={`Action ${WORLD_IDENTITY_ACTION} · age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`}
           state={identity}
+          logoSrc={WORLD_IDENTITY_ACTION_LOGO}
+          logoAlt="Nomadic logo for Identity Check"
+          logoWidth={48}
+          logoHeight={48}
           disabled={busy || identity.status === "running" || bothDone}
           ctaLabel={
             identity.status === "success"
@@ -553,6 +566,10 @@ export function WorldVerificationPanel({
           title="2. Selfie Check"
           subtitle={`Action ${WORLD_SELFIE_ACTION} · after Identity`}
           state={selfie}
+          logoSrc={WORLD_SELFIE_ACTION_LOGO}
+          logoAlt="Nomadic horizontal logo for Selfie Check"
+          logoWidth={120}
+          logoHeight={24}
           disabled={
             busy ||
             selfie.status === "running" ||
@@ -609,6 +626,10 @@ function CheckRow({
   disabled,
   ctaLabel,
   onStart,
+  logoSrc,
+  logoAlt,
+  logoWidth,
+  logoHeight,
 }: {
   title: string;
   subtitle: string;
@@ -616,6 +637,10 @@ function CheckRow({
   disabled: boolean;
   ctaLabel: string;
   onStart: () => void;
+  logoSrc: string;
+  logoAlt: string;
+  logoWidth: number;
+  logoHeight: number;
 }) {
   const tone =
     state.status === "success"
@@ -631,28 +656,39 @@ function CheckRow({
   return (
     <li className={`rounded-xl border px-4 py-3 ${tone}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-black">{title}</p>
-          <p className="mt-1 text-xs text-gray-600">{subtitle}</p>
-          <p className="mt-2 text-xs text-gray-700">
-            {state.status === "success"
-              ? "Verified with World"
-              : `Status: ${statusLabel(state.status)}`}
-          </p>
-          {state.status === "success" && verifiedLabel ? (
-            <p className="mt-1 text-xs text-gray-600">
-              Verified at: {verifiedLabel}
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div className="relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-black/10 bg-white">
+            <Image
+              src={logoSrc}
+              alt={logoAlt}
+              width={logoWidth}
+              height={logoHeight}
+              className="h-auto max-h-10 w-auto max-w-[2.75rem] object-contain"
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-black">{title}</p>
+            <p className="mt-1 text-xs text-gray-600">{subtitle}</p>
+            <p className="mt-2 text-xs text-gray-700">
+              {state.status === "success"
+                ? "Verified with World"
+                : `Status: ${statusLabel(state.status)}`}
             </p>
-          ) : null}
-          {state.message ? (
-            <p className="mt-1 text-xs text-gray-700">{state.message}</p>
-          ) : null}
+            {state.status === "success" && verifiedLabel ? (
+              <p className="mt-1 text-xs text-gray-600">
+                Verified at: {verifiedLabel}
+              </p>
+            ) : null}
+            {state.message ? (
+              <p className="mt-1 text-xs text-gray-700">{state.message}</p>
+            ) : null}
+          </div>
         </div>
         <button
           type="button"
           disabled={disabled || state.status === "success"}
           onClick={onStart}
-          className="h-10 shrink-0 rounded-xl bg-[#ff671e] px-4 text-xs font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+          className="h-10 shrink-0 rounded-xl bg-[#ff671e] px-4 text-xs font-bold text-white transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff671e] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
         >
           {ctaLabel}
         </button>

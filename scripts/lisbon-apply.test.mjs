@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   fixtureCannotInventBackendState,
   getLisbonApplyReadiness,
@@ -8,6 +11,9 @@ import {
   mergePassportProofs,
   passportProofStatusLabel,
 } from "./passport-me-helpers.mjs";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const read = (rel) => readFileSync(join(root, rel), "utf8");
 
 test("Identity proof rendered from backend as Verified", () => {
   const merged = mergePassportProofs([
@@ -115,4 +121,34 @@ test("repeated submission label stays submitted not accepted", () => {
   const second = lisbonApplicationStatusLabel("SUBMITTED");
   assert.equal(first, second);
   assert.equal(first, "Application submitted");
+});
+
+test("World Identity + Selfie actions live on Passport, not Journey apply", () => {
+  const passportScreen = read("components/passport/PassportScreen.tsx");
+  const applyScreen = read("components/journeys/LisbonHouseApplyScreen.tsx");
+  const worldPanel = read("components/world/WorldVerificationPanel.tsx");
+  const proofs = read("components/passport/PassportProofs.tsx");
+
+  assert.ok(passportScreen.includes("WorldVerificationPanel"));
+  assert.ok(passportScreen.includes("world-verification"));
+  assert.equal(applyScreen.includes("WorldVerificationPanel"), false);
+  assert.ok(applyScreen.includes("/passport#world-verification"));
+  assert.ok(applyScreen.includes("Open Passport World checks"));
+  assert.ok(worldPanel.includes("/images/nomadic-logo-26.png"));
+  assert.ok(worldPanel.includes("/images/nomadic-logo-26-horizontal.png"));
+  assert.ok(worldPanel.includes("alt={logoAlt}"));
+  assert.ok(worldPanel.includes("Start Identity Check"));
+  assert.ok(worldPanel.includes("Start Selfie Check"));
+  assert.ok(proofs.includes("/passport#world-verification"));
+  assert.equal(proofs.includes("Complete via Lisbon House apply"), false);
+
+  // Demo logos must exist as public PNGs (from user uploads).
+  const mark = readFileSync(join(root, "public/images/nomadic-logo-26.png"));
+  const horizontal = readFileSync(
+    join(root, "public/images/nomadic-logo-26-horizontal.png"),
+  );
+  assert.ok(mark.length > 1000);
+  assert.ok(horizontal.length > 1000);
+  assert.equal(mark.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  assert.equal(horizontal.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
 });
