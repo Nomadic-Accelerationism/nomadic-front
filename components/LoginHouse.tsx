@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link';
+import { NomadicWordmark } from "@/components/shell/NomadicBrand";
 
 export default function HouseLoginComponent() {
 
@@ -30,12 +30,8 @@ export default function HouseLoginComponent() {
     <div className="flex flex-col items-center justify-between min-h-screen px-8 bg-white">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center mt-36">
-          <Image
-            src="/images/nomadic.webp"
-            alt="Nomadic Logo"
-            width={100}
-            height={100}
-          />
+          <NomadicWordmark height={36} decorative />
+          <span className="sr-only">Nomadic</span>
           <h2 className="mt-12 text-sm">Hacker House Login or Register</h2>
           <p className="mt-6 text-xl font-bold">Create your dream hack space</p>
           <p className="mt-2 text-sm text-gray-600 text-center">

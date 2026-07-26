@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +19,7 @@ import { isNomadicApiConfigured } from "@/lib/config/nomadic-api";
 import type { ValidateOtpErrorCode } from "@/lib/auth/validate-otp-errors";
 import { playBloom, playSuccess } from "@/lib/cuelume/feedback";
 import { getSepoliaMagic } from "@/lib/magic/sepolia-singleton";
+import { NomadicWordmark } from "@/components/shell/NomadicBrand";
 
 type AuthUiState =
   | "idle"
@@ -221,12 +221,8 @@ export default function UserLoginComponent() {
     <div className="flex min-h-dvh flex-col items-center justify-between bg-[var(--nomadic-bg)] px-8">
       <div className="w-full max-w-md space-y-8">
         <div className="mt-28 flex flex-col items-center">
-          <Image
-            src="/images/nomadic.webp"
-            alt="Nomadic Logo"
-            width={100}
-            height={100}
-          />
+          <NomadicWordmark height={36} decorative />
+          <span className="sr-only">Nomadic</span>
           <h2 className="mt-10 text-sm text-[var(--nomadic-muted)]">
             Nomad Login or Register
           </h2>

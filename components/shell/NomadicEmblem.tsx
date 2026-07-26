@@ -1,5 +1,12 @@
+"use client";
+
+import { NomadicMark } from "@/components/shell/NomadicBrand";
 import { cn } from "@/lib/utils";
 
+/**
+ * Compact brand mark. Prefer NomadicMark / NomadicWordmark for new call sites.
+ * Kept as a thin alias so existing imports keep the official isotipo.
+ */
 export function NomadicEmblem({
   className,
   size = 28,
@@ -7,19 +14,5 @@ export function NomadicEmblem({
   className?: string;
   size?: number;
 }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--nomadic-navy)]",
-        className
-      )}
-      style={{ width: size, height: size }}
-      aria-hidden
-    >
-      <span
-        className="rounded-full bg-[var(--nomadic-orange)]"
-        style={{ width: size * 0.36, height: size * 0.36 }}
-      />
-    </span>
-  );
+  return <NomadicMark size={size} className={cn(className)} decorative />;
 }

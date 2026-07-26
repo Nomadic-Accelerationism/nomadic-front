@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { NomadicEmblem } from "@/components/shell/NomadicEmblem";
+import { NomadicMark } from "@/components/shell/NomadicBrand";
 import { MOBILE_APP_MAX_WIDTH_PX } from "@/lib/shell/constants";
 
 /**
@@ -25,10 +25,8 @@ export default function LandingComponent() {
         <div className="relative z-10 flex flex-1 flex-col px-5 pb-6 pt-10">
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="landing-logo flex flex-col items-center gap-4">
-              <NomadicEmblem size={56} />
-              <p className="landing-brand font-display text-[42px] font-bold leading-none tracking-display">
-                Nomadic
-              </p>
+              <NomadicMark size={72} decorative />
+              <span className="sr-only">Nomadic</span>
             </div>
 
             <div className="landing-actions mt-8 flex w-full max-w-sm flex-col items-center gap-5">

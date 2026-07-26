@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { BottomNav } from "@/components/shell/BottomNav";
-import { NomadicEmblem } from "@/components/shell/NomadicEmblem";
+import { NomadicWordmark } from "@/components/shell/NomadicBrand";
 import { MOBILE_APP_MAX_WIDTH_PX } from "@/lib/shell/constants";
 import { cn } from "@/lib/utils";
 
@@ -49,11 +49,12 @@ export function MobileAppShell({
       >
         {showHeader ? (
           <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--nomadic-border)] px-4">
-            <Link href="/explore" className="flex items-center gap-2">
-              <NomadicEmblem size={28} />
-              <span className="font-display text-base font-bold tracking-display text-[var(--nomadic-ink)]">
-                Nomadic
-              </span>
+            <Link
+              href="/explore"
+              className="flex min-w-0 items-center"
+              aria-label="Nomadic home"
+            >
+              <NomadicWordmark height={22} decorative />
             </Link>
             {isAuthenticated ? (
               <button

@@ -8,6 +8,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
+import { NomadicMark } from "@/components/shell/NomadicBrand";
 import { PassportCover } from "@/components/passport/PassportCover";
 import { ProvisionProgress } from "@/components/onboarding/ProvisionProgress";
 import UserLoginComponent from "@/components/LoginUser";
@@ -232,6 +233,11 @@ export function StartOnboardingScreen() {
           data-onboarding="logged-out"
         >
           <div className="space-y-3">
+            {/* Brand mark only — headline below is product copy, not a wordmark. */}
+            <div className="flex justify-center">
+              <NomadicMark size={56} decorative />
+            </div>
+            <span className="sr-only">Nomadic</span>
             <h1 className="font-display text-[30px] font-bold leading-tight tracking-display text-[var(--nomadic-ink)]">
               Your Nomadic Passport
             </h1>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { IdCard, ScanFace, type LucideIcon } from "lucide-react";
 import {
   IDKitRequestWidget,
   identityCheck,
@@ -34,12 +34,7 @@ import type {
   WorldPreset,
   WorldVerifySummary,
 } from "@/lib/world/types";
-
-/** User-uploaded Nomadic mark (from `nomadic logo 26.svg` embed). */
-export const WORLD_IDENTITY_ACTION_LOGO = "/images/nomadic-logo-26.png";
-/** User-uploaded horizontal lockup (from `nomadic logo 26 horizontal.svg`). */
-export const WORLD_SELFIE_ACTION_LOGO =
-  "/images/nomadic-logo-26-horizontal.png";
+import { cn } from "@/lib/utils";
 
 type CheckKind = "identity" | "selfie";
 
@@ -69,6 +64,11 @@ type Props = {
   /** Fired after a check verifies and Passport refetch is attempted. */
   onProofSynced?: (kind: CheckKind) => void;
   onBothVerified?: () => void;
+  /**
+   * `cover` — compact dark styling for nesting inside PassportCover.
+   * Default light panel for non-cover surfaces.
+   */
+  variant?: "default" | "cover";
 };
 
 const INITIAL: StepState = {
@@ -122,7 +122,9 @@ export function WorldVerificationPanel({
   backendProofs,
   onProofSynced,
   onBothVerified,
+  variant = "default",
 }: Props) {
+  const isCover = variant === "cover";
   const queryClient = useQueryClient();
   const { didToken, publicAddress } = useUser();
   const [identity, setIdentity] = useState<StepState>(() =>
@@ -469,17 +471,33 @@ export function WorldVerificationPanel({
     return (
       <section
         id="world-verification"
-        className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
+        className={cn(
+          "text-left",
+          isCover
+            ? "rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-cover-cream)]/20 bg-[var(--nomadic-cover-cream)]/5 px-3 py-3"
+            : "rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5"
+        )}
         aria-labelledby="world-misconfigured-heading"
         data-world-integration-boundary="misconfigured"
+        data-world-variant={variant}
       >
         <h2
           id="world-misconfigured-heading"
-          className="text-base font-semibold text-amber-950"
+          className={cn(
+            "text-base font-semibold",
+            isCover ? "text-[var(--nomadic-cover-cream)]" : "text-amber-950"
+          )}
         >
           World not configured
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-amber-950">
+        <p
+          className={cn(
+            "mt-2 text-sm leading-relaxed",
+            isCover
+              ? "text-[var(--nomadic-cover-cream)]/70"
+              : "text-amber-950"
+          )}
+        >
           Set <code className="text-xs">NEXT_PUBLIC_WORLD_APP_ID</code> (and
           server RP secrets) to enable Identity Check and Selfie Check.
         </p>
@@ -490,48 +508,89 @@ export function WorldVerificationPanel({
   return (
     <section
       id="world-verification"
-      className="rounded-2xl border border-black/10 bg-white/90 px-4 py-5 text-left"
+      className={cn(
+        "text-left",
+        isCover
+          ? "rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-cover-cream)]/15 bg-[var(--nomadic-cover-cream)]/[0.04] px-3 py-3"
+          : "rounded-2xl border border-black/10 bg-white/90 px-4 py-5"
+      )}
       aria-labelledby="world-verification-heading"
       data-world-integration-boundary="live"
       data-world-environment={publicEnv}
+      data-world-variant={variant}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2
             id="world-verification-heading"
-            className="text-base font-semibold text-black"
+            className={cn(
+              "text-sm font-semibold",
+              isCover
+                ? "uppercase tracking-[0.12em] text-[var(--nomadic-cover-cream)]/80"
+                : "text-base text-black"
+            )}
           >
             World verification
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-gray-700">
+          <p
+            className={cn(
+              "mt-1.5 text-xs leading-relaxed",
+              isCover
+                ? "text-[var(--nomadic-cover-cream)]/55"
+                : "text-sm text-gray-700"
+            )}
+          >
             Complete Identity Check, then Selfie Check. Verified status comes
             from your Passport after the backend saves each proof.
           </p>
-          <p className="mt-2 text-xs text-gray-500">
-            IDKit environment:{" "}
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px]">
-              {publicEnv}
-            </code>
-            {publicEnv === "staging"
-              ? " (simulator OK)"
-              : " — set NEXT_PUBLIC_WORLD_ENVIRONMENT=staging for the simulator"}
-          </p>
+          {!isCover ? (
+            <p className="mt-2 text-xs text-gray-500">
+              IDKit environment:{" "}
+              <code className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px]">
+                {publicEnv}
+              </code>
+              {publicEnv === "staging"
+                ? " (simulator OK)"
+                : " — set NEXT_PUBLIC_WORLD_ENVIRONMENT=staging for the simulator"}
+            </p>
+          ) : null}
         </div>
         {bothDone ? (
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
+          <span
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-medium",
+              isCover
+                ? "bg-emerald-400/15 text-emerald-200"
+                : "bg-emerald-100 text-emerald-800"
+            )}
+          >
             Both verified
           </span>
         ) : null}
       </div>
 
       {panelError ? (
-        <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+        <p
+          className={cn(
+            "mt-3 rounded-xl px-3 py-2 text-sm",
+            isCover
+              ? "border border-rose-300/30 bg-rose-400/10 text-rose-100"
+              : "border border-rose-200 bg-rose-50 text-rose-900"
+          )}
+        >
           {panelError}
         </p>
       ) : null}
 
       {syncError ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+        <div
+          className={cn(
+            "mt-3 rounded-xl px-3 py-2 text-sm",
+            isCover
+              ? "border border-amber-300/30 bg-amber-400/10 text-amber-100"
+              : "border border-amber-200 bg-amber-50 text-amber-950"
+          )}
+        >
           <p>{syncError}</p>
           <button
             type="button"
@@ -543,15 +602,17 @@ export function WorldVerificationPanel({
         </div>
       ) : null}
 
-      <ol className="mt-5 space-y-3">
+      <ol className="mt-3 space-y-2">
         <CheckRow
-          title="1. Identity Check"
-          subtitle={`Action ${WORLD_IDENTITY_ACTION} · age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`}
+          title="Identity Check"
+          subtitle={
+            isCover
+              ? `Age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`
+              : `Action ${WORLD_IDENTITY_ACTION} · age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`
+          }
           state={identity}
-          logoSrc={WORLD_IDENTITY_ACTION_LOGO}
-          logoAlt="Nomadic logo for Identity Check"
-          logoWidth={48}
-          logoHeight={48}
+          icon={IdCard}
+          variant={variant}
           disabled={busy || identity.status === "running" || bothDone}
           ctaLabel={
             identity.status === "success"
@@ -563,13 +624,11 @@ export function WorldVerificationPanel({
           onStart={() => void beginCheck("identity")}
         />
         <CheckRow
-          title="2. Selfie Check"
-          subtitle={`Action ${WORLD_SELFIE_ACTION} · after Identity`}
+          title="Selfie Check"
+          subtitle={isCover ? "After Identity" : `Action ${WORLD_SELFIE_ACTION} · after Identity`}
           state={selfie}
-          logoSrc={WORLD_SELFIE_ACTION_LOGO}
-          logoAlt="Nomadic horizontal logo for Selfie Check"
-          logoWidth={120}
-          logoHeight={24}
+          icon={ScanFace}
+          variant={variant}
           disabled={
             busy ||
             selfie.status === "running" ||
@@ -626,10 +685,8 @@ function CheckRow({
   disabled,
   ctaLabel,
   onStart,
-  logoSrc,
-  logoAlt,
-  logoWidth,
-  logoHeight,
+  icon: Icon,
+  variant,
 }: {
   title: string;
   subtitle: string;
@@ -637,13 +694,19 @@ function CheckRow({
   disabled: boolean;
   ctaLabel: string;
   onStart: () => void;
-  logoSrc: string;
-  logoAlt: string;
-  logoWidth: number;
-  logoHeight: number;
+  icon: LucideIcon;
+  variant: "default" | "cover";
 }) {
-  const tone =
-    state.status === "success"
+  const isCover = variant === "cover";
+  const tone = isCover
+    ? state.status === "success"
+      ? "border-emerald-300/25 bg-emerald-400/10"
+      : state.status === "error"
+        ? "border-rose-300/25 bg-rose-400/10"
+        : state.status === "cancelled"
+          ? "border-amber-300/25 bg-amber-400/10"
+          : "border-[var(--nomadic-cover-cream)]/15 bg-[var(--nomadic-cover-cream)]/[0.06]"
+    : state.status === "success"
       ? "border-emerald-200 bg-emerald-50"
       : state.status === "error"
         ? "border-rose-200 bg-rose-50"
@@ -654,33 +717,74 @@ function CheckRow({
   const verifiedLabel = formatProofVerifiedAt(state.verifiedAt);
 
   return (
-    <li className={`rounded-xl border px-4 py-3 ${tone}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <div className="relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-black/10 bg-white">
-            <Image
-              src={logoSrc}
-              alt={logoAlt}
-              width={logoWidth}
-              height={logoHeight}
-              className="h-auto max-h-10 w-auto max-w-[2.75rem] object-contain"
-            />
+    <li className={cn("rounded-xl border px-3 py-2.5", tone)}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+          <div
+            className={cn(
+              "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border",
+              isCover
+                ? "border-[var(--nomadic-cover-cream)]/25 bg-[var(--nomadic-cover-cream)]/5 text-[var(--nomadic-cover-cream)]"
+                : "border-[var(--nomadic-border)] bg-[var(--nomadic-surface)] text-[var(--nomadic-ink)]"
+            )}
+            aria-hidden
+          >
+            <Icon className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-black">{title}</p>
-            <p className="mt-1 text-xs text-gray-600">{subtitle}</p>
-            <p className="mt-2 text-xs text-gray-700">
+            <p
+              className={cn(
+                "text-sm font-semibold",
+                isCover ? "text-[var(--nomadic-cover-cream)]" : "text-black"
+              )}
+            >
+              {title}
+            </p>
+            <p
+              className={cn(
+                "mt-0.5 text-[11px]",
+                isCover
+                  ? "text-[var(--nomadic-cover-cream)]/50"
+                  : "text-gray-600"
+              )}
+            >
+              {subtitle}
+            </p>
+            <p
+              className={cn(
+                "mt-1.5 text-[11px]",
+                isCover
+                  ? "text-[var(--nomadic-cover-cream)]/65"
+                  : "text-gray-700"
+              )}
+            >
               {state.status === "success"
                 ? "Verified with World"
                 : `Status: ${statusLabel(state.status)}`}
             </p>
             {state.status === "success" && verifiedLabel ? (
-              <p className="mt-1 text-xs text-gray-600">
+              <p
+                className={cn(
+                  "mt-1 text-[11px]",
+                  isCover
+                    ? "text-[var(--nomadic-cover-cream)]/50"
+                    : "text-gray-600"
+                )}
+              >
                 Verified at: {verifiedLabel}
               </p>
             ) : null}
             {state.message ? (
-              <p className="mt-1 text-xs text-gray-700">{state.message}</p>
+              <p
+                className={cn(
+                  "mt-1 text-[11px]",
+                  isCover
+                    ? "text-[var(--nomadic-cover-cream)]/65"
+                    : "text-gray-700"
+                )}
+              >
+                {state.message}
+              </p>
             ) : null}
           </div>
         </div>
@@ -688,7 +792,12 @@ function CheckRow({
           type="button"
           disabled={disabled || state.status === "success"}
           onClick={onStart}
-          className="h-10 shrink-0 rounded-xl bg-[#ff671e] px-4 text-xs font-bold text-white transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff671e] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+          className={cn(
+            "h-9 shrink-0 rounded-xl px-3 text-[11px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nomadic-orange)] focus-visible:ring-offset-2 disabled:cursor-not-allowed",
+            isCover
+              ? "bg-[var(--nomadic-orange)] text-[var(--nomadic-ink)] disabled:bg-[var(--nomadic-cover-cream)]/15 disabled:text-[var(--nomadic-cover-cream)]/35"
+              : "bg-[#ff671e] text-white hover:opacity-90 disabled:bg-gray-200 disabled:text-gray-500"
+          )}
         >
           {ctaLabel}
         </button>

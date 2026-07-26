@@ -123,32 +123,58 @@ test("repeated submission label stays submitted not accepted", () => {
   assert.equal(first, "Application submitted");
 });
 
-test("World Identity + Selfie actions live on Passport, not Journey apply", () => {
+test("World Identity + Selfie actions live inside Passport cover, not Journey", () => {
   const passportScreen = read("components/passport/PassportScreen.tsx");
+  const passportCover = read("components/passport/PassportCover.tsx");
   const applyScreen = read("components/journeys/LisbonHouseApplyScreen.tsx");
   const worldPanel = read("components/world/WorldVerificationPanel.tsx");
   const proofs = read("components/passport/PassportProofs.tsx");
+  const brand = read("components/shell/NomadicBrand.tsx");
 
-  assert.ok(passportScreen.includes("WorldVerificationPanel"));
-  assert.ok(passportScreen.includes("world-verification"));
+  // Checks must be children of PassportCover (inside dark card DOM).
+  assert.ok(passportCover.includes("children"));
+  assert.ok(passportCover.includes('data-passport-cover-card="true"'));
+  assert.ok(passportCover.includes('data-passport-cover-slot="world"'));
+  const coverOpen = passportScreen.indexOf("<PassportCover");
+  const coverClose = passportScreen.indexOf("</PassportCover>");
+  const panelIdx = passportScreen.indexOf("<WorldVerificationPanel");
+  assert.ok(coverOpen >= 0 && coverClose > coverOpen);
+  assert.ok(panelIdx > coverOpen && panelIdx < coverClose);
+  assert.ok(passportScreen.includes('variant="cover"'));
   assert.equal(applyScreen.includes("WorldVerificationPanel"), false);
   assert.ok(applyScreen.includes("/passport#world-verification"));
-  assert.ok(applyScreen.includes("Open Passport World checks"));
-  assert.ok(worldPanel.includes("/images/nomadic-logo-26.png"));
-  assert.ok(worldPanel.includes("/images/nomadic-logo-26-horizontal.png"));
-  assert.ok(worldPanel.includes("alt={logoAlt}"));
+
+  // Brand PNGs are branding-only — never check icons.
+  assert.ok(brand.includes("/images/nomadic-logo-26.png"));
+  assert.ok(brand.includes("/images/nomadic-logo-26-horizontal.png"));
+  assert.equal(worldPanel.includes("/images/nomadic-logo-26.png"), false);
+  assert.equal(
+    worldPanel.includes("/images/nomadic-logo-26-horizontal.png"),
+    false,
+  );
+  assert.ok(worldPanel.includes("IdCard"));
+  assert.ok(worldPanel.includes("ScanFace"));
+  assert.ok(worldPanel.includes('beginCheck("identity")'));
+  assert.ok(worldPanel.includes('beginCheck("selfie")'));
   assert.ok(worldPanel.includes("Start Identity Check"));
   assert.ok(worldPanel.includes("Start Selfie Check"));
   assert.ok(proofs.includes("/passport#world-verification"));
   assert.equal(proofs.includes("Complete via Lisbon House apply"), false);
 
-  // Demo logos must exist as public PNGs (from user uploads).
   const mark = readFileSync(join(root, "public/images/nomadic-logo-26.png"));
   const horizontal = readFileSync(
     join(root, "public/images/nomadic-logo-26-horizontal.png"),
   );
   assert.ok(mark.length > 1000);
   assert.ok(horizontal.length > 1000);
-  assert.equal(mark.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
-  assert.equal(horizontal.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+});
+
+test("shared brand surfaces use official PNGs as wordmark/mark", () => {
+  const shell = read("components/shell/MobileAppShell.tsx");
+  const landing = read("components/Landing.tsx");
+  const login = read("components/LoginUser.tsx");
+  assert.ok(shell.includes("NomadicWordmark"));
+  assert.equal(shell.includes("NomadicEmblem"), false);
+  assert.ok(landing.includes("NomadicMark"));
+  assert.ok(login.includes("NomadicWordmark"));
 });

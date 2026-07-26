@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 import { Button } from "@/components/ui/button"
 import { MenuIcon, X } from 'lucide-react'
 import {
@@ -11,6 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { NomadicWordmark } from "@/components/shell/NomadicBrand";
 
 export default function MenuHouseHeaderComponent() {
   const menuItems = [
@@ -25,18 +25,10 @@ export default function MenuHouseHeaderComponent() {
   return (
     <Sheet>
       <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
-        <div className="flex items-center">
-          <Image
-            src="/images/nomadic.png"
-            alt="Nomadic Logo"
-            width={43}
-            height={43}
-            className="mr-2"
-          />
-          <div className="flex flex-col">
-            <p className="text-2xl font-bold pb-0">Nomadic</p>
-            <p className="text-sm text-gray-800">Hacker House</p>
-          </div>
+        <div className="flex flex-col items-start gap-1">
+          <NomadicWordmark height={28} decorative />
+          <span className="sr-only">Nomadic</span>
+          <p className="text-sm text-gray-800">Hacker House</p>
         </div>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="text-gray-700">
@@ -49,14 +41,8 @@ export default function MenuHouseHeaderComponent() {
         <div className="h-full bg-gradient-to-t from-[#ff7231] via-[#ffc4a8] to-white flex flex-col">
           <SheetHeader className="p-4 flex justify-between items-center border-b">
             <SheetTitle className="flex items-center">
-              <Image
-                src="/images/nomadic.svg"
-                alt="Nomadic Logo"
-                width={40}
-                height={40}
-                className="mr-2"
-              />
-              <span className="text-xl font-bold">Nomadic</span>
+              <NomadicWordmark height={24} decorative />
+              <span className="sr-only">Nomadic</span>
             </SheetTitle>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto px-4">

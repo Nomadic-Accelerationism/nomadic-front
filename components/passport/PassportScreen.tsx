@@ -145,7 +145,7 @@ export function PassportScreen() {
     passport.publicAddress || publicAddress || undefined;
 
   return (
-    <MobileAppShell contentClassName="justify-start gap-6 pb-8 pt-2">
+    <MobileAppShell contentClassName="justify-start gap-4 pb-8 pt-2">
       <PassportCover
         displayName={coverName}
         onOpen={() => setBookState("open")}
@@ -154,28 +154,30 @@ export function PassportScreen() {
             ? "Temporary communities · Journeys"
             : "Passport name not issued yet · World checks stay available"
         }
-      />
-
-      {worldConfigured ? (
-        <WorldVerificationPanel
-          signal={worldSignal}
-          backendProofs={passport.proofs}
-          onProofSynced={() => refetch()}
-        />
-      ) : (
-        <section
-          id="world-verification"
-          className="w-full rounded-[var(--nomadic-radius-md)] border border-[var(--nomadic-pending)]/25 bg-[var(--nomadic-pending-soft)] px-4 py-5 text-left"
-          data-world-integration-boundary="unavailable"
-        >
-          <h2 className="text-base font-semibold text-[var(--nomadic-ink)]">
-            World verification
-          </h2>
-          <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
-            World verification is not available yet.
-          </p>
-        </section>
-      )}
+      >
+        {worldConfigured ? (
+          <WorldVerificationPanel
+            variant="cover"
+            signal={worldSignal}
+            backendProofs={passport.proofs}
+            onProofSynced={() => refetch()}
+          />
+        ) : (
+          <section
+            id="world-verification"
+            className="rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-cover-cream)]/20 bg-[var(--nomadic-cover-cream)]/5 px-3 py-3 text-left"
+            data-world-integration-boundary="unavailable"
+            data-world-variant="cover"
+          >
+            <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--nomadic-cover-cream)]/80">
+              World verification
+            </h2>
+            <p className="mt-1.5 text-xs text-[var(--nomadic-cover-cream)]/55">
+              World verification is not available yet.
+            </p>
+          </section>
+        )}
+      </PassportCover>
 
       <PassportOpenSheet
         open={isPassportBookOpen(bookState)}

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { MenuIcon } from "lucide-react";
 import {
@@ -14,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
+import { NomadicWordmark } from "@/components/shell/NomadicBrand";
 
 /**
  * Slim header for secondary/legacy screens.
@@ -38,17 +38,8 @@ export default function MenuUserHeaderComponent() {
     <Sheet>
       <header className="flex items-center justify-between bg-[var(--nomadic-app-bg)] px-6 pb-2 pt-8">
         <div className="flex items-center">
-          <Link href="/explore">
-            <div className="flex cursor-pointer items-center">
-              <Image
-                src="/images/nomadic.svg"
-                alt="Nomadic Logo"
-                width={43}
-                height={43}
-                className="mr-2"
-              />
-              <span className="text-2xl font-bold">Nomadic</span>
-            </div>
+          <Link href="/explore" aria-label="Nomadic home">
+            <NomadicWordmark height={28} decorative />
           </Link>
         </div>
         <SheetTrigger asChild>
@@ -62,14 +53,8 @@ export default function MenuUserHeaderComponent() {
         <div className="flex h-full flex-col bg-[var(--nomadic-app-bg)]">
           <SheetHeader className="flex items-center justify-between border-b p-4">
             <SheetTitle className="flex items-center">
-              <Image
-                src="/images/nomadic.svg"
-                alt="Nomadic Logo"
-                width={40}
-                height={40}
-                className="mr-2"
-              />
-              <span className="text-xl font-bold">Nomadic</span>
+              <NomadicWordmark height={24} decorative />
+              <span className="sr-only">Nomadic</span>
             </SheetTitle>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto px-4">
