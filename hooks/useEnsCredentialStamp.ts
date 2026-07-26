@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { DEFAULT_LISBON_CREDENTIAL_NAME } from "@/lib/ensv2/passport-credential-read";
 import { lisbonCredentialNameFromPassport } from "@/lib/passport/display-name";
 
 export type EnsStampOk = {
@@ -43,22 +42,30 @@ async function fetchStamp(name: string): Promise<EnsStampOk | EnsStampErr> {
   return body;
 }
 
+/**
+ * Load a published Lisbon credential for the given Passport ensName.
+ * Never falls back to Victor or any other demo credential.
+ */
 export function useEnsCredentialStamp(ensName: string | null | undefined) {
-  const credentialName =
-    lisbonCredentialNameFromPassport(ensName) || DEFAULT_LISBON_CREDENTIAL_NAME;
+  const credentialName = lisbonCredentialNameFromPassport(ensName);
 
   const query = useQuery({
     queryKey: ["ens", "credential", credentialName],
-    queryFn: () => fetchStamp(credentialName),
+    queryFn: () => fetchStamp(credentialName as string),
+    enabled: Boolean(credentialName),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
 
   return {
-    stamp: query.data ?? null,
-    isLoading: query.isLoading,
-    isError: query.isError || (query.data != null && query.data.ok === false),
+    stamp: credentialName ? query.data ?? null : null,
+    isLoading: Boolean(credentialName) && query.isLoading,
+    isError:
+      Boolean(credentialName) &&
+      (query.isError || (query.data != null && query.data.ok === false)),
+    hasCredentialTarget: Boolean(credentialName),
     refetch: () => {
+      if (!credentialName) return;
       void query.refetch();
     },
   };

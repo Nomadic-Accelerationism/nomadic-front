@@ -106,7 +106,12 @@ assert.ok(flow.includes("advancePlatform"));
 assert.ok(flow.includes("submitUserTx"));
 assert.ok(flow.includes("createIdempotencyKey"));
 assert.ok(flow.includes("readProvisionResume"));
+assert.ok(flow.includes("confirmIssuedWithMe") || flow.includes("fetchPrivatePassport"));
+assert.ok(flow.includes("MAX_POLL_ATTEMPTS") || flow.includes("pollCount"));
+assert.ok(flow.includes("getProvision"));
 assert.ok(!flow.includes("new Magic("));
+// Ambiguous platform failure re-reads status before retrying advance.
+assert.ok(flow.includes("Timeout / ambiguous") || flow.includes("re-read"));
 console.log("ok — Magic + orchestration");
 
 section("BFF routes exist and strip wallet fields");
@@ -114,7 +119,14 @@ const provisionRoute = read("app/api/passport/provision/route.ts");
 assert.ok(provisionRoute.includes("idempotencyKey"));
 assert.ok(provisionRoute.includes("label"));
 assert.ok(!provisionRoute.includes("ownerWallet"));
-assert.ok(read("app/api/passport/mint-adapter/route.ts").includes("mint-adapter"));
+const mintAdapterRoute = read("app/api/passport/mint-adapter/route.ts");
+assert.ok(mintAdapterRoute.includes("mint-adapter"));
+assert.ok(mintAdapterRoute.includes("Passport creation is temporarily unavailable."));
+assert.ok(!mintAdapterRoute.includes("FEATURE_DISABLED"));
+assert.ok(
+  !mintAdapterRoute.includes("reason:") ||
+    mintAdapterRoute.includes("Strips internal reasons")
+);
 assert.ok(
   read("app/api/passport/provision/[id]/platform/advance/route.ts").includes(
     "platform/advance"
@@ -125,6 +137,9 @@ assert.ok(
     "app/api/passport/provision/[id]/user-transaction/route.ts"
   ).includes("transactionHash")
 );
+const bffProxy = read("lib/passport/provision/bff-proxy.ts");
+assert.ok(bffProxy.includes('delete row.reason'));
+assert.ok(bffProxy.includes("Passport creation is temporarily unavailable."));
 console.log("ok — BFF");
 
 section("Resume storage is non-sensitive");
@@ -159,6 +174,17 @@ assert.equal(
 assert.equal(
   productMessageForProvisionError("PASSPORT_ALREADY_EXISTS"),
   "This wallet already has a Passport."
+);
+assert.equal(
+  productMessageForProvisionError("MINT_ADAPTER_UNAVAILABLE", "FEATURE_DISABLED"),
+  "Passport creation is temporarily unavailable."
+);
+assert.equal(
+  productMessageForProvisionError("unknown_code", "FEATURE_DISABLED"),
+  "Passport creation is temporarily unavailable."
+);
+assert.ok(
+  !productMessageForProvisionError("MINT_ADAPTER_UNAVAILABLE").includes("FEATURE")
 );
 console.log("ok — errors");
 

@@ -29,7 +29,13 @@ export function mapBackendStatusToProductPhase(status) {
   }
 }
 
-export function productMessageForProvisionError(code) {
+const INTERNAL_REASON_RE =
+  /^(FEATURE_DISABLED|MISSING_PLATFORM_KEY|PLATFORM_SIGNER_MISMATCH|MISSING_SEPOLIA_RPC|ARTIFACTS_NOT_LOADED|USE_PROVISION_FLOW)$/i;
+
+export function productMessageForProvisionError(
+  code,
+  fallback = "Something went wrong. Please try again."
+) {
   const map = {
     INVALID_LABEL: "Choose a valid Passport name.",
     RESERVED_LABEL: "That Passport name is reserved.",
@@ -48,7 +54,15 @@ export function productMessageForProvisionError(code) {
     POSTCONDITION_FAILED:
       "We couldn’t verify your Passport yet. Try again shortly.",
   };
-  return map[code] || "Something went wrong. Please try again.";
+  const safeFallback =
+    typeof fallback === "string" && INTERNAL_REASON_RE.test(fallback.trim())
+      ? "Passport creation is temporarily unavailable."
+      : fallback;
+  if (!code) return safeFallback;
+  if (INTERNAL_REASON_RE.test(code)) {
+    return "Passport creation is temporarily unavailable.";
+  }
+  return map[code] || safeFallback;
 }
 
 export function parseMintAdapterStatus(body, httpOk) {
@@ -57,8 +71,13 @@ export function parseMintAdapterStatus(body, httpOk) {
   }
   return {
     available: false,
-    reason: body?.reason,
     code: body?.code || "MINT_ADAPTER_UNAVAILABLE",
+    error: body?.error || "MINT_ADAPTER_UNAVAILABLE",
+    message:
+      typeof body?.message === "string" &&
+      !INTERNAL_REASON_RE.test(body.message)
+        ? body.message
+        : "Passport creation is temporarily unavailable.",
   };
 }
 

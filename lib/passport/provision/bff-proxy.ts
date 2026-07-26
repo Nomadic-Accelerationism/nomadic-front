@@ -82,6 +82,32 @@ export async function proxyPassportProvision(
       data = null;
     }
 
+    // Never forward internal adapter readiness reasons to the browser.
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+      const row = { ...(data as Record<string, unknown>) };
+      delete row.reason;
+      const code =
+        typeof row.code === "string"
+          ? row.code
+          : typeof row.error === "string"
+            ? row.error
+            : "";
+      const message =
+        typeof row.message === "string" ? row.message.trim() : "";
+      const internal =
+        /^(FEATURE_DISABLED|MISSING_PLATFORM_KEY|PLATFORM_SIGNER_MISMATCH|MISSING_SEPOLIA_RPC|ARTIFACTS_NOT_LOADED)$/i;
+      if (
+        code === "MINT_ADAPTER_UNAVAILABLE" ||
+        internal.test(code) ||
+        internal.test(message)
+      ) {
+        row.error = "MINT_ADAPTER_UNAVAILABLE";
+        row.code = "MINT_ADAPTER_UNAVAILABLE";
+        row.message = "Passport creation is temporarily unavailable.";
+      }
+      data = row;
+    }
+
     return NextResponse.json(data ?? { error: "empty_response" }, {
       status: response.status,
       headers: { "Cache-Control": "no-store" },

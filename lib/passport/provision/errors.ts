@@ -29,12 +29,26 @@ const PRODUCT_MESSAGES: Record<string, string> = {
   internal_error: "Something went wrong. Please try again.",
 };
 
+const INTERNAL_REASON_RE =
+  /^(FEATURE_DISABLED|MISSING_PLATFORM_KEY|PLATFORM_SIGNER_MISMATCH|MISSING_SEPOLIA_RPC|ARTIFACTS_NOT_LOADED|USE_PROVISION_FLOW)$/i;
+
+/**
+ * Map backend codes to product copy.
+ * Never surface internal readiness reasons (FEATURE_DISABLED, missing keys, etc.).
+ */
 export function productMessageForProvisionError(
   code: string | null | undefined,
   fallback = "Something went wrong. Please try again."
 ): string {
-  if (!code) return fallback;
-  return PRODUCT_MESSAGES[code] ?? fallback;
+  const safeFallback =
+    typeof fallback === "string" && INTERNAL_REASON_RE.test(fallback.trim())
+      ? "Passport creation is temporarily unavailable."
+      : fallback;
+  if (!code) return safeFallback;
+  if (INTERNAL_REASON_RE.test(code)) {
+    return "Passport creation is temporarily unavailable.";
+  }
+  return PRODUCT_MESSAGES[code] ?? safeFallback;
 }
 
 export function parseProvisionApiError(body: unknown): ProvisionApiError | null {
