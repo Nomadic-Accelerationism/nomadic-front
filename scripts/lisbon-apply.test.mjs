@@ -123,33 +123,35 @@ test("repeated submission label stays submitted not accepted", () => {
   assert.equal(first, "Application submitted");
 });
 
-test("World Identity + Selfie actions live inside Passport cover, not Journey", () => {
+test("World Identity + Selfie actions live inside open Passport, not Journey", () => {
   const passportScreen = read("components/passport/PassportScreen.tsx");
   const passportCover = read("components/passport/PassportCover.tsx");
+  const passportOpenSheet = read(
+    "components/passport/PassportOpenSheet.tsx",
+  );
   const applyScreen = read("components/journeys/LisbonHouseApplyScreen.tsx");
   const worldPanel = read("components/world/WorldVerificationPanel.tsx");
   const proofs = read("components/passport/PassportProofs.tsx");
   const brand = read("components/shell/NomadicBrand.tsx");
 
-  // Checks must be children of PassportCover (inside dark card DOM).
-  assert.ok(passportCover.includes("children"));
+  // Closed cover stays calm; checks live only after the Passport opens.
   assert.ok(passportCover.includes('data-passport-cover-card="true"'));
-  assert.ok(passportCover.includes('data-passport-cover-slot="world"'));
-  const coverOpen = passportScreen.indexOf("<PassportCover");
-  const coverClose = passportScreen.indexOf("</PassportCover>");
-  const panelIdx = passportScreen.indexOf("<WorldVerificationPanel");
-  assert.ok(coverOpen >= 0 && coverClose > coverOpen);
-  assert.ok(panelIdx > coverOpen && panelIdx < coverClose);
-  assert.ok(passportScreen.includes('variant="cover"'));
+  assert.ok(passportCover.includes("<PassportGlobe"));
+  assert.equal(passportCover.includes("WorldVerificationPanel"), false);
+  assert.equal(passportScreen.includes("WorldVerificationPanel"), false);
+  assert.ok(passportScreen.includes("worldSignal={worldSignal}"));
+  assert.ok(passportScreen.includes("onProofSynced={() => refetch()}"));
+  assert.ok(passportOpenSheet.includes("<WorldVerificationPanel"));
+  assert.ok(passportOpenSheet.includes('variant="passport"'));
   assert.equal(applyScreen.includes("WorldVerificationPanel"), false);
   assert.ok(applyScreen.includes("/passport#world-verification"));
 
   // Brand assets are branding-only — never check icons.
   assert.ok(brand.includes("/images/nomadic-logo-26.png"));
-  assert.ok(brand.includes("/images/nomadic-logo-26-horizontal.svg"));
+  assert.ok(brand.includes("/images/nomadic-logo-26-horizontal.png"));
   assert.equal(worldPanel.includes("/images/nomadic-logo-26.png"), false);
   assert.equal(
-    worldPanel.includes("/images/nomadic-logo-26-horizontal.svg"),
+    worldPanel.includes("/images/nomadic-logo-26-horizontal.png"),
     false,
   );
   assert.ok(worldPanel.includes("IdCard"));
@@ -163,7 +165,7 @@ test("World Identity + Selfie actions live inside Passport cover, not Journey", 
 
   const mark = readFileSync(join(root, "public/images/nomadic-logo-26.png"));
   const horizontal = readFileSync(
-    join(root, "public/images/nomadic-logo-26-horizontal.svg"),
+    join(root, "public/images/nomadic-logo-26-horizontal.png"),
   );
   assert.ok(mark.length > 1000);
   assert.ok(horizontal.length > 1000);

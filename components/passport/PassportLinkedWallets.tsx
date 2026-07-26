@@ -4,21 +4,28 @@ import { truncateAddress } from "@/lib/wallet";
 
 export type PassportLinkedWalletsProps = {
   publicAddress: `0x${string}` | null;
+  showHeading?: boolean;
 };
 
 export function PassportLinkedWallets({
   publicAddress,
+  showHeading = true,
 }: PassportLinkedWalletsProps) {
   const abbreviated = truncateAddress(publicAddress);
 
   return (
-    <section aria-labelledby="passport-wallets-heading">
-      <h2
-        id="passport-wallets-heading"
-        className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nomadic-muted)]"
-      >
-        Linked wallets
-      </h2>
+    <section
+      aria-labelledby={showHeading ? "passport-wallets-heading" : undefined}
+      aria-label={showHeading ? undefined : "Linked wallet"}
+    >
+      {showHeading ? (
+        <h2
+          id="passport-wallets-heading"
+          className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nomadic-muted)]"
+        >
+          Linked wallets
+        </h2>
+      ) : null}
       <div className="surface-soft px-3 py-3">
         <p className="text-[11px] font-medium text-[var(--nomadic-muted)]">
           Primary wallet

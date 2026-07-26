@@ -5,22 +5,29 @@ import { useEnsCredentialStamp } from "@/hooks/useEnsCredentialStamp";
 
 export type PassportCommunityStampsProps = {
   ensName: string | null;
+  showHeading?: boolean;
 };
 
 export function PassportCommunityStamps({
   ensName,
+  showHeading = true,
 }: PassportCommunityStampsProps) {
   const { stamp, isLoading, refetch, hasCredentialTarget } =
     useEnsCredentialStamp(ensName);
 
   return (
-    <section aria-labelledby="passport-stamps-heading">
-      <h2
-        id="passport-stamps-heading"
-        className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nomadic-muted)]"
-      >
-        Community stamps
-      </h2>
+    <section
+      aria-labelledby={showHeading ? "passport-stamps-heading" : undefined}
+      aria-label={showHeading ? undefined : "Community stamps"}
+    >
+      {showHeading ? (
+        <h2
+          id="passport-stamps-heading"
+          className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nomadic-muted)]"
+        >
+          Community stamps
+        </h2>
+      ) : null}
 
       {!hasCredentialTarget ? (
         <div

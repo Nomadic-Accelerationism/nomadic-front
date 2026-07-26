@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 /** Official compact mark / isotipo (user upload). */
 export const NOMADIC_MARK_SRC = "/images/nomadic-logo-26.png";
 /** Official horizontal wordmark (user upload). */
-export const NOMADIC_WORDMARK_SRC = "/images/nomadic-logo-26-horizontal.svg";
+export const NOMADIC_WORDMARK_SRC = "/images/nomadic-logo-26-horizontal.png";
 
-const WORDMARK_ASPECT = 1066.19 / 209.68;
+const WORDMARK_ASPECT = 1600 / 315;
 
 export type NomadicMarkProps = {
   size?: number;

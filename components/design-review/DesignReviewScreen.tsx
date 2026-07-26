@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -10,8 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
 import { PassportCover } from "@/components/passport/PassportCover";
+import { PassportOpenSheet } from "@/components/passport/PassportOpenSheet";
 import { LISBON_HOUSE_JOURNEY } from "@/lib/journeys/lisbon-house";
 import type { DesignPreviewKey } from "@/lib/design-review/screens";
+import type { PrivatePassport } from "@/lib/passport/types";
 
 export type DesignReviewScreenProps = {
   screen: DesignPreviewKey;
@@ -135,56 +140,33 @@ function ExplorePreview() {
 }
 
 function PassportPreview() {
+  const [open, setOpen] = useState(false);
+  const passport: PrivatePassport = {
+    publicAddress: "0xd114000000000000000000000000000000009b17",
+    identityStatus: "READY",
+    ensName: "testinggg.nomadic-passport.eth",
+    ensStatus: "ISSUED",
+    proofs: [],
+    credentials: [],
+    journeys: [],
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <PreviewLabel>Visual preview</PreviewLabel>
       <PassportCover
-        displayName="testinggg"
-        subtitle="testinggg.nomadic-passport.eth"
-      >
-        <div className="space-y-2.5">
-          <ProofAction
-            icon={IdCard}
-            title="Identity Check"
-            description="Private proof of personhood and age."
-          />
-          <ProofAction
-            icon={ScanFace}
-            title="Selfie Check"
-            description="Recent presence for Journey applications."
-          />
-        </div>
-      </PassportCover>
-    </div>
-  );
-}
-
-type ProofActionProps = {
-  icon: typeof IdCard;
-  title: string;
-  description: string;
-};
-
-function ProofAction({
-  icon: Icon,
-  title,
-  description,
-}: ProofActionProps) {
-  return (
-    <div
-      className="flex w-full items-center gap-3 rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-cover-cream)]/15 bg-[var(--nomadic-cover-cream)]/[0.05] px-3 py-3 text-left"
-    >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--nomadic-orange)] text-[var(--nomadic-ink)]">
-        <Icon className="h-4 w-4" aria-hidden />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold text-[var(--nomadic-cover-cream)]">
-          {title}
-        </span>
-        <span className="mt-0.5 block text-[11px] leading-snug text-[var(--nomadic-cover-cream)]/55">
-          {description}
-        </span>
-      </span>
+        displayName="testinggg.nomadic-passport.eth"
+        subtitle="Public ENS identity"
+        editionLabel="Lisbon edition · 2026"
+        onOpen={() => setOpen(true)}
+      />
+      <PassportOpenSheet
+        open={open}
+        onOpenChange={setOpen}
+        passport={passport}
+        bookTitle="testinggg’s Nomadic Passport"
+        worldSignal={passport.publicAddress || undefined}
+      />
     </div>
   );
 }

@@ -66,9 +66,10 @@ type Props = {
   onBothVerified?: () => void;
   /**
    * `cover` — compact dark styling for nesting inside PassportCover.
-   * Default light panel for non-cover surfaces.
+   * `passport` — compact two-card layout for the open Passport.
+   * Default light panel for other non-cover surfaces.
    */
-  variant?: "default" | "cover";
+  variant?: "default" | "cover" | "passport";
 };
 
 const INITIAL: StepState = {
@@ -125,6 +126,7 @@ export function WorldVerificationPanel({
   variant = "default",
 }: Props) {
   const isCover = variant === "cover";
+  const isPassport = variant === "passport";
   const queryClient = useQueryClient();
   const { didToken, publicAddress } = useUser();
   const [identity, setIdentity] = useState<StepState>(() =>
@@ -475,6 +477,8 @@ export function WorldVerificationPanel({
           "text-left",
           isCover
             ? "rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-cover-cream)]/20 bg-[var(--nomadic-cover-cream)]/5 px-3 py-3"
+            : isPassport
+              ? "surface-soft px-4 py-4"
             : "rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5"
         )}
         aria-labelledby="world-misconfigured-heading"
@@ -485,7 +489,11 @@ export function WorldVerificationPanel({
           id="world-misconfigured-heading"
           className={cn(
             "text-base font-semibold",
-            isCover ? "text-[var(--nomadic-cover-cream)]" : "text-amber-950"
+            isCover
+              ? "text-[var(--nomadic-cover-cream)]"
+              : isPassport
+                ? "text-[var(--nomadic-ink)]"
+                : "text-amber-950"
           )}
         >
           World not configured
@@ -495,6 +503,8 @@ export function WorldVerificationPanel({
             "mt-2 text-sm leading-relaxed",
             isCover
               ? "text-[var(--nomadic-cover-cream)]/70"
+              : isPassport
+                ? "text-[var(--nomadic-muted)]"
               : "text-amber-950"
           )}
         >
@@ -512,6 +522,8 @@ export function WorldVerificationPanel({
         "text-left",
         isCover
           ? "rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-cover-cream)]/15 bg-[var(--nomadic-cover-cream)]/[0.04] px-3 py-3"
+          : isPassport
+            ? "text-left"
           : "rounded-2xl border border-black/10 bg-white/90 px-4 py-5"
       )}
       aria-labelledby="world-verification-heading"
@@ -527,6 +539,8 @@ export function WorldVerificationPanel({
               "text-sm font-semibold",
               isCover
                 ? "uppercase tracking-[0.12em] text-[var(--nomadic-cover-cream)]/80"
+                : isPassport
+                  ? "sr-only"
                 : "text-base text-black"
             )}
           >
@@ -540,10 +554,11 @@ export function WorldVerificationPanel({
                 : "text-sm text-gray-700"
             )}
           >
-            Complete Identity Check, then Selfie Check. Verified status comes
-            from your Passport after the backend saves each proof.
+            {isPassport
+              ? "Identity Check first, then Selfie Check."
+              : "Complete Identity Check, then Selfie Check. Verified status comes from your Passport after the backend saves each proof."}
           </p>
-          {!isCover ? (
+          {!isCover && !isPassport ? (
             <p className="mt-2 text-xs text-gray-500">
               IDKit environment:{" "}
               <code className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px]">
@@ -602,11 +617,16 @@ export function WorldVerificationPanel({
         </div>
       ) : null}
 
-      <ol className="mt-3 space-y-2">
+      <ol
+        className={cn(
+          "mt-3",
+          isPassport ? "grid grid-cols-2 gap-3" : "space-y-2"
+        )}
+      >
         <CheckRow
           title="Identity Check"
           subtitle={
-            isCover
+            isCover || isPassport
               ? `Age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`
               : `Action ${WORLD_IDENTITY_ACTION} · age ≥ ${WORLD_IDENTITY_MINIMUM_AGE}`
           }
@@ -625,7 +645,11 @@ export function WorldVerificationPanel({
         />
         <CheckRow
           title="Selfie Check"
-          subtitle={isCover ? "After Identity" : `Action ${WORLD_SELFIE_ACTION} · after Identity`}
+          subtitle={
+            isCover || isPassport
+              ? "After Identity"
+              : `Action ${WORLD_SELFIE_ACTION} · after Identity`
+          }
           state={selfie}
           icon={ScanFace}
           variant={variant}
@@ -695,9 +719,10 @@ function CheckRow({
   ctaLabel: string;
   onStart: () => void;
   icon: LucideIcon;
-  variant: "default" | "cover";
+  variant: "default" | "cover" | "passport";
 }) {
   const isCover = variant === "cover";
+  const isPassport = variant === "passport";
   const tone = isCover
     ? state.status === "success"
       ? "border-emerald-300/25 bg-emerald-400/10"
@@ -717,14 +742,32 @@ function CheckRow({
   const verifiedLabel = formatProofVerifiedAt(state.verifiedAt);
 
   return (
-    <li className={cn("rounded-xl border px-3 py-2.5", tone)}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+    <li
+      className={cn(
+        "rounded-xl border px-3 py-2.5",
+        isPassport && "min-h-[178px] rounded-[var(--nomadic-radius-md)] p-3.5",
+        tone
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-wrap items-start justify-between gap-2",
+          isPassport && "h-full flex-col flex-nowrap"
+        )}
+      >
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 items-start gap-2.5",
+            isPassport && "w-full flex-col gap-2"
+          )}
+        >
           <div
             className={cn(
               "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border",
               isCover
                 ? "border-[var(--nomadic-cover-cream)]/25 bg-[var(--nomadic-cover-cream)]/5 text-[var(--nomadic-cover-cream)]"
+                : isPassport
+                  ? "border-[var(--nomadic-orange)]/20 bg-[var(--nomadic-orange)]/[0.12] text-[var(--nomadic-orange-deep)]"
                 : "border-[var(--nomadic-border)] bg-[var(--nomadic-surface)] text-[var(--nomadic-ink)]"
             )}
             aria-hidden
@@ -735,7 +778,9 @@ function CheckRow({
             <p
               className={cn(
                 "text-sm font-semibold",
-                isCover ? "text-[var(--nomadic-cover-cream)]" : "text-black"
+                isCover
+                  ? "text-[var(--nomadic-cover-cream)]"
+                  : "text-[var(--nomadic-ink)]"
               )}
             >
               {title}
@@ -794,6 +839,7 @@ function CheckRow({
           onClick={onStart}
           className={cn(
             "h-9 shrink-0 rounded-xl px-3 text-[11px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nomadic-orange)] focus-visible:ring-offset-2 disabled:cursor-not-allowed",
+            isPassport && "mt-auto min-h-10 h-auto w-full whitespace-normal py-2 leading-tight",
             isCover
               ? "bg-[var(--nomadic-orange)] text-[var(--nomadic-ink)] disabled:bg-[var(--nomadic-cover-cream)]/15 disabled:text-[var(--nomadic-cover-cream)]/35"
               : "bg-[#ff671e] text-white hover:opacity-90 disabled:bg-gray-200 disabled:text-gray-500"

@@ -79,22 +79,29 @@ function ProofCell({ item }: { item: ProofGridItem }) {
 export type PassportProofGridProps = {
   backendProofs: PassportProof[];
   isLoading?: boolean;
+  showHeading?: boolean;
 };
 
 export function PassportProofGrid({
   backendProofs,
   isLoading = false,
+  showHeading = true,
 }: PassportProofGridProps) {
   const items = buildPassportProofGrid(backendProofs);
 
   return (
-    <section aria-labelledby="passport-proofs-heading">
-      <h2
-        id="passport-proofs-heading"
-        className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nomadic-muted)]"
-      >
-        Identity proofs
-      </h2>
+    <section
+      aria-labelledby={showHeading ? "passport-proofs-heading" : undefined}
+      aria-label={showHeading ? undefined : "Identity proofs"}
+    >
+      {showHeading ? (
+        <h2
+          id="passport-proofs-heading"
+          className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nomadic-muted)]"
+        >
+          Identity proofs
+        </h2>
+      ) : null}
       {isLoading ? (
         <p
           className="text-xs text-[var(--nomadic-muted)]"
