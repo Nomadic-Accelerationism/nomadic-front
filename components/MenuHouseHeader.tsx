@@ -65,7 +65,7 @@ export default function MenuHouseHeaderComponent() {
             <Button variant="ghost" className="w-full text-left justify-start">
               Logout
             </Button>
-            <p className="text-xs text-center mt-4">v.0.01a</p>
+            <p className="text-xs text-center mt-4">v.0.02a</p>
           </div>
         </div>
       </SheetContent>

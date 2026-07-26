@@ -36,7 +36,7 @@ export default function HouseLoginComponent() {
       <div className="flex min-h-[calc(100dvh-4rem)] flex-col justify-between">
       <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
         <div className="flex flex-col items-center text-center">
-          <NomadicWordmark height={36} decorative className="brightness-0" />
+          <NomadicWordmark height={36} decorative />
           <span className="sr-only">Nomadic</span>
           <p className="mt-10 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--nomadic-muted)]">
             Hacker House login
@@ -99,7 +99,7 @@ export default function HouseLoginComponent() {
       </div>
 
       <div className="pt-8 text-center">
-        <p className="text-xs text-[var(--nomadic-muted)]">v.0.01a</p>
+        <p className="text-xs text-[var(--nomadic-muted)]">v.0.02a</p>
       </div>
       </div>
     </MobileAppShell>

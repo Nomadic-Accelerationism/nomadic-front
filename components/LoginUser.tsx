@@ -224,19 +224,10 @@ export default function UserLoginComponent() {
       showNav={false}
       contentClassName="relative justify-center overflow-hidden px-6 py-8 sm:px-7"
     >
-      <div
-        className="pointer-events-none absolute inset-x-[-35%] bottom-[-18%] h-[58%] rounded-full bg-[radial-gradient(circle,rgba(255,103,30,0.25),rgba(255,170,116,0.1)_48%,transparent_72%)]"
-        aria-hidden
-      />
-
       <div className="relative z-10 flex min-h-[calc(100dvh-4rem)] flex-col justify-between">
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           <div className="flex flex-col items-center text-center">
-            <NomadicWordmark
-              height={36}
-              decorative
-              className="brightness-0"
-            />
+            <NomadicWordmark height={36} decorative />
             <span className="sr-only">Nomadic</span>
             <p className="mt-10 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--nomadic-muted)]">
               Nomad login
@@ -332,7 +323,7 @@ export default function UserLoginComponent() {
         </div>
 
         <div className="pt-8 text-center">
-          <p className="text-xs text-[var(--nomadic-muted)]">v.0.01a</p>
+          <p className="text-xs text-[var(--nomadic-muted)]">v.0.02a</p>
         </div>
       </div>
 

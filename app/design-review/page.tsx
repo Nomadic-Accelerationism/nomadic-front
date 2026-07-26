@@ -23,7 +23,7 @@ export default function DesignReviewPage() {
   return (
     <main className="nomadic-app-canvas min-h-dvh px-5 py-8 text-[var(--nomadic-ink)] sm:px-8 sm:py-12">
       <div className="mx-auto w-full max-w-3xl">
-        <NomadicWordmark height={32} decorative className="brightness-0" />
+        <NomadicWordmark height={32} decorative />
         <p className="mt-10 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--nomadic-muted)]">
           Local design review
         </p>

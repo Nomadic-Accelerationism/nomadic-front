@@ -35,7 +35,7 @@ export default function HackerJourneysComponent() {
       </div>
 
       <div className="relative z-10 mb-4">
-        <p className="text-xs text-gray-800">v.0.01a</p>
+        <p className="text-xs text-gray-800">v.0.02a</p>
       </div>
     </div>
   );
