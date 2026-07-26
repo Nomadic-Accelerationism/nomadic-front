@@ -316,16 +316,21 @@ export default function EnsV2Stage5APage() {
       <p className="mt-2 text-sm text-gray-700">
         One Magic-signed atomic resolver <code>multicall</code> that revokes the
         Lisbon House issuer&apos;s four scoped <code>ROLE_SET_TEXT</code>{" "}
-        permissions. Does not change credential record values. Does not run
-        Stage 5B.
+        permissions. Does not change credential record values.
+      </p>
+      <p className="mt-1 text-sm text-gray-600">
+        Stage 5B is intentionally read-only (issuer write simulation elsewhere)
+        and is <strong>not</strong> run as a transaction from this page.
       </p>
 
       {completed ? (
         <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-950">
           <p className="font-semibold">Stage 5A completed</p>
           <p className="mt-1 text-xs">
-            Issuer scoped text roles are zero. Revocation is disabled (resume
-            protection). Stage 5B is not available in this frontend.
+            Issuer scoped text roles are zero and metadata remains{" "}
+            <code>{STAGE5A_METADATA_VALUE}</code>. Revocation is disabled
+            (reload/resume protection — no re-send, no automatic repair). Stage
+            5B is intentionally read-only and not offered here.
           </p>
           <p className="mt-3 break-all text-xs">
             Tx:{" "}

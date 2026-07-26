@@ -20,6 +20,9 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
+const PASSPORT = "victor.nomadic-passport.eth";
+const PASSPORT_NODE =
+  "0xc60a6d215c6da5d140152c60f32f60a6946efca7aebd26f39ff66018886a2834";
 const CORRECT_NODE =
   "0x6ad2126ebdb620e0dedc9df67cbb3256d7d948d91f24db92ab3ede1a419e7142";
 const WRONG_NODE =
@@ -58,7 +61,8 @@ async function rpc(method, params) {
   return json.result;
 }
 
-test("Stage 3 credential namehash matches pinned node (not broken node)", () => {
+test("Stage 3 passport + credential namehashes match pinned nodes", () => {
+  assert.equal(namehash(PASSPORT), PASSPORT_NODE);
   const hashed = namehash(CREDENTIAL);
   assert.equal(hashed, CORRECT_NODE);
   assert.notEqual(hashed, WRONG_NODE);

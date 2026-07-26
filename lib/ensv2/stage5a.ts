@@ -20,6 +20,11 @@ export const STAGE5A_ISSUER =
   "0x3505b68444Db0E71987090769e5283AfC0efBd62" as Address;
 export const STAGE5A_EXPECTED_SIGNER =
   "0xd114FA765bA4811219AAe364c93CE8A81Ad39B17" as Address;
+export const STAGE5A_PASSPORT_NAME = "victor.nomadic-passport.eth";
+export const STAGE5A_PASSPORT_NODE =
+  "0xc60a6d215c6da5d140152c60f32f60a6946efca7aebd26f39ff66018886a2834" as Hex;
+export const STAGE5A_CREDENTIAL_NAME =
+  "lisbon-house.victor.nomadic-passport.eth";
 export const STAGE5A_CREDENTIAL_NODE =
   "0x6ad2126ebdb620e0dedc9df67cbb3256d7d948d91f24db92ab3ede1a419e7142" as Hex;
 /** Historical broken frontend node — never use for reads or writes. */

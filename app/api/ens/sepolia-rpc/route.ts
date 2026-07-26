@@ -11,10 +11,15 @@ const PUBLIC_FALLBACK = "https://ethereum-sepolia-rpc.publicnode.com";
  *
  * Server uses ENS_SEPOLIA_RPC_URL (never NEXT_PUBLIC_*).
  * Browser/Magic must call this route — never the keyed dRPC URL.
+ * Never return the upstream URL or key in responses or logs.
+ * Never log raw signed transaction bytes (eth_sendRawTransaction params).
  *
  * Magic's iframe (auth.magic.link) cross-origin fetches this endpoint, so CORS
- * must allow arbitrary request headers and we always return HTTP 200 with a
- * JSON-RPC body (nodes do the same; non-200 can surface as "Failed to fetch").
+ * must reflect Origin; responses use Cache-Control: no-store and prefer HTTP
+ * 200 JSON-RPC bodies (nodes do the same; non-200 can surface as Failed to fetch).
+ *
+ * Magic Dashboard: Allowed Origins is not enough — also add this origin to
+ * CSP/connect-src or Magics eth_sendTransaction fails before any proxy hit.
  */
 function upstreamUrl(): string {
   return process.env.ENS_SEPOLIA_RPC_URL?.trim() || PUBLIC_FALLBACK;
