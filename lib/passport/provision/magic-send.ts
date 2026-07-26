@@ -21,6 +21,9 @@ export async function sendUserProvisionTransaction(params: {
   expectedFrom: `0x${string}`;
   plan: UserTransactionPlan;
 }): Promise<MagicSendResult> {
+  // Refuse before constructing/attaching another Magic network when a foreign
+  // .magic-iframe is already present (LoginUser/session-did defaults used to).
+  const preexisting = countMagicIframes();
   const magic = getSepoliaMagic();
   if (!magic) {
     return {
@@ -31,7 +34,7 @@ export async function sendUserProvisionTransaction(params: {
   }
 
   const iframes = countMagicIframes();
-  if (iframes > 1) {
+  if (preexisting > 1 || iframes > 1) {
     return {
       ok: false,
       code: "FAILED",

@@ -305,10 +305,14 @@ export function StartOnboardingScreen() {
           actionLabel={flow.actionLabel}
           onContinueSignature={() => {
             void (async () => {
+              // Clear prior send/guard errors so retry is not stuck on stale copy.
+              flow.resetMessage();
+              setCreateMessage(null);
               const token = await resolveSessionDidToken(didToken);
               const owner = (passport?.publicAddress ||
                 publicAddress) as `0x${string}` | null;
               if (!token || !owner) {
+                setCreateMessage("Sign in to create your Passport.");
                 playBloom();
                 return;
               }

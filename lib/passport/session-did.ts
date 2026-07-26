@@ -5,6 +5,10 @@
  * 1. Fresh ID token from an active Magic client session (when available)
  * 2. DID stored after successful `/validaOTP` (existing AuthService / UserContext)
  *
+ * Uses the shared Sepolia Magic singleton only — never constructs a second
+ * Magic client here. A default-network instance on /start races the provision
+ * sender and trips the multi-iframe guard before eth_sendTransaction opens.
+ *
  * Limitation: after a full browser refresh, Magic iframe session may not restore
  * even if localStorage still has a DID. Callers should treat backend 401 as
  * INVALID_SESSION and clear/redirect via existing logout — we do not invent
@@ -13,27 +17,7 @@
  * Never log the DID.
  */
 
-import { Magic } from "magic-sdk";
-
-let magicSingleton: Magic | null | undefined;
-
-function getMagicClient(): Magic | null {
-  if (typeof window === "undefined") return null;
-  if (magicSingleton !== undefined) return magicSingleton;
-
-  const key = process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY?.trim();
-  if (!key) {
-    magicSingleton = null;
-    return null;
-  }
-
-  try {
-    magicSingleton = new Magic(key);
-  } catch {
-    magicSingleton = null;
-  }
-  return magicSingleton;
-}
+import { getSepoliaMagic } from "@/lib/magic/sepolia-singleton";
 
 export async function resolveSessionDidToken(
   storedDidToken: string | null | undefined
@@ -43,7 +27,7 @@ export async function resolveSessionDidToken(
       ? storedDidToken.trim()
       : null;
 
-  const magic = getMagicClient();
+  const magic = getSepoliaMagic();
   if (magic) {
     try {
       const loggedIn = await magic.user.isLoggedIn();

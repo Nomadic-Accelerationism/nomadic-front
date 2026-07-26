@@ -96,6 +96,8 @@ section("Architecture — eth_sendTransaction only, singleton Magic");
 const magicSend = read("lib/passport/provision/magic-send.ts");
 assert.ok(magicSend.includes("eth_sendTransaction"));
 assert.ok(magicSend.includes("getSepoliaMagic"));
+assert.ok(magicSend.includes("countMagicIframes"));
+assert.ok(magicSend.includes("Please refresh the page and try again."));
 assert.ok(!magicSend.includes("wallet_switchEthereumChain"));
 assert.ok(!magicSend.includes("eth_signTransaction"));
 assert.ok(!magicSend.includes("privateKey"));
@@ -113,6 +115,29 @@ assert.ok(!flow.includes("new Magic("));
 // Ambiguous platform failure re-reads status before retrying advance.
 assert.ok(flow.includes("Timeout / ambiguous") || flow.includes("re-read"));
 console.log("ok — Magic + orchestration");
+
+section("Canary resume — no second Magic before Continue / eth_sendTransaction");
+const sessionDid = read("lib/passport/session-did.ts");
+assert.ok(sessionDid.includes("getSepoliaMagic"));
+assert.ok(!sessionDid.includes("new Magic("));
+assert.ok(!sessionDid.includes('from "magic-sdk"'));
+const loginUser = read("components/LoginUser.tsx");
+assert.ok(loginUser.includes("getSepoliaMagic"));
+assert.ok(!loginUser.includes("new Magic("));
+assert.ok(!loginUser.includes('from "magic-sdk"'));
+const startScreen = read("components/onboarding/StartOnboardingScreen.tsx");
+assert.ok(startScreen.includes("resolveSessionDidToken"));
+assert.ok(startScreen.includes("continueUserSignature"));
+assert.ok(startScreen.includes("resetMessage"));
+// Continue path must clear stale guard copy then resolve DID via Sepolia singleton.
+const continueIdx = startScreen.indexOf("onContinueSignature");
+assert.ok(continueIdx > 0);
+const continueSlice = startScreen.slice(continueIdx, continueIdx + 900);
+assert.ok(continueSlice.includes("resetMessage"));
+assert.ok(continueSlice.includes("resolveSessionDidToken"));
+assert.ok(continueSlice.includes("continueUserSignature"));
+assert.equal(mapBackendStatusToProductPhase("AWAITING_USER_PARENT"), "confirming");
+console.log("ok — single Magic on Continue resume");
 
 section("BFF routes exist and strip wallet fields");
 const provisionRoute = read("app/api/passport/provision/route.ts");

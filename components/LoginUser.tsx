@@ -12,7 +12,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Magic } from "magic-sdk";
 import axios from "axios";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
@@ -20,6 +19,7 @@ import { Loader2 } from "lucide-react";
 import { isNomadicApiConfigured } from "@/lib/config/nomadic-api";
 import type { ValidateOtpErrorCode } from "@/lib/auth/validate-otp-errors";
 import { playBloom, playSuccess } from "@/lib/cuelume/feedback";
+import { getSepoliaMagic } from "@/lib/magic/sepolia-singleton";
 
 type AuthUiState =
   | "idle"
@@ -33,14 +33,12 @@ type AuthUiState =
   | "invalid_session"
   | "unexpected_error";
 
-const createMagic = () => {
-  if (typeof window === "undefined") return null;
-  const key = process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY?.trim();
-  if (!key) return null;
-  return new Magic(key);
-};
-
-const magic = createMagic();
+/**
+ * Shared Sepolia Magic only — never construct a separate Magic client here.
+ * A second default-network instance on /start leaves a stale .magic-iframe and
+ * blocks provision eth_sendTransaction with "Please refresh the page…".
+ */
+const magic = typeof window !== "undefined" ? getSepoliaMagic() : null;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 if (magic) {
