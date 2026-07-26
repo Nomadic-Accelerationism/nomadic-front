@@ -1,0 +1,23 @@
+<svg preserveAspectRatio="none" overflow="visible" width="298" height="23" viewBox="0 0 297.917 22.6515" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g filter="url(#landing-scribble-shadow)">
+    <path d="M3.50061 11.5563C21.0006 19.5 98.5398 2.69884 91.6053 7.61197C84.0006 13 55.1802 18.459 122.959 11.5563C190.737 4.65368 199.497 -0.27679 186.126 5.63978C172.755 11.5563 138.402 19.8805 155.001 18.5C171.599 17.1195 248.995 1.6954 243.001 5.63978C237.007 9.58416 211.492 18.4763 228.001 16C248.001 13 308.288 -5.58342 291.501 11.5564" stroke="#FF671F" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <defs>
+    <filter id="landing-scribble-shadow" x="0" y="0" width="297.917" height="22.6515" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="0.5"/>
+      <feGaussianBlur stdDeviation="0.5"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0666667 0 0 0 0 0.0666667 0 0 0 0 0.0666667 0 0 0 0.27 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="dropShadow" result="shape"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="-0.5"/>
+      <feGaussianBlur stdDeviation="0.8"/>
+      <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.753333 0 0 0 0 0.242143 0 0 0 0 0 0 0 0 1 0"/>
+      <feBlend mode="normal" in2="shape" result="innerShadow"/>
+    </filter>
+  </defs>
+</svg>

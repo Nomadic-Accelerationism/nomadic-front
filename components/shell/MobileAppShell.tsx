@@ -37,18 +37,18 @@ export function MobileAppShell({
   return (
     <div
       className={cn(
-        "min-h-dvh w-full bg-[var(--nomadic-browser-bg)]",
+        "nomadic-app-canvas min-h-dvh w-full",
         className
       )}
     >
       <div
-        className="mx-auto flex min-h-dvh w-full flex-col bg-[var(--nomadic-app-bg)] shadow-[0_0_0_1px_var(--nomadic-border)]"
+        className="nomadic-shell-frame mx-auto flex min-h-dvh w-full flex-col"
         style={{ maxWidth: MOBILE_APP_MAX_WIDTH_PX }}
         data-mobile-shell
         data-max-width={MOBILE_APP_MAX_WIDTH_PX}
       >
         {showHeader ? (
-          <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--nomadic-border)] px-4">
+          <header className="flex h-16 shrink-0 items-center justify-between px-5">
             <Link
               href="/explore"
               className="flex min-w-0 items-center"
@@ -72,7 +72,7 @@ export function MobileAppShell({
 
         <main
           className={cn(
-            "flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4",
+            "nomadic-screen flex flex-1 flex-col overflow-y-auto px-5 pb-5 pt-4 sm:px-6",
             contentClassName
           )}
         >

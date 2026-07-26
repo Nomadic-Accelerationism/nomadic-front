@@ -197,7 +197,7 @@ export function LisbonHouseApplyScreen() {
           <Link href={fixture.routes.detail}>← Back to Journey</Link>
         </Button>
 
-        <h1 className="font-display text-2xl font-bold tracking-display text-[var(--nomadic-ink)]">
+        <h1 className="font-display text-[30px] font-black leading-[0.95] tracking-display text-[var(--nomadic-ink)]">
           Apply
         </h1>
         <p className="mt-2 text-sm text-[var(--nomadic-muted)]">

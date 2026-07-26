@@ -17,9 +17,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="sticky bottom-0 z-40 border-t border-[var(--nomadic-border)] bg-[var(--nomadic-bg)]/96 backdrop-blur-[2px]"
+      className="sticky bottom-4 z-40 mx-auto mb-4 w-[11.5rem] rounded-full border border-[var(--nomadic-border-strong)] bg-[var(--nomadic-surface)]/88 p-1.5 shadow-[var(--nomadic-shadow-clay)] backdrop-blur-xl"
     >
-      <ul className="grid grid-cols-2">
+      <ul className="grid grid-cols-2 gap-1">
         {PRODUCT_NAV_ROUTES.map((item) => {
           const Icon = ICONS[item.id];
           const active =
@@ -29,21 +29,20 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex min-h-11 flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-[11px] font-semibold tracking-wide transition-colors",
+                  "flex min-h-11 items-center justify-center rounded-full px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nomadic-orange-deep)] focus-visible:ring-offset-2",
                   active
-                    ? "text-[var(--nomadic-orange)]"
-                    : "text-[var(--nomadic-muted)] hover:text-[var(--nomadic-ink)]"
+                    ? "bg-[var(--nomadic-orange)] text-[var(--nomadic-ink)] shadow-[var(--nomadic-shadow-soft)]"
+                    : "text-[var(--nomadic-muted)] hover:bg-[var(--nomadic-ink)]/[0.04] hover:text-[var(--nomadic-ink)]"
                 )}
                 aria-current={active ? "page" : undefined}
+                aria-label={item.label}
+                title={item.label}
               >
                 <Icon
-                  className={cn(
-                    "h-5 w-5",
-                    active ? "text-[var(--nomadic-orange)]" : "currentColor"
-                  )}
+                  className="h-5 w-5"
                   aria-hidden
                 />
-                {item.label}
+                <span className="sr-only">{item.label}</span>
               </Link>
             </li>
           );

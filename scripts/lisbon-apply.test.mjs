@@ -144,12 +144,12 @@ test("World Identity + Selfie actions live inside Passport cover, not Journey", 
   assert.equal(applyScreen.includes("WorldVerificationPanel"), false);
   assert.ok(applyScreen.includes("/passport#world-verification"));
 
-  // Brand PNGs are branding-only — never check icons.
+  // Brand assets are branding-only — never check icons.
   assert.ok(brand.includes("/images/nomadic-logo-26.png"));
-  assert.ok(brand.includes("/images/nomadic-logo-26-horizontal.png"));
+  assert.ok(brand.includes("/images/nomadic-logo-26-horizontal.svg"));
   assert.equal(worldPanel.includes("/images/nomadic-logo-26.png"), false);
   assert.equal(
-    worldPanel.includes("/images/nomadic-logo-26-horizontal.png"),
+    worldPanel.includes("/images/nomadic-logo-26-horizontal.svg"),
     false,
   );
   assert.ok(worldPanel.includes("IdCard"));
@@ -163,13 +163,13 @@ test("World Identity + Selfie actions live inside Passport cover, not Journey", 
 
   const mark = readFileSync(join(root, "public/images/nomadic-logo-26.png"));
   const horizontal = readFileSync(
-    join(root, "public/images/nomadic-logo-26-horizontal.png"),
+    join(root, "public/images/nomadic-logo-26-horizontal.svg"),
   );
   assert.ok(mark.length > 1000);
   assert.ok(horizontal.length > 1000);
 });
 
-test("shared brand surfaces use official PNGs as wordmark/mark", () => {
+test("shared brand surfaces use the official wordmark and mark", () => {
   const shell = read("components/shell/MobileAppShell.tsx");
   const landing = read("components/Landing.tsx");
   const login = read("components/LoginUser.tsx");

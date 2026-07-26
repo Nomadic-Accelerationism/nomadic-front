@@ -55,7 +55,7 @@ export function ExploreScreen() {
     <MobileAppShell>
       <div className="flex flex-col gap-6">
         <header>
-          <h1 className="font-display text-[28px] font-bold leading-[1.15] tracking-display text-[var(--nomadic-ink)]">
+          <h1 className="font-display text-[30px] font-black leading-[0.95] tracking-display text-[var(--nomadic-ink)]">
             Where next?
           </h1>
         </header>

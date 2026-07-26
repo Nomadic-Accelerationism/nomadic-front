@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link';
 import { NomadicWordmark } from "@/components/shell/NomadicBrand";
+import { MobileAppShell } from "@/components/shell/MobileAppShell";
 
 export default function HouseLoginComponent() {
 
@@ -27,41 +28,52 @@ export default function HouseLoginComponent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen px-8 bg-white">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center mt-36">
-          <NomadicWordmark height={36} decorative />
+    <MobileAppShell
+      showHeader={false}
+      showNav={false}
+      contentClassName="justify-center px-6 py-8 sm:px-7"
+    >
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col justify-between">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
+        <div className="flex flex-col items-center text-center">
+          <NomadicWordmark height={36} decorative className="brightness-0" />
           <span className="sr-only">Nomadic</span>
-          <h2 className="mt-12 text-sm">Hacker House Login or Register</h2>
-          <p className="mt-6 text-xl font-bold">Create your dream hack space</p>
-          <p className="mt-2 text-sm text-gray-600 text-center">
+          <p className="mt-10 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--nomadic-muted)]">
+            Hacker House login
+          </p>
+          <h1 className="font-display mt-3 text-[30px] font-black leading-[0.95] tracking-display text-[var(--nomadic-ink)]">
+            Create your dream
+            <br />
+            hack space
+          </h1>
+          <p className="mt-4 max-w-[19rem] text-sm leading-relaxed text-[var(--nomadic-muted)]">
             Enter your email below to receive a magic sign-in link. We recommend using a personal email for continuity.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="relative mx-8">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <div className="relative">
             <Input
               type="email"
               placeholder="Your email address"
               value={email}
               onChange={handleEmailChange}
-              className="pr-12 rounded-xl"
+              className="pr-12"
             />
-            <Link href="/home-house">
-              <Button
-                type="submit"
-                className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
-              >
+            <Button
+              asChild
+              className="absolute bottom-0 right-0 top-0 rounded-l-none px-3"
+            >
+              <Link href="/home-house" aria-label="Continue with email">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
-        <div className="">
-          <div className="flex justify-between space-x-1 ml-8 mr-8">
+        <div>
+          <div className="flex justify-between gap-2">
             {code.map((digit, index) => (
               <Input
                 key={index}
@@ -69,7 +81,8 @@ export default function HouseLoginComponent() {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleCodeChange(index, e.target.value)}
-                className="w-10 h-12 text-center rounded-md bg-gray-300 border border-gray-800"
+                className="h-12 w-10 px-0 text-center"
+                aria-label={`Verification code digit ${index + 1}`}
               />
             ))}
           </div>
@@ -77,17 +90,18 @@ export default function HouseLoginComponent() {
 
           <Button
             type="button"
-            variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-900"
+            variant="quiet"
+            className="w-full"
           >
             Send new code
           </Button>
         </form>
       </div>
 
-      <div className="mt-8 text-center">
-        <p className="text-xs text-gray-500">v.0.01a</p>
+      <div className="pt-8 text-center">
+        <p className="text-xs text-[var(--nomadic-muted)]">v.0.01a</p>
       </div>
-    </div>
+      </div>
+    </MobileAppShell>
   );
 }

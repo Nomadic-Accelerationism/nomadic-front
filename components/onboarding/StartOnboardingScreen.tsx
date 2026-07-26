@@ -8,7 +8,6 @@ import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
-import { NomadicMark } from "@/components/shell/NomadicBrand";
 import { PassportCover } from "@/components/passport/PassportCover";
 import { ProvisionProgress } from "@/components/onboarding/ProvisionProgress";
 import UserLoginComponent from "@/components/LoginUser";
@@ -47,7 +46,6 @@ export function StartOnboardingScreen() {
   const [uiPhase, setUiPhase] = useState<"select" | "preview" | "provision">(
     "select"
   );
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [createMessage, setCreateMessage] = useState<string | null>(null);
 
   const existingQuery = useQuery({
@@ -222,40 +220,7 @@ export function StartOnboardingScreen() {
   }
 
   if (!isAuthenticated) {
-    if (showEmailLogin) {
-      return <UserLoginComponent />;
-    }
-
-    return (
-      <MobileAppShell showNav={false} showHeader={false}>
-        <div
-          className="flex flex-1 flex-col items-center justify-center gap-8 px-2 py-10 text-center"
-          data-onboarding="logged-out"
-        >
-          <div className="space-y-3">
-            {/* Brand mark only — headline below is product copy, not a wordmark. */}
-            <div className="flex justify-center">
-              <NomadicMark size={56} decorative />
-            </div>
-            <span className="sr-only">Nomadic</span>
-            <h1 className="font-display text-[30px] font-bold leading-tight tracking-display text-[var(--nomadic-ink)]">
-              Your Nomadic Passport
-            </h1>
-            <p className="text-base tracking-body text-[var(--nomadic-muted)]">
-              One identity for every journey.
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="lg"
-            className="w-full max-w-sm"
-            onClick={() => setShowEmailLogin(true)}
-          >
-            Continue with email
-          </Button>
-        </div>
-      </MobileAppShell>
-    );
+    return <UserLoginComponent />;
   }
 
   if (
@@ -419,7 +384,7 @@ export function StartOnboardingScreen() {
     <MobileAppShell showNav={false}>
       <div className="flex flex-col gap-6" data-onboarding="select">
         <header className="space-y-2">
-          <h1 className="font-display text-[26px] font-bold leading-tight tracking-display text-[var(--nomadic-ink)]">
+          <h1 className="font-display text-[30px] font-black leading-[0.95] tracking-display text-[var(--nomadic-ink)]">
             Choose your Passport name
           </h1>
         </header>

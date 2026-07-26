@@ -57,7 +57,7 @@ export function LisbonHouseJourneyScreen() {
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--nomadic-muted)]">
             {fixture.community.name}
           </p>
-          <h1 className="font-display text-2xl font-bold tracking-display text-[var(--nomadic-ink)]">
+          <h1 className="font-display text-[30px] font-black leading-[0.95] tracking-display text-[var(--nomadic-ink)]">
             {fixture.journey.title}
           </h1>
         </div>
