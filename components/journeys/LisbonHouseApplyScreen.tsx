@@ -158,7 +158,10 @@ export function LisbonHouseApplyScreen() {
   if (!isInitialized || !isAuthenticated) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#ff671e]" aria-hidden />
+        <Loader2
+          className="h-8 w-8 animate-spin text-[var(--nomadic-orange)]"
+          aria-hidden
+        />
         <span className="sr-only">Loading application</span>
       </div>
     );
@@ -176,7 +179,6 @@ export function LisbonHouseApplyScreen() {
             logout();
             router.replace("/login-user");
           }}
-          className="h-11 rounded-xl bg-[#ff671e] font-bold text-black"
         >
           Sign in again
         </Button>
@@ -187,32 +189,19 @@ export function LisbonHouseApplyScreen() {
   const submitted = uiState === "submitted";
 
   return (
-    <div
-      className="relative flex w-full flex-col items-center overflow-hidden"
-      style={{ minHeight: "calc(100vh - 80px)" }}
-    >
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(to top, #fe7432 5%, #ffcfb8 40%, white 60%, white 100%)",
-          backgroundSize: "100% 100%",
-          backgroundPosition: "bottom",
-        }}
-        aria-hidden
-      />
-
-      <div className="relative z-10 flex w-full max-w-md flex-col px-6 pb-12 pt-6">
+    <div className="flex w-full flex-col pb-6">
         <Button
           asChild
-          variant="ghost"
-          className="mb-4 h-10 w-fit justify-start px-0 text-sm text-gray-700"
+          variant="quiet"
+          className="mb-4 h-10 w-fit justify-start px-0 text-sm"
         >
           <Link href={fixture.routes.detail}>← Back to Journey</Link>
         </Button>
 
-        <h1 className="text-2xl font-bold text-black">Apply</h1>
-        <p className="mt-2 text-sm text-gray-700">
+        <h1 className="font-display text-2xl font-bold tracking-display text-[var(--nomadic-ink)]">
+          Apply
+        </h1>
+        <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
           {fixture.community.name} · {fixture.journey.title}
         </p>
 
@@ -222,34 +211,37 @@ export function LisbonHouseApplyScreen() {
         >
           <h2
             id="apply-proofs-heading"
-            className="text-sm font-semibold uppercase tracking-wide text-gray-700"
+            className="text-sm font-semibold uppercase tracking-wide text-[var(--nomadic-muted)]"
           >
             Required proofs
           </h2>
           {isLoading && !passport ? (
-            <p className="text-sm text-gray-600">Loading Passport proofs…</p>
+            <p className="text-sm text-[var(--nomadic-muted)]">
+              Loading Passport proofs…
+            </p>
           ) : (
             mergedProofs.map((proof) => (
-              <div
-                key={proof.id}
-                className="rounded-2xl border border-black/10 bg-white/90 px-4 py-4"
-              >
+              <div key={proof.id} className="surface-soft px-4 py-4">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-semibold text-black">{proof.title}</h3>
+                  <h3 className="font-semibold text-[var(--nomadic-ink)]">
+                    {proof.title}
+                  </h3>
                   <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                    className={
                       proof.status === "completed"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-900"
-                    }`}
+                        ? "badge-nomadic badge-nomadic-success"
+                        : "badge-nomadic badge-nomadic-pending"
+                    }
                   >
                     {passportProofStatusLabel(proof.status)}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">{proof.description}</p>
+                <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
+                  {proof.description}
+                </p>
                 {proof.status === "completed" &&
                 formatProofVerifiedAt(proof.verifiedAt) ? (
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-[var(--nomadic-muted)]">
                     Verified at: {formatProofVerifiedAt(proof.verifiedAt)}
                   </p>
                 ) : null}
@@ -259,22 +251,22 @@ export function LisbonHouseApplyScreen() {
         </section>
 
         <section
-          className="mt-8 rounded-2xl border border-black/10 bg-white/90 px-4 py-4 text-left"
+          className="surface-soft mt-8 px-4 py-4 text-left"
           aria-labelledby="privacy-disclosure-heading"
         >
           <h2
             id="privacy-disclosure-heading"
-            className="text-base font-semibold text-black"
+            className="text-base font-semibold text-[var(--nomadic-ink)]"
           >
             Privacy disclosure
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-gray-700">
+          <p className="mt-2 text-sm leading-relaxed text-[var(--nomadic-muted)]">
             {dataMinimization.disclosure}
           </p>
-          <p className="mt-3 text-xs font-medium uppercase tracking-wide text-gray-500">
+          <p className="mt-3 text-xs font-medium uppercase tracking-wide text-[var(--nomadic-muted)]">
             Designed not to retain
           </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--nomadic-muted)]">
             {dataMinimization.designedNotToRetain.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -291,13 +283,13 @@ export function LisbonHouseApplyScreen() {
               />
             ) : (
               <section
-                className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-left"
+                className="rounded-[var(--nomadic-radius-md)] border border-[var(--nomadic-pending)]/25 bg-[var(--nomadic-pending-soft)] px-4 py-5 text-left"
                 data-world-integration-boundary="unavailable"
               >
-                <h2 className="text-base font-semibold text-amber-950">
+                <h2 className="text-base font-semibold text-[var(--nomadic-ink)]">
                   Verification
                 </h2>
-                <p className="mt-2 text-sm text-amber-950">
+                <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
                   World verification is not available yet.
                 </p>
               </section>
@@ -306,44 +298,44 @@ export function LisbonHouseApplyScreen() {
         ) : null}
 
         <section
-          className="mt-8 rounded-2xl border border-black/10 bg-white/90 px-4 py-5"
+          className="surface-soft mt-8 px-4 py-5"
           aria-labelledby="apply-submit-heading"
           data-lisbon-apply-state={uiState}
         >
           <h2
             id="apply-submit-heading"
-            className="text-base font-semibold text-black"
+            className="text-base font-semibold text-[var(--nomadic-ink)]"
           >
             {submitted ? "Application submitted" : "Submit application"}
           </h2>
 
           {submitted ? (
             <>
-              <p className="mt-2 text-sm leading-relaxed text-gray-700">
+              <p className="mt-2 text-sm leading-relaxed text-[var(--nomadic-muted)]">
                 Your Passport satisfied lisbon_house_policy_v1 and your
                 application has been submitted to Nomadic Lisbon House.
               </p>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-[var(--nomadic-muted)]">
                 Status:{" "}
                 {lisbonApplicationStatusLabel(
                   applicationStatus || existingApplication?.status || "SUBMITTED",
                 )}
               </p>
               {existingCredential ? (
-                <p className="mt-2 text-sm text-emerald-800">
+                <p className="mt-2 text-sm font-medium text-[var(--nomadic-success)]">
                   Lisbon House Eligibility credential is on your Passport.
                 </p>
               ) : null}
             </>
           ) : (
             <>
-              <p className="mt-2 text-sm text-gray-700">
+              <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
                 {readiness.canSubmit
                   ? "Ready to apply — both Passport proofs are verified."
                   : "Apply stays disabled until both proofs are verified on your Passport."}
               </p>
               {!readiness.canSubmit ? (
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-amber-900">
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--nomadic-pending)]">
                   {!readiness.identityVerified ? (
                     <li>World Identity Check still required</li>
                   ) : null}
@@ -354,7 +346,7 @@ export function LisbonHouseApplyScreen() {
               ) : null}
 
               {submitError ? (
-                <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+                <p className="mt-3 rounded-[var(--nomadic-radius-sm)] border border-[var(--nomadic-danger)]/25 bg-[var(--nomadic-danger-soft)] px-3 py-2 text-sm text-[var(--nomadic-danger)]">
                   {submitError}
                 </p>
               ) : null}
@@ -363,7 +355,8 @@ export function LisbonHouseApplyScreen() {
                 type="button"
                 disabled={!readiness.canSubmit || uiState === "submitting"}
                 onClick={() => void handleSubmit()}
-                className="mt-4 h-12 w-full rounded-xl bg-[#ff671e] text-base font-bold text-black hover:bg-orange-500 disabled:bg-gray-200 disabled:text-gray-500"
+                size="lg"
+                className="mt-4 w-full"
               >
                 {uiState === "submitting"
                   ? "Submitting application…"
@@ -375,8 +368,8 @@ export function LisbonHouseApplyScreen() {
               {uiState === "session_expired" ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  className="mt-3 h-11 w-full rounded-xl"
+                  variant="secondary"
+                  className="mt-3 w-full"
                   onClick={() => {
                     logout();
                     router.replace("/login-user");
@@ -391,12 +384,12 @@ export function LisbonHouseApplyScreen() {
 
         <Button
           asChild
-          variant="outline"
-          className="mt-6 h-12 w-full rounded-xl border-black/30 bg-white/80 text-base font-semibold"
+          variant="secondary"
+          size="lg"
+          className="mt-6 w-full"
         >
           <Link href="/passport">Return to Passport</Link>
         </Button>
-      </div>
     </div>
   );
 }

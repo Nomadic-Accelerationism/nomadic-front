@@ -19,6 +19,13 @@ export type PassportProof = {
   verifiedAt?: string | null;
   failedAt?: string | null;
   expiredAt?: string | null;
+  /** Optional World/backend attributes — never invent these client-side. */
+  verificationLevel?: string;
+  metadata?: Record<string, unknown>;
+  documentVerified?: boolean;
+  country?: string;
+  nationality?: string;
+  orb?: boolean;
 };
 
 /** Backend-issued credential record (source of truth). */

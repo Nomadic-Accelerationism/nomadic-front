@@ -4,31 +4,96 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --background: 24 100% 98%;
+    --foreground: 20 28% 12%;
+    --card: 30 100% 99%;
+    --card-foreground: 20 28% 12%;
+    --popover: 30 100% 99%;
+    --popover-foreground: 20 28% 12%;
+    --primary: 20 100% 56%;
+    --primary-foreground: 20 28% 12%;
+    --secondary: 24 40% 96%;
+    --secondary-foreground: 20 28% 12%;
+    --muted: 24 30% 94%;
+    --muted-foreground: 18 16% 31%;
+    --accent: 24 40% 96%;
+    --accent-foreground: 20 28% 12%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 20% 88%;
+    --input: 20 20% 88%;
+    --ring: 20 100% 40%;
+    --radius: 1rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* ——— Nomadic editorial clay system ——— */
+    --nomadic-bg: #fff8f4;
+    --nomadic-surface: #fffdfc;
+    --nomadic-surface-soft: #fff1e8;
+    --nomadic-ink: #241a16;
+    --nomadic-muted: #5c4b43;
+    --nomadic-orange: #ff671e;
+    --nomadic-orange-deep: #c03e00;
+    --nomadic-border: rgba(36, 26, 22, 0.1);
+    --nomadic-border-strong: rgba(36, 26, 22, 0.16);
+    --nomadic-paper: #f7efe4;
+    --nomadic-paper-edge: #e8d9c8;
+    --nomadic-cover: #241a16;
+    --nomadic-cover-cream: #f3ead7;
+    --nomadic-browser-bg: #ebe4de;
+    --nomadic-success: #2f6b4f;
+    --nomadic-success-soft: rgba(47, 107, 79, 0.1);
+    --nomadic-pending: #9a6b2f;
+    --nomadic-pending-soft: rgba(154, 107, 47, 0.12);
+    --nomadic-info: #3d5a80;
+    --nomadic-info-soft: rgba(61, 90, 128, 0.1);
+    --nomadic-danger: #b42318;
+    --nomadic-danger-soft: rgba(180, 35, 24, 0.1);
+    --nomadic-focus: #c03e00;
+
+    /* Soft mist control — secondary/house actions (reusable) */
+    --nomadic-mist: #e7e1db;
+    --nomadic-mist-ink: #5a504a;
+    --nomadic-mist-border: rgba(90, 80, 74, 0.14);
+
+    /* Radius scale */
+    --nomadic-radius-sm: 14px;
+    --nomadic-radius-md: 20px;
+    --nomadic-radius-lg: 24px;
+
+    /* Shadows — editorial clay (subtle) */
+    --nomadic-shadow-soft:
+      0 1px 2px rgba(82, 45, 28, 0.04),
+      0 4px 12px rgba(82, 45, 28, 0.04);
+    --nomadic-shadow-clay:
+      0 10px 28px rgba(82, 45, 28, 0.08),
+      inset 0 4px 8px rgba(255, 255, 255, 0.6),
+      inset 0 -4px 8px rgba(110, 64, 42, 0.06);
+    --nomadic-shadow-clay-strong:
+      0 14px 36px rgba(82, 45, 28, 0.12),
+      inset 0 5px 10px rgba(255, 255, 255, 0.55),
+      inset 0 -5px 10px rgba(110, 64, 42, 0.08);
+    --nomadic-shadow-cover:
+      0 18px 40px rgba(36, 26, 22, 0.28),
+      inset 0 1px 0 rgba(255, 243, 230, 0.12),
+      inset 0 -8px 16px rgba(0, 0, 0, 0.18);
+
+    /* Compat aliases (previous Passport pass) */
+    --nomadic-app-bg: var(--nomadic-bg);
+    --nomadic-navy: var(--nomadic-ink);
+    --nomadic-navy-deep: #1a120f;
+
+    /* Typography — titles Darker Grotesque (-2%), body Satoshi Variable (-0.5%) */
+    --nomadic-font-display: var(--font-darker-grotesque), "Darker Grotesque",
+      ui-sans-serif, system-ui, sans-serif;
+    --nomadic-font-body: var(--font-satoshi), Satoshi, ui-sans-serif, system-ui,
+      sans-serif;
+    --nomadic-tracking-display: -0.02em;
+    --nomadic-tracking-body: -0.005em;
   }
 
   .dark {
@@ -63,44 +128,431 @@
   * {
     @apply border-border;
   }
+
+  html {
+    font-family: var(--nomadic-font-body);
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--nomadic-font-body);
+    letter-spacing: var(--nomadic-tracking-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display,
+  .title-nomadic {
+    font-family: var(--nomadic-font-display);
+    letter-spacing: var(--nomadic-tracking-display);
   }
 }
 
+/* Fallback faces when next/font variables are unavailable (e.g. static CSS) */
 @font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Regular.woff2') format('woff2'),
-       url('/fonts/Satoshi-Regular.woff') format('woff');
-  font-weight: 400;
+  font-family: "Satoshi";
+  src:
+    url("/fonts/Satoshi-Variable.ttf") format("truetype"),
+    url("/fonts/Satoshi-Regular.woff2") format("woff2"),
+    url("/fonts/Satoshi-Regular.woff") format("woff");
+  font-weight: 300 900;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Bold.woff2') format('woff2'),
-       url('/fonts/Satoshi-Bold.woff') format('woff');
+  font-family: "Satoshi";
+  src:
+    url("/fonts/Satoshi-Bold.woff2") format("woff2"),
+    url("/fonts/Satoshi-Bold.woff") format("woff");
   font-weight: 700;
   font-style: normal;
+  font-display: swap;
 }
 
-/* Apply the font globally */
-html {
-  font-family: var(--font-satoshi);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-.nomadic-button {
-  @apply w-full max-w-[200px] mb-4 bg-[#ff671e] hover:bg-orange-500 active:scale-[0.98] transition-transform text-black text-xl py-8 rounded-xl shadow-xl ring-1 ring-[#C03E00] ring-inset font-bold;
-}
+@layer components {
+  /* Surface hierarchy — never nest clay inside clay */
+  .surface-flat {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
 
-.nomadic-button:hover {
-  @apply bg-orange-500;
-}
+  .surface-soft {
+    background: var(--nomadic-surface);
+    border: 1px solid var(--nomadic-border);
+    border-radius: var(--nomadic-radius-md);
+    box-shadow: var(--nomadic-shadow-soft);
+  }
 
-.nomadic-button:active {
-  @apply bg-orange-500;
-}
+  .surface-clay {
+    background: var(--nomadic-surface);
+    border: 1px solid var(--nomadic-border);
+    border-radius: var(--nomadic-radius-md);
+    box-shadow: var(--nomadic-shadow-clay);
+  }
 
-.nomadic-button:focus {
-  @apply bg-orange-500;
+  .surface-clay-strong {
+    background: var(--nomadic-surface);
+    border: 1px solid var(--nomadic-border);
+    border-radius: var(--nomadic-radius-lg);
+    box-shadow: var(--nomadic-shadow-clay-strong);
+  }
+
+  .surface-paper {
+    background: var(--nomadic-paper);
+    border: 1px solid var(--nomadic-paper-edge);
+    border-radius: var(--nomadic-radius-md);
+    box-shadow: none;
+  }
+
+  .surface-cover {
+    background: var(--nomadic-cover);
+    border-radius: var(--nomadic-radius-lg);
+    box-shadow: var(--nomadic-shadow-cover);
+    color: var(--nomadic-cover-cream);
+  }
+
+  /* Buttons — no scale hover */
+  .btn-nomadic {
+    @apply inline-flex min-h-11 items-center justify-center gap-1.5 px-4 text-sm font-bold;
+    border-radius: var(--nomadic-radius-sm);
+    transition:
+      transform 170ms ease,
+      box-shadow 170ms ease,
+      opacity 170ms ease;
+  }
+
+  .btn-nomadic:focus-visible {
+    outline: 2px solid var(--nomadic-orange-deep);
+    outline-offset: 2px;
+  }
+
+  .btn-nomadic-primary {
+    background: var(--nomadic-orange);
+    color: var(--nomadic-ink);
+    box-shadow: var(--nomadic-shadow-clay);
+    border: 1px solid transparent;
+  }
+
+  .btn-nomadic-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 12px 30px rgba(82, 45, 28, 0.1),
+      inset 0 4px 8px rgba(255, 255, 255, 0.65),
+      inset 0 -4px 8px rgba(110, 64, 42, 0.07);
+  }
+
+  .btn-nomadic-primary:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow:
+      0 6px 16px rgba(82, 45, 28, 0.07),
+      inset 0 2px 6px rgba(255, 255, 255, 0.45),
+      inset 0 -5px 10px rgba(110, 64, 42, 0.1);
+  }
+
+  /* Nesting rule: clay parent → flat/soft children (no clay-in-clay) */
+  .surface-clay .btn-nomadic-primary,
+  .surface-clay-strong .btn-nomadic-primary,
+  .surface-cover .btn-nomadic-primary {
+    box-shadow: 0 2px 8px rgba(82, 45, 28, 0.14);
+  }
+
+  .surface-clay .btn-nomadic-primary:hover:not(:disabled),
+  .surface-clay-strong .btn-nomadic-primary:hover:not(:disabled),
+  .surface-cover .btn-nomadic-primary:hover:not(:disabled) {
+    box-shadow: 0 3px 10px rgba(82, 45, 28, 0.16);
+  }
+
+  .btn-nomadic-secondary {
+    background: var(--nomadic-surface);
+    color: var(--nomadic-ink);
+    border: 1px solid var(--nomadic-border-strong);
+    box-shadow: var(--nomadic-shadow-soft);
+  }
+
+  .btn-nomadic-secondary:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .btn-nomadic-secondary:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn-nomadic-quiet {
+    background: transparent;
+    color: var(--nomadic-ink);
+    border: 1px solid var(--nomadic-border);
+    box-shadow: none;
+    font-weight: 600;
+  }
+
+  .btn-nomadic-mist {
+    background: var(--nomadic-mist);
+    color: var(--nomadic-mist-ink);
+    border: 1px solid var(--nomadic-mist-border);
+    box-shadow: none;
+    font-weight: 600;
+  }
+
+  .btn-nomadic-mist:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: #ddd6cf;
+  }
+
+  .btn-nomadic-mist:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn-nomadic-quiet:hover:not(:disabled) {
+    background: rgba(36, 26, 22, 0.03);
+  }
+
+  .btn-nomadic-danger {
+    background: var(--nomadic-danger-soft);
+    color: var(--nomadic-danger);
+    border: 1px solid rgba(180, 35, 24, 0.2);
+  }
+
+  .btn-nomadic:disabled,
+  .btn-nomadic[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    filter: saturate(0.7);
+  }
+
+  /* Inputs — prepared for handle onboarding states */
+  .input-nomadic {
+    @apply flex w-full min-h-11 px-3 text-sm font-medium;
+    background: var(--nomadic-surface);
+    color: var(--nomadic-ink);
+    border: 1px solid var(--nomadic-border-strong);
+    border-radius: var(--nomadic-radius-sm);
+    box-shadow: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .input-nomadic::placeholder {
+    color: var(--nomadic-muted);
+    opacity: 0.75;
+  }
+
+  .input-nomadic:focus,
+  .input-nomadic:focus-visible,
+  .input-nomadic[data-state="focused"] {
+    outline: none;
+    border-color: var(--nomadic-orange);
+    box-shadow: 0 0 0 3px rgba(255, 103, 30, 0.18);
+  }
+
+  .input-nomadic[data-state="checking"] {
+    border-color: var(--nomadic-pending);
+    box-shadow: 0 0 0 3px var(--nomadic-pending-soft);
+  }
+
+  .input-nomadic[data-state="available"] {
+    border-color: var(--nomadic-success);
+    box-shadow: 0 0 0 3px var(--nomadic-success-soft);
+  }
+
+  .input-nomadic[data-state="taken"],
+  .input-nomadic[data-state="invalid"] {
+    border-color: var(--nomadic-danger);
+    box-shadow: 0 0 0 3px var(--nomadic-danger-soft);
+  }
+
+  .input-nomadic:disabled,
+  .input-nomadic[data-state="disabled"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--nomadic-surface-soft);
+  }
+
+  /* Status badges — restrained, not full-color cards */
+  .badge-nomadic {
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold;
+  }
+
+  .badge-nomadic-neutral {
+    background: rgba(36, 26, 22, 0.05);
+    color: var(--nomadic-muted);
+  }
+
+  .badge-nomadic-success {
+    background: var(--nomadic-success-soft);
+    color: var(--nomadic-success);
+  }
+
+  .badge-nomadic-pending {
+    background: var(--nomadic-pending-soft);
+    color: var(--nomadic-pending);
+  }
+
+  .badge-nomadic-danger,
+  .badge-nomadic-error {
+    background: var(--nomadic-danger-soft);
+    color: var(--nomadic-danger);
+  }
+
+  .badge-nomadic-info {
+    background: var(--nomadic-info-soft);
+    color: var(--nomadic-info);
+  }
+
+  .badge-nomadic-orange {
+    background: rgba(255, 103, 30, 0.12);
+    color: var(--nomadic-orange-deep);
+  }
+
+  .badge-nomadic-ink {
+    background: var(--nomadic-ink);
+    color: var(--nomadic-cover-cream);
+  }
+
+  /* Legacy landing CTA — no scale */
+  .nomadic-button {
+    @apply w-full max-w-[200px] mb-4 text-xl py-8 font-bold;
+    background: var(--nomadic-orange);
+    color: var(--nomadic-ink);
+    border-radius: var(--nomadic-radius-md);
+    box-shadow: var(--nomadic-shadow-clay);
+    transition:
+      transform 170ms ease,
+      box-shadow 170ms ease;
+  }
+
+  .nomadic-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .nomadic-button:active {
+    transform: translateY(1px);
+  }
+
+  .nomadic-button:focus-visible {
+    outline: 2px solid var(--nomadic-orange-deep);
+    outline-offset: 2px;
+  }
+
+  /* ——— Landing sunrise sequence ——— */
+  .landing-stage {
+    background: #2a211c;
+  }
+
+  .landing-sunrise {
+    opacity: 0;
+    background:
+      radial-gradient(
+        120% 80% at 50% 110%,
+        rgba(255, 140, 70, 0.55) 0%,
+        transparent 52%
+      ),
+      linear-gradient(180deg, #fff8f4 0%, #ffe8d6 42%, #ffc9a0 100%);
+    animation: landing-sunrise 1.35s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+  }
+
+  .landing-glow {
+    opacity: 0;
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 120, 48, 0.45),
+      transparent
+    );
+    animation: landing-glow 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
+  }
+
+  .landing-logo {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: landing-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+  }
+
+  .landing-brand {
+    color: var(--nomadic-cover-cream);
+    animation: landing-brand-ink 0.7s ease 0.95s forwards;
+  }
+
+  .landing-actions,
+  .landing-footer {
+    opacity: 0;
+    transform: translateY(14px);
+    animation: landing-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.35s forwards;
+  }
+
+  @keyframes landing-sunrise {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes landing-glow {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) scale(0.85);
+    }
+    to {
+      opacity: 0.9;
+      transform: translateX(-50%) scale(1.05);
+    }
+  }
+
+  @keyframes landing-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes landing-brand-ink {
+    from {
+      color: var(--nomadic-cover-cream);
+    }
+    to {
+      color: var(--nomadic-ink);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-sunrise,
+    .landing-glow,
+    .landing-logo,
+    .landing-brand,
+    .landing-actions,
+    .landing-footer {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    .landing-brand {
+      color: var(--nomadic-ink);
+    }
+
+    .landing-sunrise {
+      opacity: 1;
+    }
+  }
 }

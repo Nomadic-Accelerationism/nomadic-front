@@ -12,7 +12,10 @@
     "test:lisbon": "node --test scripts/lisbon-apply.test.mjs",
     "test:ensv2-stage3": "node --test scripts/ensv2-stage3.test.mjs",
     "test:ensv2-stage5a": "node --test scripts/ensv2-stage3.test.mjs",
-    "test:all": "node --test scripts/passport-me.test.mjs scripts/world.test.mjs scripts/lisbon-apply.test.mjs scripts/ensv2-stage3.test.mjs",
+    "test:passport-product": "node --test scripts/passport-product.test.mjs",
+    "test:passport-onboarding": "node --test scripts/passport-onboarding.test.mjs",
+    "test:passport-provision": "node --test scripts/passport-provision.test.mjs",
+    "test:all": "node --test scripts/passport-me.test.mjs scripts/world.test.mjs scripts/lisbon-apply.test.mjs scripts/ensv2-stage3.test.mjs scripts/passport-product.test.mjs scripts/passport-onboarding.test.mjs scripts/passport-provision.test.mjs",
     "spike:ens": "node scripts/ens-spike-test.mjs"
   },
   "dependencies": {
@@ -32,7 +35,9 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "cuelume": "^0.1.2",
     "date-fns": "^3.6.0",
+    "framer-motion": "^12.42.2",
     "lucide-react": "^0.427.0",
     "magic-sdk": "^28.17.0",
     "next": "14.2.5",

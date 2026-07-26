@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { isNomadicApiConfigured } from "@/lib/config/nomadic-api";
 import type { ValidateOtpErrorCode } from "@/lib/auth/validate-otp-errors";
+import { playBloom, playSuccess } from "@/lib/cuelume/feedback";
 
 type AuthUiState =
   | "idle"
@@ -65,7 +66,7 @@ const USER_MESSAGES: Partial<Record<AuthUiState, string>> = {
   otp_sent: "Check your email for the Magic sign-in code.",
   validating_magic_session: "Validating your Magic session…",
   creating_nomadic_session: "Creating your Nomadic Passport session…",
-  authenticated: "Signed in. Opening your Passport…",
+  authenticated: "Signed in. Opening Passport setup…",
   configuration_error: "Nomadic authentication is temporarily unavailable.",
   backend_unavailable:
     "Your email was verified, but Nomadic could not start your Passport session. Please try again.",
@@ -122,10 +123,12 @@ export default function UserLoginComponent() {
 
     if (!process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY?.trim() || !magic) {
       setAuthState("configuration_error");
+      playBloom();
       return;
     }
     if (!isNomadicApiConfigured()) {
       setAuthState("configuration_error");
+      playBloom();
       return;
     }
 
@@ -138,6 +141,7 @@ export default function UserLoginComponent() {
 
       if (!didToken) {
         setAuthState("invalid_session");
+        playBloom();
         return;
       }
 
@@ -160,12 +164,14 @@ export default function UserLoginComponent() {
             : null;
         setRequestId(rid);
         setAuthState(mapValidateOtpCode(code));
+        playBloom();
         return;
       }
 
       const metadata = response.data?.metadata;
       if (!metadata) {
         setAuthState("unexpected_error");
+        playBloom();
         return;
       }
 
@@ -177,7 +183,9 @@ export default function UserLoginComponent() {
       }
 
       setAuthState("authenticated");
-      router.push("/passport");
+      playSuccess();
+      // First-time path: choose Passport name / creation gate before Explore.
+      router.push("/start");
     } catch (error) {
       // Avoid logging tokens; axios errors may embed request bodies.
       console.error("Login flow failed", axios.isAxiosError(error) ? error.code : "error");
@@ -186,6 +194,7 @@ export default function UserLoginComponent() {
       } else {
         setAuthState("unexpected_error");
       }
+      playBloom();
     }
   };
 
@@ -194,6 +203,7 @@ export default function UserLoginComponent() {
 
     if (!emailRegex.test(email)) {
       setIsAlertOpen(true);
+      playBloom();
       return;
     }
 
@@ -203,24 +213,29 @@ export default function UserLoginComponent() {
   const requestNewOTP = () => {
     if (!emailRegex.test(email)) {
       setIsAlertOpen(true);
+      playBloom();
       return;
     }
     void requestOTP(email);
   };
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen px-8 bg-white">
+    <div className="flex min-h-dvh flex-col items-center justify-between bg-[var(--nomadic-bg)] px-8">
       <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center mt-36">
+        <div className="mt-28 flex flex-col items-center">
           <Image
             src="/images/nomadic.webp"
             alt="Nomadic Logo"
             width={100}
             height={100}
           />
-          <h2 className="mt-12 text-sm">Nomad Login or Register</h2>
-          <p className="mt-6 text-xl font-bold">Travel, share, hack and enjoy</p>
-          <p className="mt-2 text-sm text-gray-600 text-center">
+          <h2 className="mt-10 text-sm text-[var(--nomadic-muted)]">
+            Nomad Login or Register
+          </h2>
+          <p className="font-display mt-5 text-xl font-bold tracking-display text-[var(--nomadic-ink)]">
+            Travel, share, hack and enjoy
+          </p>
+          <p className="mt-2 text-center text-sm tracking-body text-[var(--nomadic-muted)]">
             Enter your email below to receive a magic sign-in link. We recommend
             using a personal email for continuity.
           </p>
@@ -233,14 +248,15 @@ export default function UserLoginComponent() {
               placeholder="Your email address"
               value={email}
               onChange={handleEmailChange}
-              className="pr-12 rounded-xl"
+              className="pr-12"
               disabled={isBusy || authState === "configuration_error"}
               aria-describedby={statusMessage ? "login-status" : undefined}
             />
             <Button
               type="submit"
-              className="absolute right-0 top-0 bottom-0 rounded-l-none rounded-r-xl px-3"
+              className="absolute bottom-0 right-0 top-0 rounded-l-none px-3"
               disabled={isBusy || authState === "configuration_error"}
+              aria-label="Continue with email"
             >
               {isBusy ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -266,17 +282,17 @@ export default function UserLoginComponent() {
           {statusMessage ? (
             <div
               id="login-status"
-              className={`mx-8 rounded-xl border px-4 py-3 text-sm ${
+              className={`mx-8 rounded-[var(--nomadic-radius-sm)] border px-4 py-3 text-sm ${
                 isErrorState
-                  ? "border-red-200 bg-red-50 text-red-900"
-                  : "border-black/10 bg-gray-50 text-gray-800"
+                  ? "border-[var(--nomadic-danger)]/25 bg-[var(--nomadic-danger-soft)] text-[var(--nomadic-danger)]"
+                  : "border-[var(--nomadic-border)] bg-[var(--nomadic-surface)] text-[var(--nomadic-ink)]"
               }`}
               role={isErrorState ? "alert" : "status"}
               aria-live="polite"
             >
               <p>{statusMessage}</p>
               {requestId ? (
-                <details className="mt-2 text-xs text-gray-500">
+                <details className="mt-2 text-xs text-[var(--nomadic-muted)]">
                   <summary className="cursor-pointer">Technical details</summary>
                   <p className="mt-1 break-all">Request ID: {requestId}</p>
                 </details>
@@ -287,8 +303,8 @@ export default function UserLoginComponent() {
           <div className="flex justify-center">
             <Button
               type="button"
-              variant="ghost"
-              className="w-full text-gray-600 hover:text-gray-900 mx-8"
+              variant="quiet"
+              className="mx-8 w-full"
               onClick={requestNewOTP}
               disabled={isBusy || authState === "configuration_error"}
             >
@@ -299,7 +315,7 @@ export default function UserLoginComponent() {
       </div>
 
       <div className="mt-8 text-center">
-        <p className="text-xs text-gray-500">v.0.01a</p>
+        <p className="text-xs text-[var(--nomadic-muted)]">v.0.01a</p>
       </div>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>

@@ -10,9 +10,6 @@ const config = {
 	],
   prefix: "",
   theme: {
-    fontFamily: {
-      satoshi: ['var(--font-satoshi)'],
-    },
     container: {
       center: true,
       padding: "2rem",
@@ -22,8 +19,33 @@ const config = {
     },
     extend: {
         fontFamily: {
-          sans: ['Satoshi', 'sans-serif'], // This makes Satoshi the default font
-          satoshi: ['Satoshi', 'sans-serif'],
+          // Body / UI — Satoshi Variable (-0.5% tracking via CSS)
+          sans: [
+            "var(--font-satoshi)",
+            "Satoshi",
+            "ui-sans-serif",
+            "system-ui",
+            "sans-serif",
+          ],
+          satoshi: [
+            "var(--font-satoshi)",
+            "Satoshi",
+            "ui-sans-serif",
+            "system-ui",
+            "sans-serif",
+          ],
+          // Large titles — Darker Grotesque (-2% tracking via CSS)
+          display: [
+            "var(--font-darker-grotesque)",
+            "Darker Grotesque",
+            "ui-sans-serif",
+            "system-ui",
+            "sans-serif",
+          ],
+        },
+        letterSpacing: {
+          display: "-0.02em",
+          body: "-0.005em",
         },
         colors: {
         border: "hsl(var(--border))",
@@ -31,6 +53,14 @@ const config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        nomadic: {
+          app: "var(--nomadic-app-bg)",
+          navy: "var(--nomadic-navy)",
+          paper: "var(--nomadic-paper)",
+          orange: "var(--nomadic-orange)",
+          ink: "var(--nomadic-ink)",
+          muted: "var(--nomadic-muted)",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

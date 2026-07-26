@@ -1,13 +1,12 @@
 "use client";
 
-import MenuUserHeaderComponent from "@/components/MenuUserHeader";
+import { MobileAppShell } from "@/components/shell/MobileAppShell";
 import { LisbonHouseJourneyScreen } from "@/components/journeys/LisbonHouseJourneyScreen";
 
 export default function LisbonHouseJourneyPage() {
   return (
-    <>
-      <MenuUserHeaderComponent />
+    <MobileAppShell showNav={false}>
       <LisbonHouseJourneyScreen />
-    </>
+    </MobileAppShell>
   );
 }

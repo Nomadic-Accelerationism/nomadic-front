@@ -15,39 +15,40 @@ export function PolicyDisclosure({ policy }: PolicyDisclosureProps) {
       <div>
         <h2
           id="policy-disclosure-heading"
-          className="text-lg font-bold text-black"
+          className="font-display text-lg font-bold tracking-display text-[var(--nomadic-ink)]"
         >
           Eligibility policy
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-[var(--nomadic-muted)]">
           {policy.displayName}{" "}
-          <span className="font-mono text-xs text-gray-400">({policy.key})</span>
+          <span className="font-mono text-xs text-[var(--nomadic-muted)]/80">
+            ({policy.key})
+          </span>
         </p>
       </div>
 
       <ol className="space-y-4">
         {policy.requirements.map((req, index) => (
-          <li
-            key={req.id}
-            className="rounded-2xl border border-black/10 bg-white/90 px-4 py-4"
-          >
-            <p className="text-xs font-medium text-gray-500">
+          <li key={req.id} className="surface-soft px-4 py-4">
+            <p className="text-xs font-medium text-[var(--nomadic-muted)]">
               Requirement {index + 1}
             </p>
-            <h3 className="mt-1 text-base font-semibold text-black">
+            <h3 className="mt-1 text-base font-semibold text-[var(--nomadic-ink)]">
               {req.title}
             </h3>
-            <p className="mt-2 text-sm text-gray-700">{req.summary}</p>
-            <div className="mt-3 rounded-xl bg-orange-50/80 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+            <p className="mt-2 text-sm text-[var(--nomadic-muted)]">
+              {req.summary}
+            </p>
+            <div className="mt-3 rounded-[var(--nomadic-radius-sm)] bg-[var(--nomadic-surface-soft)] px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--nomadic-muted)]">
                 Why is this required?
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-gray-700">
+              <p className="mt-1 text-sm leading-relaxed text-[var(--nomadic-ink)]">
                 {req.whyRequired}
               </p>
             </div>
             {req.confirmationState === "aspirational" ? (
-              <p className="mt-2 text-[11px] text-gray-400">
+              <p className="mt-2 text-[11px] text-[var(--nomadic-muted)]">
                 Attribute confirmation pending live World integration.
               </p>
             ) : null}
@@ -55,19 +56,19 @@ export function PolicyDisclosure({ policy }: PolicyDisclosureProps) {
         ))}
       </ol>
 
-      <div className="rounded-2xl border border-black/10 bg-white/90 px-4 py-4">
-        <h3 className="text-base font-semibold text-black">
+      <div className="surface-soft px-4 py-4">
+        <h3 className="text-base font-semibold text-[var(--nomadic-ink)]">
           What Nomadic is designed not to retain
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        <p className="mt-2 text-sm leading-relaxed text-[var(--nomadic-muted)]">
           {policy.dataMinimization.disclosure}
         </p>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--nomadic-muted)]">
           {policy.dataMinimization.designedNotToRetain.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-gray-500">
+        <p className="mt-3 text-xs text-[var(--nomadic-muted)]">
           Wording reflects product intent. Live World integration will confirm
           which minimum results are available.
         </p>

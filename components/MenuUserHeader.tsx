@@ -1,49 +1,45 @@
 "use client";
 
-import React from 'react';
-import Image from 'next/image';
-import { Button } from "@/components/ui/button"
-import {  MenuIcon, X } from 'lucide-react'
+import React from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { MenuIcon } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/contexts/UserContext';  // Make sure this path matches your actual UserContext location
-import Link from 'next/link';
+} from "@/components/ui/sheet";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
+import Link from "next/link";
 
+/**
+ * Slim header for secondary/legacy screens.
+ * Product navigation is Explore + Passport via MobileAppShell bottom nav.
+ * Internal/test routes are intentionally omitted.
+ */
 export default function MenuUserHeaderComponent() {
   const router = useRouter();
   const { logout } = useUser();
-  
+
   const menuItems = [
+    { name: "Explore", url: "/explore" },
     { name: "Passport", url: "/passport" },
-    { name: "Lisbon House Journey", url: "/journeys/lisbon-house" },
-    { name: "My Proofs", url: "/user-proofs" },
-    // Legacy Journey list retained for compatibility:
-    { name: "All Journeys", url: "/hacker-journeys" },
-    // Legacy demo surfaces intentionally not promoted:
-    // { name: "$NACC Tokens", url: "/nacc-tokens" },
-    // { name: "Generate Single Use ID", url: "/generate-single-use-id" },
-    // { name: "Recommend a Nomad", url: "/recommend" },
-    // { name: "Pending Reviews", url: "/reviews" },
-    { name: "About", url: "/about" },
   ];
 
   const handleLogout = async () => {
     await logout();
-    router.push('/');
+    router.push("/");
   };
 
   return (
     <Sheet>
-      <header className="flex items-center justify-between px-6 pt-8 pb-2 bg-white">
+      <header className="flex items-center justify-between bg-[var(--nomadic-app-bg)] px-6 pb-2 pt-8">
         <div className="flex items-center">
-          <Link href="/passport">
-            <div className="flex items-center cursor-pointer">
+          <Link href="/explore">
+            <div className="flex cursor-pointer items-center">
               <Image
                 src="/images/nomadic.svg"
                 alt="Nomadic Logo"
@@ -62,9 +58,9 @@ export default function MenuUserHeaderComponent() {
           </Button>
         </SheetTrigger>
       </header>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
-        <div className="h-full bg-gradient-to-t from-[#ff7231] via-[#ffc4a8] to-white flex flex-col">
-          <SheetHeader className="p-4 flex justify-between items-center border-b">
+      <SheetContent side="left" className="w-[300px] p-0 sm:w-[400px]">
+        <div className="flex h-full flex-col bg-[var(--nomadic-app-bg)]">
+          <SheetHeader className="flex items-center justify-between border-b p-4">
             <SheetTitle className="flex items-center">
               <Image
                 src="/images/nomadic.svg"
@@ -77,14 +73,13 @@ export default function MenuUserHeaderComponent() {
             </SheetTitle>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto px-4">
-
-            <nav className="flex flex-1 flex-col gap-2 mt-4">
+            <nav className="mt-4 flex flex-1 flex-col gap-2">
               {menuItems.map((item) => (
                 <Button
                   key={item.name}
                   asChild
                   variant="secondary"
-                  className="h-14 justify-start rounded-2xl bg-gray-100 text-lg font-normal text-black hover:bg-white/90 border border-black"
+                  className="h-14 justify-start rounded-2xl border border-black bg-gray-100 text-lg font-normal text-black hover:bg-white/90"
                 >
                   <Link href={item.url}>{item.name}</Link>
                 </Button>
@@ -92,34 +87,17 @@ export default function MenuUserHeaderComponent() {
             </nav>
           </div>
 
-          <div className="mt-auto p-4 space-y-1">
-
+          <div className="mt-auto space-y-1 p-4">
             <div className="flex flex-col">
-              <div className="w-1/2 border-t border-black mb-2"></div>
-              <Button variant="ghost" className="w-full text-left justify-start pl-0">
-                Switch to Hacker House Profile
-              </Button>
-            </div>
-            
-            <div className="flex flex-col">
-              <div className="w-1/2 border-t border-black mb-2"></div>
-              <Button variant="ghost" className="w-full text-left justify-start pl-0">
-                Bug Report
-              </Button>
-            </div>
-
-            <div className="flex flex-col">
-              <div className="w-1/2 border-t border-black mb-2"></div>
-              <Button 
-                variant="ghost" 
-                className="w-full text-left justify-start pl-0"
+              <div className="mb-2 w-1/2 border-t border-black"></div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start pl-0 text-left"
                 onClick={handleLogout}
               >
                 Logout
               </Button>
             </div>
-
-            <p className="text-xs text-center mt-4 pt-4">v.0.01a</p>
           </div>
         </div>
       </SheetContent>

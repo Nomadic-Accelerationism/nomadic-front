@@ -109,7 +109,7 @@ export function PassportIdentity({
         </div>
 
         <div>
-          <p className="text-xs font-medium text-gray-500">ENS Passport</p>
+          <p className="text-xs font-medium text-gray-500">Passport name</p>
           {hasEnsIssued ? (
             <p className="mt-1 break-all text-sm font-medium text-black">
               {ensName!.trim()}
@@ -120,8 +120,7 @@ export function PassportIdentity({
                 Not issued yet
               </p>
               <p className="mt-1 text-xs leading-relaxed text-gray-500">
-                Your Passport will receive an ENS identity during the issuance
-                step.
+                Choose your Passport name to finish setting up.
               </p>
             </>
           )}
